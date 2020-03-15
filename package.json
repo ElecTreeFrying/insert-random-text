@@ -1,0 +1,202 @@
+{
+	"name": "insert-random-text",
+  "publisher": "ElecTreeFrying",
+	"displayName": "Insert Random Text",
+	"description": "Insert random text on the fly.",
+	"version": "0.0.1",
+	"icon": "images/github.png",
+	"categories": [
+		"Other"
+  ],
+  "keywords": [
+		"lorem",
+		"insert",
+		"random",
+		"insert-text",
+		"random-text"
+	],
+  "galleryBanner": {
+		"color": "#494949",
+		"theme": "dark"
+	},
+	"homepage": "https://github.com/ElecTreeFrying/insert-random-text/blob/master/README.md",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ElecTreeFrying/insert-random-text.git"
+	},
+	"bugs": {
+		"email": "electreefrying.git@gmail.com",
+		"url": "https://github.com/ElecTreeFrying/insert-random-text/issues"
+	},
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.43.0"
+	},
+	"activationEvents": [
+		"onCommand:extension.insertRandomAnimal",
+		"onCommand:extension.insertRandomPerson",
+		"onCommand:extension.insertRandomDate",
+		"onCommand:extension.insertRandomCountry",
+		"onCommand:extension.insertRandomNumber",
+		"onCommand:extension.insertRandomString",
+		"onCommand:extension.insertLorem",
+		"onCommand:extension.insertLoremSmall",
+		"onCommand:extension.insertLoremMedium",
+		"onCommand:extension.insertLoremLarge",
+		"onCommand:extension.insertRandomHash",
+		"onCommand:extension.insertRandomHashSmall",
+		"onCommand:extension.insertRandomHashMedium",
+		"onCommand:extension.insertRandomHashLarge"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.insertRandomAnimal",
+				"title": "Insert Random: Animal"
+			},
+			{
+				"command": "extension.insertRandomPerson",
+				"title": "Insert Random: Person"
+			},
+			{
+				"command": "extension.insertRandomDate",
+				"title": "Insert Random: Date"
+			},
+			{
+				"command": "extension.insertRandomCountry",
+				"title": "Insert Random: Country"
+			},
+			{
+				"command": "extension.insertRandomNumber",
+				"title": "Insert Random: Number"
+			},
+			{
+				"command": "extension.insertRandomString",
+				"title": "Insert Random: String"
+			},
+			{
+				"command": "extension.insertLorem",
+				"title": "Insert Random: Lorem"
+			},
+			{
+				"command": "extension.insertLoremSmall",
+				"title": "Insert Random: Lorem Small"
+			},
+			{
+				"command": "extension.insertLoremMedium",
+				"title": "Insert Random: Lorem Medium"
+			},
+			{
+				"command": "extension.insertLoremLarge",
+				"title": "Insert Random: Lorem Large"
+			},
+			{
+				"command": "extension.insertRandomHash",
+				"title": "Insert Random: Hash"
+			},
+			{
+				"command": "extension.insertRandomHashSmall",
+				"title": "Insert Random: Hash Small"
+			},
+			{
+				"command": "extension.insertRandomHashMedium",
+				"title": "Insert Random: Hash Medium"
+			},
+			{
+				"command": "extension.insertRandomHashLarge",
+				"title": "Insert Random: Hash Large"
+			}
+		],
+		"configuration": [
+			{
+				"title": "Insert Random Text",
+				"properties": {
+					"quoteStyle": {
+						"title": "Quote style",
+						"description": "Select a quote style for import path.",
+						"type": "string",
+						"default": "Single quotes",
+						"enum": [
+							"Single quotes",
+							"Double quotes"
+						],
+						"enumDescriptions": [
+							"Wrap import paths with single quotes",
+							"Wrap import paths with double quotes"
+						]
+					},
+					"disableNotifs": {
+						"title": "Disable notifications",
+						"description": "Disable insert random animal notification.",
+						"type": "boolean",
+						"default": false
+					},
+					"withQuote": {
+						"title": "Wrap with quotes",
+						"description": "Toggle to wrap random text with quotes.",
+						"type": "boolean",
+						"default": true
+					},
+					"loremSize": {
+						"title": "Lorem size (for command 'Insert Lorem')",
+						"description": "Enter lorem string length. { min: 25, max: 1000 }",
+						"type": "number",
+						"default": 25,
+						"minimum": 25,
+						"maximum": 2500
+					},
+					"hashSize": {
+						"title": "Hash size (for command 'Insert Lorem')",
+						"description": "Enter hash string length. { min: 7, max: 70 }",
+						"type": "number",
+						"default": 13,
+						"minimum": 7,
+						"maximum": 70
+					},
+					"insertType": {
+						"title": "Insert type",
+						"description": "Insert options on text editor.",
+						"type": "string",
+						"default": "Cursor",
+						"enum": [
+							"Cursor",
+							"Top"
+						],
+						"enumDescriptions": [
+							"Insert on selected line.",
+							"Insert in line 1."
+						]
+					}
+				}
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/camelcase": "^5.2.0",
+		"@types/chance": "^1.0.9",
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^7.0.1",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.43.0",
+		"@typescript-eslint/eslint-plugin": "^2.18.0",
+		"@typescript-eslint/parser": "^2.18.0",
+		"eslint": "^6.8.0",
+		"glob": "^7.1.6",
+		"mocha": "^7.0.1",
+		"typescript": "^3.7.5",
+		"vscode-test": "^1.3.0"
+	},
+	"dependencies": {
+		"camelcase": "^5.3.1",
+		"chance": "^1.1.4"
+	}
+}
