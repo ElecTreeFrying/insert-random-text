@@ -1,21 +1,21 @@
 {
 	"name": "insert-random-text",
-  "publisher": "ElecTreeFrying",
+	"publisher": "ElecTreeFrying",
 	"displayName": "Insert Random Text",
 	"description": "Insert random text on the fly.",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"icon": "images/github.png",
 	"categories": [
 		"Other"
-  ],
-  "keywords": [
+	],
+	"keywords": [
 		"lorem",
 		"insert",
 		"random",
 		"insert-text",
 		"random-text"
 	],
-  "galleryBanner": {
+	"galleryBanner": {
 		"color": "#494949",
 		"theme": "dark"
 	},
