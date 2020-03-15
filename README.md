@@ -37,11 +37,12 @@ Insert random text on the fly.
 ### General settings
 
 * `quoteStyle`: (double/single quote) Select quote style for path.
-* `withQuote`: Toggle to wrap random text with quotes.
 * `insertType`: Paste import on selected line at the top or on selected line.
 * `loremSize`: Enter lorem string length..
 * `hashSize`: Enter hash string length..
 * `disableNotifs`: Disable all notifications on file drop to active pane.
+* `withQuote`: Toggle to wrap random text with quotes.
+* `withNewLine`: Toggle include newline at the end of each insert.
 
 ### Settings Preview
 

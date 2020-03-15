@@ -126,17 +126,19 @@
 							"Wrap import paths with double quotes"
 						]
 					},
-					"disableNotifs": {
-						"title": "Disable notifications",
-						"description": "Disable insert random animal notification.",
-						"type": "boolean",
-						"default": false
-					},
-					"withQuote": {
-						"title": "Wrap with quotes",
-						"description": "Toggle to wrap random text with quotes.",
-						"type": "boolean",
-						"default": true
+					"insertType": {
+						"title": "Insert type",
+						"description": "Insert options on text editor.",
+						"type": "string",
+						"default": "Cursor",
+						"enum": [
+							"Cursor",
+							"Top"
+						],
+						"enumDescriptions": [
+							"Insert on selected line.",
+							"Insert in line 1."
+						]
 					},
 					"loremSize": {
 						"title": "Lorem size (for command 'Insert Lorem')",
@@ -154,19 +156,23 @@
 						"minimum": 7,
 						"maximum": 70
 					},
-					"insertType": {
-						"title": "Insert type",
-						"description": "Insert options on text editor.",
-						"type": "string",
-						"default": "Cursor",
-						"enum": [
-							"Cursor",
-							"Top"
-						],
-						"enumDescriptions": [
-							"Insert on selected line.",
-							"Insert in line 1."
-						]
+					"disableNotifs": {
+						"title": "Disable notifications",
+						"description": "Disable insert random animal notification.",
+						"type": "boolean",
+						"default": false
+					},
+					"withQuote": {
+						"title": "Wrap with quotes",
+						"description": "Toggle to wrap random text with quotes.",
+						"type": "boolean",
+						"default": true
+					},
+					"withNewLine": {
+						"title": "Include newline",
+						"description": "Toggle include newline at the end of each insert.",
+						"type": "boolean",
+						"default": true
 					}
 				}
 			}

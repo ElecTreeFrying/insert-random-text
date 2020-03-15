@@ -9,16 +9,15 @@ function configObserve(context: vscode.ExtensionContext, retrival = new ConfigRe
 
 	param = retrival.param;
 
-	console.log(param);
-
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
 
 		param.quoteStyle     = e.affectsConfiguration(configEnum.QUOTESTYLE) 		 ? retrival.quoteStyle 		 : param.quoteStyle;
 		param.insertType     = e.affectsConfiguration(configEnum.INSERTTYPE) 		 ? retrival.insertType 		 : param.insertType;
 		param.loremSize      = e.affectsConfiguration(configEnum.LOREMSIZE) 		 ? retrival.loremSize 		 : param.loremSize;
 		param.hashSize       = e.affectsConfiguration(configEnum.HASHSIZE) 		   ? retrival.hashSize 	   	 : param.hashSize;
-		param.withQuote      = e.affectsConfiguration(configEnum.WITHQUOTE)      ? retrival.withQuote      : param.withQuote;
 		param.disableNotifs  = e.affectsConfiguration(configEnum.DISABLENOTIFS)  ? retrival.disableNotifs  : param.disableNotifs;
+		param.withQuote      = e.affectsConfiguration(configEnum.WITHQUOTE)      ? retrival.withQuote      : param.withQuote;
+		param.withNewLine    = e.affectsConfiguration(configEnum.WITHNEWLINE)    ? retrival.withNewLine    : param.withNewLine;
 	}));
 }
 

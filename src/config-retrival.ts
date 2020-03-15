@@ -14,8 +14,9 @@ export interface Config {
   insertType:     boolean;
   loremSize:      number;
   hashSize:       number;
-  withQuote:      boolean;
   disableNotifs:  boolean;
+  withQuote:      boolean;
+  withNewLine:    boolean;
 }
 
 export const configEnum = {
@@ -23,8 +24,9 @@ export const configEnum = {
   INSERTTYPE:     'insertType',
   LOREMSIZE:      'loremSize',
   HASHSIZE:       'hashSize',
+  DISABLENOTIFS:  'disableNotifs',
   WITHQUOTE:      'withQuote',
-  DISABLENOTIFS:  'disableNotifs'
+  WITHNEWLINE:    'withNewLine'
 }
 
 export class ConfigRetrival {
@@ -42,8 +44,9 @@ export class ConfigRetrival {
       insertType:     this.insertType,
       loremSize:      this.loremSize,
       hashSize:       this.hashSize,
-      withQuote:       this.withQuote,
       disableNotifs:  this.disableNotifs,
+      withQuote:      this.withQuote,
+      withNewLine:    this.withNewLine
     }
   }
 
@@ -59,7 +62,8 @@ export class ConfigRetrival {
 
   get loremSize(): number { return this.workspace.getConfiguration().get('loremSize'); }
   get hashSize(): number { return this.workspace.getConfiguration().get('hashSize'); }
-  get withQuote(): boolean { return this.workspace.getConfiguration().get('withQuote'); }
   get disableNotifs(): boolean { return this.workspace.getConfiguration().get('disableNotifs'); }
+  get withQuote(): boolean { return this.workspace.getConfiguration().get('withQuote'); }
+  get withNewLine(): boolean { return this.workspace.getConfiguration().get('withNewLine'); }
 
 }
