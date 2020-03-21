@@ -53,8 +53,8 @@ Insert random text on the fly.
   1. Install Visual Studio Code v1.30.0 or higher
   1. Launch Code
   1. From the command palette `Ctrl+Shift+P` (Windows, Linux) or `Cmd+Shift+P` (OSX)
-  1. Select `Install Extensions`
-  1. Choose Insert Random Text by _ElecTreeFrying_
+  1. Select Install Extensions.
+  1. Choose **Insert Random** Text by _ElecTreeFrying_
   1. Reload Visual Studio Code
 
 ## Changelog
@@ -68,7 +68,7 @@ See [CHANGELOG] for more information.
 
 ## Related
 
-[More extensions of mine]
+[More extensions of mine.]
 
 ## License
 
@@ -86,4 +86,4 @@ MIT
 [CHANGELOG]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/changelog
 [Github Issues]: https://github.com/ElecTreeFrying/insert-random-text/issues
 [Visual Studio Marketplace]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text&ssr=false#review-details
-[More extensions of mine]: https://marketplace.visualstudio.com/publishers/ElecTreeFrying
+[More extensions of mine.]: https://marketplace.visualstudio.com/publishers/ElecTreeFrying

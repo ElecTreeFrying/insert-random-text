@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2 (2020-3-21)
+
+### Changes
+
+- updated README
+
 ## v0.1.1 (2020-3-16)
 
 ### Feature
