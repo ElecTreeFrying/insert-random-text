@@ -3,7 +3,7 @@
 	"publisher": "ElecTreeFrying",
 	"displayName": "Insert Random Text",
 	"description": "Insert random text on the fly.",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"icon": "images/github.png",
 	"categories": [
 		"Other"
