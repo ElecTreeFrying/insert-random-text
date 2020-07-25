@@ -1,16 +1,22 @@
 # Changelog
 
+## v0.1.3 (2020-7-25)
+
+### Changes
+
+- updated readme
+
 ## v0.1.2 (2020-3-21)
 
 ### Changes
 
-- updated README
+- updated readme
 
 ## v0.1.1 (2020-3-16)
 
 ### Feature
 
-- Toggle new line
+- toggle new line
 
 ### Changes
 
@@ -18,4 +24,4 @@
 
 ## v0.1.0 (2020-3-15)
 
-- Initial release
+- initial release
