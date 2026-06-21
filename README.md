@@ -1,102 +1,153 @@
+# Random & Fake Data Generator
 
-# Insert Random Text (vscode extension)
+[![version][version svg]][package]
+[![installs][installs svg]][package]
+[![downloads][downloads svg]][package]
+[![ratings][ratings svg]][package]
+[![license][license svg]][repo]
+[![vscode][vscode svg]][package]
 
-<!-- [![Current version of Insert Random Text][version svg]][package] [![Current downloads of Insert Random Text][downloads svg]][package] [![Current ratings of Insert Random Text][ratings svg]][package] -->
+[version svg]: https://vsmarketplacebadges.dev/version-short/electreefrying.insert-random-text.png
+[installs svg]: https://vsmarketplacebadges.dev/installs/electreefrying.insert-random-text.png
+[downloads svg]: https://vsmarketplacebadges.dev/downloads/electreefrying.insert-random-text.png
+[ratings svg]: https://vsmarketplacebadges.dev/rating-short/ElecTreeFrying.insert-random-text.png
+[license svg]: https://img.shields.io/github/license/ElecTreeFrying/insert-random-text
+[vscode svg]: https://img.shields.io/badge/vscode-%3E%3D1.97.0-blue
+[package]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text
+[repo]: https://github.com/ElecTreeFrying/insert-random-text
 
-Insert random text on the fly.
+> **Insert random & fake data — at every cursor.**
 
-## Usage
+**Names** · **Emails** · **Addresses** · **Numbers** · **Dates** · **UUIDs** · **Lorem ipsum** · **Mock JSON**
 
-1. On your text editor.
-1. From the command palette `Ctrl+Shift+P`
-1. Select any Insert Random command
+Generate realistic fake data right where you're typing — no website, no signup, fully offline. Drop a multi-cursor selection down a column and fill every row with a _different_ value in one step.
 
-![insert-random-text-demo](images/playback.gif "Insert random text demo")
+![Random & Fake Data Generator demo](images/playback.gif "Insert random data at the cursor")
 
-## Commands
+---
 
-| Command                     | Description                                         |
-| --------------------------- | --------------------------------------------------- |
-| Insert Random: Animal       | Insert random animal                                |
-| Insert Random: Person       | Insert random name                                  |
-| Insert Random: Date         | Insert random date                                  |
-| Insert Random: Country      | Insert random country                               |
-| Insert Random: Number       | Insert random number                                |
-| Insert Random: string       | Insert random string                                |
-| Insert Random: lorem        | Insert lorem (configure length in settings)         |
-| Insert Random: Lorem Small  | Insert lorem, Length 177                            |
-| Insert Random: Lorem Medium | Insert lorem, Length 521                            |
-| Insert Random: Lorem Large  | Insert lorem, Length 1368                           |
-| Insert Random: hash         | Insert random hash (configure length in settings    |
-| Insert Random: Hash Small   | Insert random, Length 7                             |
-| Insert Random: Hash Medium  | Insert random, Length 17                            |
-| Insert Random: Hash Large   | Insert random, Length 27                            |
+## Quick Start
 
-## Extension Settings
+1. **Install** the extension ([see below](#installation)).
+2. Open the Command Palette — <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>.
+3. Run **Insert Random: Pick…** to choose from the full catalog, or run a specific `Insert Random:` command directly.
+4. Place **multiple cursors** first to fill many spots at once — each gets its own value.
 
-### General settings
+---
 
-* `quoteStyle`: (double/single quote) Select quote style for path.
-* `insertType`: Paste import on selected line at the top or on selected line.
-* `loremSize`: Enter lorem string length..
-* `hashSize`: Enter hash string length..
-* `disableNotifs`: Disable all notifications on file drop to active pane.
-* `withQuote`: Toggle to wrap random text with quotes.
-* `withNewLine`: Toggle include newline at the end of each insert.
+## Highlights
 
-### Settings Preview
+- **Fill every cursor at once** — a _different_ value at each cursor in a single step. The fastest way to seed a table, an array, or a fixture.
+- **Stays in your editor** — fully offline, no account, no copy-paste from a website.
+- **Reproducible when you need it** — set a seed and get the same data every run for stable tests and snapshots.
+- **Drops straight into code** — optional quote-wrapping and trailing newline so values land cleanly in arrays, JSON, and configs.
+- **Powered by [Faker][faker]** — realistic, coherent names, emails, and addresses, not random noise.
 
-![extension-settings-preview](images/settings.gif "Extension settings")
+[faker]: https://fakerjs.dev
+
+---
+
+## What it generates
+
+| Category | Examples |
+|---|---|
+| **Identity** | full name, first / last name, username, email |
+| **Numbers** | integer (with range), boolean |
+| **Text** | string, lorem ipsum (words / sentences / paragraphs) |
+| **Time** | dates and timestamps |
+| **Location** | country, city, address |
+| **Network & IDs** | UUID, hash, IP, MAC, URL, color |
+
+_…and growing every release._
+
+---
+
+## Settings
+
+| Setting | Description |
+|---|---|
+| `insertRandomText.uniquePerCursor` | A different value at each cursor (multi-cursor fill), or the same value repeated. |
+| `insertRandomText.seed` | A number for reproducible output — the same seed yields the same values. |
+| `insertRandomText.bulkCount` | How many values to insert at each cursor. |
+| `insertRandomText.outputFormat` | `plain`, `jsonArray`, or `quotedList`. |
+| `insertRandomText.contextMenu.enabled` | Add an "Insert Random" submenu to the editor right-click menu. |
+| `withQuote` | Wrap each inserted value in quotes. |
+| `withNewLine` | Append a newline after each value. |
+| `quoteStyle` | Single or double quotes. |
+| `insertType` | Insert at each cursor, or at the top of the file. |
+
+---
 
 ## Installation
 
-  1. Install VS Code v1.42.0 or higher
-  2. Launch Visual Studio Code
-  3. Enter command `Ctrl+Shift+P` (Windows, Linux) or `Cmd+Shift+P` (OSX)
-  4. Select → `Extensions: Install Extensions`.
-  5. Choose **Insert Random Text** by _ElecTreeFrying_
-  6. Reload Visual Studio Code
+**Requires VS Code 1.97.0 or later.**
+
+- **Marketplace:** Extensions view (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>) → search **Random & Fake Data Generator** by _ElecTreeFrying_ → **Install**.
+- **CLI:** `code --install-extension ElecTreeFrying.insert-random-text`
+- **Direct:** [VS Code Marketplace listing][package]
+
+---
+
+## Compatibility
+
+- **VS Code** 1.97.0 or later.
+- **Compatible hosts:** Cursor, VSCodium, Code Server, and other forks that implement the VS Code API at the same engine version.
+- **Platforms:** macOS, Windows, Linux.
+- **Privacy:** No network calls, no telemetry — every value is generated locally.
+
+---
+
+## Troubleshooting
+
+If a command doesn't insert, or a value looks wrong, please open an issue on [GitHub Issues][issues].
+
+[issues]: https://github.com/ElecTreeFrying/insert-random-text/issues
+
+---
 
 ## Changelog
 
-See [CHANGELOG] for more information.
+See [CHANGELOG.md][changelog] for full release notes.
+
+[changelog]: CHANGELOG.md
+
+---
 
 ## Contributing
 
-* File bugs, or any feature requests in [GitHub Issues].
-* Leave a review on [Visual Studio Marketplace].
+Contributions, bug reports, and feature requests are welcome in [GitHub Issues][issues].
+
+---
 
 ## Support
 
-### Donate by Bitcoin (BTC)
+**This extension is free and always will be.** If it's become part of your workflow, here are a few ways to give back:
 
-bc1q9hjnxk67c9y6tsyp8jde43xg9hacf0kgdxq6jsxl47666d3hk8aqunv0xr
+- Star the repo on [GitHub][repo]
+- Leave a review on the [VS Code Marketplace][reviews]
+- Send a donation to any address below
 
-![donate-by-bitcoin](images/BITCOIN.png "donate by bitcoin")
+[reviews]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text&ssr=false#review-details
 
-### Donate by Mining
+| Network | Address |
+|---|---|
+| **Bitcoin** | `bc1q4j2uewfphjmca83905qv37vcl4jh8va5yupl7w` |
+| **Solana** | `EHtTGyRoDAK44KBGrEoypAWyPpResHUqwufKnuLs7Tyy` |
+| **Sui** | `0xcaf8ff4a65d7e35d961abd0203180013b7fe974d4fa0313e880c39c45ada2b09` |
+| **ERC-20** (Ethereum / Base / Monad / Polygon / HyperEVM) | `0xd25f84Ed2F76dF2F0C8f1207402eF9e15b5d7855` |
 
-|      Mining address (NiceHash)     |
-|:----------------------------------:|
-| 3GJoX9cKs7eUHr6n5LcwNYEkSoD6mEqb1r |
+---
 
 ## Related
 
-[More extensions of mine.]
+- **[All extensions by ElecTreeFrying][all]** on the VS Code Marketplace.
+
+[all]: https://marketplace.visualstudio.com/publishers/ElecTreeFrying
+
+---
 
 ## License
 
-MIT
+[MIT][license]
 
-[version svg]: https://vsmarketplacebadge.apphb.com/version/ElecTreeFrying.insert-random-text.svg
-[downloads svg]: https://vsmarketplacebadge.apphb.com/downloads/ElecTreeFrying.insert-random-text.svg
-[ratings svg]: https://vsmarketplacebadge.apphb.com/rating-short/ElecTreeFrying.insert-random-text.svg
-[package]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text
-
-[VS Code]: https://code.visualstudio.com/
-[extension]: https://marketplace.visualstudio.com/VSCode
-
-[CHANGELOG]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/changelog
-[Github Issues]: https://github.com/ElecTreeFrying/insert-random-text/issues
-[Visual Studio Marketplace]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text&ssr=false#review-details
-[More extensions of mine.]: https://marketplace.visualstudio.com/publishers/ElecTreeFrying
+[license]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/license

@@ -1,206 +1,163 @@
 import * as vscode from 'vscode';
-import * as Chance from 'chance';
-import { Config, ConfigRetrival, configEnum } from './config-retrival';
-import { InsertText } from './insert-text';
+import { ConfigKey, Configuration, Settings } from './configuration';
+import { Generator, generators, getGenerator } from './catalog';
+import { load, seed } from './engine';
+import { buildBlocks, InsertOptions, OutputFormat } from './formatter';
 
-let param: Config;
+const SINGLE_QUOTE = "'";
+const DOUBLE_QUOTE = '"';
+const PICK_COMMAND = 'insertRandomText.pick';
+const CONFIG_KEYS: readonly string[] = Object.values(ConfigKey);
 
-function configObserve(context: vscode.ExtensionContext, retrival = new ConfigRetrival(vscode.workspace)) {
+/** Cached settings snapshot; replaced wholesale by {@link watchConfiguration}. */
+let settings: Settings;
 
-	param = retrival.param;
+/**
+ * Every contributed command id → the generator it inserts. The original
+ * `extension.insertRandom*` ids are kept for back-compat (existing keybindings);
+ * new types use namespaced `insertRandomText.*` ids. The Lorem/Hash size variants
+ * point at dedicated hidden generators.
+ */
+const COMMAND_TO_GENERATOR: Readonly<Record<string, string>> = {
+  // Original commands — kept for back-compat.
+  'extension.insertRandomAnimal': 'animal',
+  'extension.insertRandomPerson': 'person',
+  'extension.insertRandomDate': 'date',
+  'extension.insertRandomCountry': 'country',
+  'extension.insertRandomNumber': 'number',
+  'extension.insertRandomString': 'string',
+  'extension.insertLorem': 'lorem',
+  'extension.insertLoremSmall': 'loremSmall',
+  'extension.insertLoremMedium': 'loremMedium',
+  'extension.insertLoremLarge': 'loremLarge',
+  'extension.insertRandomHash': 'hash',
+  'extension.insertRandomHashSmall': 'hashSmall',
+  'extension.insertRandomHashMedium': 'hashMedium',
+  'extension.insertRandomHashLarge': 'hashLarge',
+  // Modern commands for the broader catalog.
+  'insertRandomText.uuid': 'uuid',
+  'insertRandomText.email': 'email',
+  'insertRandomText.username': 'username',
+  'insertRandomText.boolean': 'boolean',
+  'insertRandomText.firstName': 'firstName',
+  'insertRandomText.lastName': 'lastName',
+  'insertRandomText.phone': 'phone',
+  'insertRandomText.city': 'city',
+  'insertRandomText.address': 'address',
+  'insertRandomText.ipv4': 'ipv4',
+  'insertRandomText.mac': 'mac',
+  'insertRandomText.url': 'url',
+  'insertRandomText.color': 'color',
+  'insertRandomText.password': 'password',
+  'insertRandomText.word': 'word',
+  'insertRandomText.sentence': 'sentence',
+};
 
-	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+/** Seed the cached settings, then re-snapshot them whenever a relevant key changes. */
+function watchConfiguration(context: vscode.ExtensionContext, reader = new Configuration(vscode.workspace)): void {
+  settings = reader.read();
 
-		param.quoteStyle     = e.affectsConfiguration(configEnum.QUOTESTYLE) 		 ? retrival.quoteStyle 		 : param.quoteStyle;
-		param.insertType     = e.affectsConfiguration(configEnum.INSERTTYPE) 		 ? retrival.insertType 		 : param.insertType;
-		param.loremSize      = e.affectsConfiguration(configEnum.LOREMSIZE) 		 ? retrival.loremSize 		 : param.loremSize;
-		param.hashSize       = e.affectsConfiguration(configEnum.HASHSIZE) 		   ? retrival.hashSize 	   	 : param.hashSize;
-		param.disableNotifs  = e.affectsConfiguration(configEnum.DISABLENOTIFS)  ? retrival.disableNotifs  : param.disableNotifs;
-		param.withQuote      = e.affectsConfiguration(configEnum.WITHQUOTE)      ? retrival.withQuote      : param.withQuote;
-		param.withNewLine    = e.affectsConfiguration(configEnum.WITHNEWLINE)    ? retrival.withNewLine    : param.withNewLine;
-	}));
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (CONFIG_KEYS.some((key) => event.affectsConfiguration(key))) {
+        settings = reader.read();
+      }
+    }),
+  );
 }
 
-export function activate(context: vscode.ExtensionContext) {
-
-	configObserve(context);
-
-	let insertRandomAnimal = vscode.commands.registerCommand('extension.insertRandomAnimal', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.animal.random);
-		});
-
-		param.disableNotifs ? 0 : vscode.window.showInformationMessage(`Animal location: ${text.animal.type}`);
-	});
-
-	let insertRandomPerson = vscode.commands.registerCommand('extension.insertRandomPerson', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.person);
-		});
-	});
-
-	let insertRandomDate = vscode.commands.registerCommand('extension.insertRandomDate', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.date);
-		});
-	});
-
-	let insertRandomCountry = vscode.commands.registerCommand('extension.insertRandomCountry', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.country);
-		});
-	});
-
-	let insertRandomNumber = vscode.commands.registerCommand('extension.insertRandomNumber', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.number);
-		});
-	});
-
-	let insertRandomString = vscode.commands.registerCommand('extension.insertRandomString', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.string);
-		});
-	});
-
-	let insertLorem = vscode.commands.registerCommand('extension.insertLorem', async () => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, null);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.lorem);
-		});
-	});
-
-	let insertLoremSmall = vscode.commands.registerCommand('extension.insertLoremSmall', async () => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, null);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.loremSmall);
-		});
-	});
-
-	let insertLoremMedium = vscode.commands.registerCommand('extension.insertLoremMedium', async () => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, null);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.loremMedium);
-		});
-	});
-
-	let insertLoremLarge = vscode.commands.registerCommand('extension.insertLoremLarge', async () => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, null);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.loremLarge);
-		});
-	});
-
-	let insertRandomHash = vscode.commands.registerCommand('extension.insertRandomHash', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.hash.plain());
-		});
-	});
-
-	let insertRandomHashSmall = vscode.commands.registerCommand('extension.insertRandomHashSmall', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.hash.small());
-		});
-	});
-
-	let insertRandomHashMedium = vscode.commands.registerCommand('extension.insertRandomHashMedium', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.hash.medium());
-		});
-	});
-
-	let insertRandomHashLarge = vscode.commands.registerCommand('extension.insertRandomHashLarge', async (chance = new Chance()) => {
-
-		await vscode.commands.executeCommand('notifications.clearAll');
-		const editor = vscode.window.activeTextEditor;
-		const text = new InsertText(param, chance);
-
-		editor.edit((active) => {
-			const pos = param.insertType ? editor.selection.anchor : new vscode.Position(0, 0);;
-			active.insert(pos, text.hash.large());
-		});
-	});
-
-	const disposable = [
-		insertRandomAnimal, insertRandomPerson, insertRandomDate, insertRandomCountry, insertRandomNumber, insertRandomString, insertLorem, insertLoremSmall, insertLoremMedium, insertLoremLarge, insertRandomHash, insertRandomHashSmall, insertRandomHashMedium, insertRandomHashLarge
-	];
-
-	context.subscriptions.push(...disposable);
+/** Derive the formatter options from the current settings. */
+function currentInsertOptions(): InsertOptions {
+  return {
+    quote: settings.withQuote ? (settings.quoteStyle ? SINGLE_QUOTE : DOUBLE_QUOTE) : '',
+    newline: settings.withNewLine ? '\n' : '',
+    uniquePerCursor: settings.uniquePerCursor,
+    bulkCount: settings.bulkCount,
+    outputFormat: settings.outputFormat as OutputFormat,
+  };
 }
 
-export function deactivate() {}
+/**
+ * Apply the `seed` setting before a command runs. A non-empty numeric seed makes
+ * output reproducible — the same seed yields the same values every time; anything
+ * else (blank or non-numeric) leaves faker random.
+ */
+function applySeed(): void {
+  const raw = settings.seed.trim();
+  if (raw === '') { return; }
+  const value = Number(raw);
+  if (!Number.isNaN(value)) { seed(value); }
+}
+
+/** Insert a generator's output at the active editor's cursor(s). */
+async function insertGenerated(generatorId: string): Promise<void> {
+  await load();
+
+  const editor = vscode.window.activeTextEditor;
+  const generator = getGenerator(generatorId);
+  if (!editor || !generator) { return; }
+
+  applySeed();
+  const options = currentInsertOptions();
+
+  if (settings.insertType) {
+    // Cursor mode: a fresh block at every selection — the multi-cursor fill.
+    const { selections } = editor;
+    const blocks = buildBlocks(selections.length, generator, options);
+    await editor.edit((builder) => {
+      selections.forEach((selection, index) => builder.replace(selection, blocks[index]));
+    });
+  } else {
+    // Top mode (legacy): a single block at line 1.
+    const [ block ] = buildBlocks(1, generator, { ...options, uniquePerCursor: false });
+    await editor.edit((builder) => builder.insert(new vscode.Position(0, 0), block));
+  }
+}
+
+type GeneratorPick = vscode.QuickPickItem & { generatorId?: string };
+
+/** "Insert Random: Pick…" — one entry point over the whole catalog, grouped by
+ * category. The chosen generator runs through the same insert path. */
+async function pickAndInsert(): Promise<void> {
+  await load();
+
+  const byGroup = new Map<string, Generator[]>();
+  for (const generator of generators) {
+    if (generator.hidden) { continue; }
+    const members = byGroup.get(generator.group) ?? [];
+    members.push(generator);
+    byGroup.set(generator.group, members);
+  }
+
+  const items: GeneratorPick[] = [];
+  for (const [ group, members ] of byGroup) {
+    items.push({ label: group, kind: vscode.QuickPickItemKind.Separator });
+    for (const generator of members) {
+      items.push({ label: generator.label, description: generator.id, generatorId: generator.id });
+    }
+  }
+
+  const choice = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Insert Random — pick a type to insert at every cursor…',
+    matchOnDescription: true,
+  });
+  if (choice?.generatorId) {
+    await insertGenerated(choice.generatorId);
+  }
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+  watchConfiguration(context);
+
+  for (const commandId of Object.keys(COMMAND_TO_GENERATOR)) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(commandId, () => insertGenerated(COMMAND_TO_GENERATOR[commandId])),
+    );
+  }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(PICK_COMMAND, () => pickAndInsert()),
+  );
+}
+
+export function deactivate(): void { /* no teardown needed */ }

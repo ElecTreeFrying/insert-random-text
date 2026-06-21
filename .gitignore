@@ -1,4 +1,19 @@
+# Build output
 out
+dist
+*.tsbuildinfo
+
+# Dependencies
 node_modules
+
+# VS Code extension testing & packaging
 .vscode-test/
 *.vsix
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
