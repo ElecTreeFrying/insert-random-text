@@ -41,6 +41,7 @@ Generate realistic fake data right where you're typing — no website, no signup
 - **Stays in your editor** — fully offline, no account, no copy-paste from a website.
 - **Reproducible when you need it** — set a seed and get the same data every run for stable tests and snapshots.
 - **Drops straight into code** — optional quote-wrapping and trailing newline so values land cleanly in arrays, JSON, and configs.
+- **Or skip the editor entirely** — set the insert type to **Clipboard** to copy a value straight to your clipboard (handy for filenames, terminals, anywhere outside the editor).
 - **Powered by [Faker][faker]** — realistic, coherent names, emails, and addresses, not random noise.
 
 [faker]: https://fakerjs.dev
@@ -74,7 +75,7 @@ _…and growing every release._
 | `withQuote` | Wrap each inserted value in quotes. |
 | `withNewLine` | Append a newline after each value. |
 | `quoteStyle` | Single or double quotes. |
-| `insertType` | Insert at each cursor, or at the top of the file. |
+| `insertType` | Insert at each cursor, at the top of the file, or copy to the clipboard. |
 
 ---
 

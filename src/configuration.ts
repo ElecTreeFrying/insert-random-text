@@ -4,17 +4,25 @@ export interface WorkspaceLike {
   getConfiguration(): { get<T>(section: string): T | undefined };
 }
 
-// The two user-facing enum settings store display strings; these are the values
-// that map to `true`.
+// `quoteStyle` stores a display string; this is the value that maps to `true`.
 const QUOTE_STYLE_SINGLE = 'Single quotes';
-const INSERT_TYPE_CURSOR = 'Cursor';
+
+/** Where a generated value is delivered. */
+export type InsertTarget = 'cursor' | 'top' | 'clipboard';
+
+// `insertType` stores a display string; map each to its internal target.
+const INSERT_TARGETS: Record<string, InsertTarget> = {
+  Cursor: 'cursor',
+  Top: 'top',
+  Clipboard: 'clipboard',
+};
 
 /** The fully-resolved settings the extension runs on. */
 export interface Settings {
   /** `true` = single quotes, `false` = double. */
   quoteStyle: boolean;
-  /** `true` = insert at the cursor, `false` = insert at the top of the file. */
-  insertType: boolean;
+  /** Where generated values are delivered: cursor, top of file, or clipboard. */
+  insertType: InsertTarget;
   withQuote: boolean;
   withNewLine: boolean;
   uniquePerCursor: boolean;
@@ -63,7 +71,7 @@ export class Configuration {
   }
 
   get quoteStyle(): boolean { return this.value<string>(ConfigKey.QUOTE_STYLE) === QUOTE_STYLE_SINGLE; }
-  get insertType(): boolean { return this.value<string>(ConfigKey.INSERT_TYPE) === INSERT_TYPE_CURSOR; }
+  get insertType(): InsertTarget { return INSERT_TARGETS[this.value<string>(ConfigKey.INSERT_TYPE) ?? 'Cursor'] ?? 'cursor'; }
   get withQuote(): boolean { return this.value<boolean>(ConfigKey.WITH_QUOTE) ?? true; }
   get withNewLine(): boolean { return this.value<boolean>(ConfigKey.WITH_NEW_LINE) ?? true; }
   get uniquePerCursor(): boolean { return this.value<boolean>(ConfigKey.UNIQUE_PER_CURSOR) ?? true; }

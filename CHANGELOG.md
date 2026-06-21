@@ -10,6 +10,7 @@ The first stable release — a ground-up relaunch as **Random & Fake Data Genera
 - Expanded the catalog to ~24 data types — names, email, username, phone, UUID, hash, numbers, boolean, dates, country/city/address, IP/MAC/URL, color, password, words/sentences/lorem, and more.
 - **Multi-cursor fill** — insert a different value at every cursor in one step.
 - New **Insert Random: Pick…** command — choose any type from a searchable, grouped menu.
+- **Clipboard insert type** — set `insertType` to `Clipboard` to copy a generated value to the clipboard instead of inserting it (no editor needed; resolves #4).
 - New settings: `insertRandomText.uniquePerCursor`, `insertRandomText.seed` (reproducible output), `insertRandomText.bulkCount`, `insertRandomText.outputFormat` (`plain` / `jsonArray` / `quotedList`), and an opt-in editor context-menu submenu (`insertRandomText.contextMenu.enabled`).
 
 ### Fixes

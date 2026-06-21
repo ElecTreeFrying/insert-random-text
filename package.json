@@ -244,16 +244,18 @@
           },
           "insertType": {
             "title": "Insert type",
-            "description": "Where inserted values go.",
+            "description": "Where generated values go.",
             "type": "string",
             "default": "Cursor",
             "enum": [
               "Cursor",
-              "Top"
+              "Top",
+              "Clipboard"
             ],
             "enumDescriptions": [
               "Fill a fresh value at each cursor.",
-              "Insert one block at line 1."
+              "Insert one block at line 1.",
+              "Copy to the clipboard instead of inserting (no editor needed)."
             ]
           },
           "withQuote": {

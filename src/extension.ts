@@ -89,28 +89,44 @@ function applySeed(): void {
   if (!Number.isNaN(value)) { seed(value); }
 }
 
-/** Insert a generator's output at the active editor's cursor(s). */
+/** Deliver a generator's output to the editor cursor(s), top of file, or clipboard. */
 async function insertGenerated(generatorId: string): Promise<void> {
   await load();
 
-  const editor = vscode.window.activeTextEditor;
   const generator = getGenerator(generatorId);
-  if (!editor || !generator) { return; }
+  if (!generator) { return; }
 
   applySeed();
   const options = currentInsertOptions();
 
-  if (settings.insertType) {
-    // Cursor mode: a fresh block at every selection — the multi-cursor fill.
+  if (settings.insertType === 'clipboard') {
+    // Clipboard: no editor needed. Copy a bare value (no quote-wrap or trailing
+    // newline, unless the output format is itself a list) and confirm unobtrusively.
+    const [ value ] = buildBlocks(1, generator, {
+      ...options,
+      quote: options.outputFormat === 'quotedList' ? options.quote : '',
+      newline: '',
+      uniquePerCursor: false,
+    });
+    await vscode.env.clipboard.writeText(value);
+    vscode.window.setStatusBarMessage(`$(clippy) Copied random ${generator.label.toLowerCase()} to clipboard`, 2500);
+    return;
+  }
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) { return; }
+
+  if (settings.insertType === 'top') {
+    // Top: a single block at line 1.
+    const [ block ] = buildBlocks(1, generator, { ...options, uniquePerCursor: false });
+    await editor.edit((builder) => builder.insert(new vscode.Position(0, 0), block));
+  } else {
+    // Cursor: a fresh block at every selection — the multi-cursor fill.
     const { selections } = editor;
     const blocks = buildBlocks(selections.length, generator, options);
     await editor.edit((builder) => {
       selections.forEach((selection, index) => builder.replace(selection, blocks[index]));
     });
-  } else {
-    // Top mode (legacy): a single block at line 1.
-    const [ block ] = buildBlocks(1, generator, { ...options, uniquePerCursor: false });
-    await editor.edit((builder) => builder.insert(new vscode.Position(0, 0), block));
   }
 }
 
