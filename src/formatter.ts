@@ -1,4 +1,4 @@
-import type { Generator } from './catalog';
+import type { DateFormat, Generator } from './catalog';
 import type { EscapeStyle } from './quotePolicy';
 
 /** How a block of generated values is rendered. */
@@ -18,6 +18,8 @@ export interface InsertOptions {
   readonly bulkCount: number;
   /** How a block of values is rendered. */
   readonly outputFormat: OutputFormat;
+  /** Timestamp rendering, handed through to each generate() (Time generators read it). */
+  readonly dateFormat?: DateFormat;
 }
 
 /**
@@ -45,7 +47,7 @@ function wrap(value: string, quote: string, escape: EscapeStyle): string {
 /** Render the string inserted at one cursor: `bulkCount` fresh values, formatted. */
 function formatBlock(generator: Generator, options: InsertOptions): string {
   const count = Math.max(1, Math.floor(options.bulkCount || 1));
-  const values = Array.from({ length: count }, () => generator.generate());
+  const values = Array.from({ length: count }, () => generator.generate({ dateFormat: options.dateFormat }));
   const escape = options.escape ?? 'backslash';
 
   switch (options.outputFormat) {

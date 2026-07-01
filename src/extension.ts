@@ -216,6 +216,7 @@ function currentInsertOptions(languageId?: string): InsertOptions {
     uniquePerCursor: settings.uniquePerCursor,
     bulkCount: settings.bulkCount,
     outputFormat: settings.outputFormat as OutputFormat,
+    dateFormat: settings.dateFormat,
   };
 }
 
@@ -388,7 +389,7 @@ async function pickAndInsertRecord(): Promise<void> {
 
   applySeed();
   const shape = settings.recordFormat as RecordShape;
-  const options = { bulkCount: settings.bulkCount, sqlTable: settings.recordSqlTable };
+  const options = { bulkCount: settings.bulkCount, sqlTable: settings.recordSqlTable, dateFormat: settings.dateFormat };
 
   if (settings.insertType === 'clipboard') {
     // Clipboard: no editor needed. The record is copied as-is — its shape

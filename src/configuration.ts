@@ -1,3 +1,5 @@
+import type { DateFormat } from './catalog';
+
 /** The narrow slice of `vscode.workspace` this reader needs (kept minimal so it
  * can be substituted in isolation). */
 export interface WorkspaceLike {
@@ -14,6 +16,9 @@ const INSERT_TARGETS: Record<string, InsertTarget> = {
   Clipboard: 'clipboard',
 };
 
+// The declared `dateFormat` values; anything else falls back to the full-ISO default.
+const DATE_FORMATS: readonly DateFormat[] = [ 'iso', 'isoDate', 'isoTime', 'unixSeconds', 'unixMillis' ];
+
 /** The fully-resolved settings the extension runs on. */
 export interface Settings {
   /** Where generated values are delivered: cursor, top of file, or clipboard. */
@@ -24,6 +29,8 @@ export interface Settings {
   seed: string;
   bulkCount: number;
   outputFormat: string;
+  /** How the timestamp-emitting Time generators render their Date. */
+  dateFormat: DateFormat;
   /** Structured shape for multi-field records: 'json' | 'sql' | 'csv'. */
   recordFormat: string;
   /** Table name used by the `sql` record shape. */
@@ -39,6 +46,7 @@ export const ConfigKey = {
   SEED: 'insertRandomText.seed',
   BULK_COUNT: 'insertRandomText.bulkCount',
   OUTPUT_FORMAT: 'insertRandomText.outputFormat',
+  DATE_FORMAT: 'insertRandomText.dateFormat',
   RECORD_FORMAT: 'insertRandomText.recordFormat',
   RECORD_SQL_TABLE: 'insertRandomText.recordSqlTable',
 } as const;
@@ -62,6 +70,7 @@ export class Configuration {
       seed: this.seed,
       bulkCount: this.bulkCount,
       outputFormat: this.outputFormat,
+      dateFormat: this.dateFormat,
       recordFormat: this.recordFormat,
       recordSqlTable: this.recordSqlTable,
     };
@@ -78,6 +87,7 @@ export class Configuration {
   get seed(): string { return this.value<string>(ConfigKey.SEED) ?? ''; }
   get bulkCount(): number { return this.value<number>(ConfigKey.BULK_COUNT) ?? 1; }
   get outputFormat(): string { return this.value<string>(ConfigKey.OUTPUT_FORMAT) ?? 'plain'; }
+  get dateFormat(): DateFormat { const value = this.value<DateFormat>(ConfigKey.DATE_FORMAT) ?? 'iso'; return DATE_FORMATS.includes(value) ? value : 'iso'; }
   get recordFormat(): string { return this.value<string>(ConfigKey.RECORD_FORMAT) ?? 'json'; }
   get recordSqlTable(): string { return this.value<string>(ConfigKey.RECORD_SQL_TABLE) ?? 'table'; }
 }

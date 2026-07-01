@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 
 import { buildRecords } from '../../record';
-import type { Generator } from '../../catalog';
+import type { Generator, GenerateOptions } from '../../catalog';
 
 // buildRecords composes selected generators into one record string per shape:
 // json (object / array of objects, JSON.stringify escaping, keys = generator id),
@@ -94,6 +94,30 @@ describe('buildRecords — bulkCount clamping', () => {
       buildRecords([ field('n', 'A') ], 'json', { ...OPTS, bulkCount: 2.9 }),
       '[ { "n": "A" }, { "n": "A" } ]',
     );
+  });
+});
+
+describe('buildRecords — dateFormat threading', () => {
+  // Records draw from the same generators as single-type inserts, so a Time field must honor the
+  // dateFormat setting here too. A probe field records what each draw received.
+  function probe(): { generator: Generator; seen: unknown[] } {
+    const seen: unknown[] = [];
+    return {
+      seen,
+      generator: { id: 'p', label: 'P', group: 'G', generate: (opts?: GenerateOptions) => { seen.push(opts?.dateFormat); return 'x'; } },
+    };
+  }
+
+  it('passes opts.dateFormat into every field draw (all records)', () => {
+    const { generator, seen } = probe();
+    buildRecords([ generator ], 'json', { ...OPTS, bulkCount: 2, dateFormat: 'isoDate' });
+    assert.deepStrictEqual(seen, [ 'isoDate', 'isoDate' ]);
+  });
+
+  it('passes no format when the option is unset', () => {
+    const { generator, seen } = probe();
+    buildRecords([ generator ], 'csv', OPTS);
+    assert.deepStrictEqual(seen, [ undefined ]);
   });
 });
 

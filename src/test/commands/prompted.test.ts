@@ -10,6 +10,7 @@ const EXTENSION_ID = 'ElecTreeFrying.insert-random-text';
 const NUMBER_RANGE = 'insertRandomText.numberRange';
 const FLOAT_RANGE = 'insertRandomText.floatRange';
 const STRING_LENGTH = 'insertRandomText.stringLength';
+const DATE_BETWEEN = 'insertRandomText.dateBetween';
 
 async function setConfig(key: string, value: unknown): Promise<void> {
   const changed = new Promise<void>((resolve) => {
@@ -94,6 +95,31 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     assert.match(editor.document.getText(), /^[A-Za-z0-9]{12}$/);
   });
 
+  it('Date (Between…) inserts the pinned instant when from = to (full ISO by default)', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(DATE_BETWEEN, [ '2020-06-15', '2020-06-15' ]);
+    assert.strictEqual(editor.document.getText(), '2020-06-15T00:00:00.000Z');
+  });
+
+  it('Date (Between…) stays within the entered range', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(DATE_BETWEEN, [ '2020-01-01', '2020-12-31' ]);
+    const text = editor.document.getText();
+    const drawn = new Date(text).getTime();
+    assert.ok(
+      drawn >= Date.parse('2020-01-01T00:00:00Z') && drawn <= Date.parse('2020-12-31T00:00:00Z'),
+      `${text} outside [from, to]`,
+    );
+  });
+
+  it('Date (Between…) renders per the dateFormat setting — the pipeline threads it in', async () => {
+    await setConfig(ConfigKey.DATE_FORMAT, 'unixSeconds');
+    const editor = await openDoc('');
+    await runPromptedCommand(DATE_BETWEEN, [ '2020-06-15', '2020-06-15' ]);
+    await setConfig(ConfigKey.DATE_FORMAT, undefined); // restore the suite baseline.
+    assert.strictEqual(editor.document.getText(), String(Date.parse('2020-06-15T00:00:00Z') / 1000));
+  });
+
   it('Esc at the first box cancels cleanly — nothing inserted, no error', async () => {
     const editor = await openDoc('');
     await assert.doesNotReject(async () => { await runPromptedCommand(NUMBER_RANGE, [ undefined ]); });
@@ -103,6 +129,12 @@ describe('prompted commands — input boxes → normal pipeline', function () {
   it('Esc at the second box cancels cleanly too (min already accepted)', async () => {
     const editor = await openDoc('');
     await assert.doesNotReject(async () => { await runPromptedCommand(NUMBER_RANGE, [ '1', undefined ]); });
+    assert.strictEqual(editor.document.getText(), '', 'a mid-flow cancel must insert nothing');
+  });
+
+  it('Esc at the second date box cancels cleanly (from already accepted)', async () => {
+    const editor = await openDoc('');
+    await assert.doesNotReject(async () => { await runPromptedCommand(DATE_BETWEEN, [ '2020-01-01', undefined ]); });
     assert.strictEqual(editor.document.getText(), '', 'a mid-flow cancel must insert nothing');
   });
 

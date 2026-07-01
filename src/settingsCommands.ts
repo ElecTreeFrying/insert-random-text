@@ -82,6 +82,14 @@ const RECORD_FORMAT_OPTIONS: readonly EnumOption[] = [
   { value: 'csv', label: 'CSV line', detail: 'value,value,…' },
 ];
 
+const DATE_FORMAT_OPTIONS: readonly EnumOption[] = [
+  { value: 'iso', label: 'ISO 8601 timestamp', detail: 'Full timestamp, e.g. 2026-07-02T12:34:56.789Z.' },
+  { value: 'isoDate', label: 'ISO date', detail: 'Date only (YYYY-MM-DD), e.g. 2026-07-02.' },
+  { value: 'isoTime', label: 'ISO time', detail: 'Time only (HH:mm:ss), e.g. 12:34:56.' },
+  { value: 'unixSeconds', label: 'Unix seconds', detail: 'Unix time in seconds, e.g. 1783082096.' },
+  { value: 'unixMillis', label: 'Unix milliseconds', detail: 'Unix time in milliseconds, e.g. 1783082096123.' },
+];
+
 async function setBulkCount(): Promise<void> {
   const current = read<number>(ConfigKey.BULK_COUNT) ?? 1;
   const input = await vscode.window.showInputBox({
@@ -139,6 +147,7 @@ async function resetSettings(): Promise<void> {
 export const SETTING_COMMANDS: Readonly<Record<string, () => Promise<void>>> = {
   'insertRandomText.setInsertType': () => chooseEnum('Insert type', ConfigKey.INSERT_TYPE, INSERT_TYPE_OPTIONS, 'Cursor'),
   'insertRandomText.setOutputFormat': () => chooseEnum('Output format', ConfigKey.OUTPUT_FORMAT, OUTPUT_FORMAT_OPTIONS, 'plain'),
+  'insertRandomText.setDateFormat': () => chooseEnum('Date format', ConfigKey.DATE_FORMAT, DATE_FORMAT_OPTIONS, 'iso'),
   'insertRandomText.setRecordFormat': () => chooseEnum('Record format', ConfigKey.RECORD_FORMAT, RECORD_FORMAT_OPTIONS, 'json'),
   'insertRandomText.setRecordSqlTable': setRecordSqlTable,
   'insertRandomText.setBulkCount': setBulkCount,

@@ -1,9 +1,10 @@
-import type { Generator } from './catalog';
+import { formatTimestamp, GenerateOptions, Generator } from './catalog';
 import { faker } from './engine';
 
 /**
  * Parameterized ("prompted") insert commands — types that ask for parameters in
- * input boxes before inserting: Number (Range…), Float (Range…), String (Length…).
+ * input boxes before inserting: Number (Range…), Float (Range…), String
+ * (Length…), Date (Between…).
  *
  * These are deliberately NOT catalog entries: the registry stays a list of
  * zero-argument generators, while each prompted command declares its input steps
@@ -42,8 +43,9 @@ export interface PromptedCommand {
   readonly group: string;
   /** The input boxes, in order. Cancelling any one aborts the whole command. */
   readonly steps: readonly PromptStep[];
-  /** Draw one fresh value from validated params. Called once per generate(). */
-  render(params: Readonly<Record<string, string>>): string;
+  /** Draw one fresh value from validated params. Called once per generate();
+   * `opts` carries the per-call settings the pipeline threads in (dateFormat). */
+  render(params: Readonly<Record<string, string>>, opts?: GenerateOptions): string;
 }
 
 /** Parse a safe integer out of raw input-box text; `undefined` when it isn't one. */
@@ -62,8 +64,25 @@ function parseNumber(input: string): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
+const DATE_INPUT = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/;
+
+/** Parse `YYYY-MM-DD` or full ISO 8601 out of raw input-box text; `undefined` when
+ * it isn't one. The shape gate keeps `new Date`'s looser parses (e.g. '5') out.
+ * The calendar check is explicit because V8 rolls an impossible day over
+ * (2026-02-31 → March 3) instead of rejecting it; a NaN check alone misses that. */
+function parseDate(input: string): Date | undefined {
+  const trimmed = input.trim();
+  if (!DATE_INPUT.test(trimmed)) { return undefined; }
+  const [ year, month, day ] = trimmed.slice(0, 10).split('-').map(Number);
+  // Date.UTC(year, month, 0) is the last day of `month` (1-based here, 0-based in Date.UTC).
+  if (month < 1 || month > 12 || day < 1 || day > new Date(Date.UTC(year, month, 0)).getUTCDate()) { return undefined; }
+  const value = new Date(trimmed);
+  return Number.isNaN(value.getTime()) ? undefined : value;
+}
+
 const INTEGER_ERROR = 'Enter a whole number (e.g. 42).';
 const NUMBER_ERROR = 'Enter a number (e.g. 0.5).';
+const DATE_ERROR = 'Enter a date as YYYY-MM-DD or full ISO 8601 (e.g. 2026-07-02 or 2026-07-02T12:00:00Z).';
 
 function maxAtLeastMin(min: string): string {
   return `Max must be at least the min you entered (${min}).`;
@@ -156,6 +175,37 @@ export const promptedCommands: readonly PromptedCommand[] = [
     ],
     render: ({ length }) => faker().string.alphanumeric(Number(length)),
   },
+  {
+    id: 'dateBetween',
+    label: 'Date (Between…)',
+    group: 'Time',
+    steps: [
+      {
+        key: 'from',
+        prompt: 'Date range — the earliest date (YYYY-MM-DD or full ISO 8601).',
+        placeholder: 'e.g. 2020-01-01',
+        fallback: '2020-01-01',
+        validate: (input) => (parseDate(input) === undefined ? DATE_ERROR : undefined),
+      },
+      {
+        key: 'to',
+        prompt: 'Date range — the latest date (YYYY-MM-DD or full ISO 8601).',
+        placeholder: 'e.g. 2030-12-31',
+        fallback: '2030-12-31',
+        validate: (input, prior) => {
+          const value = parseDate(input);
+          if (value === undefined) { return DATE_ERROR; }
+          const from = parseDate(prior.from ?? '');
+          if (from === undefined) { return undefined; }
+          return value.getTime() < from.getTime()
+            ? `To must be on or after the from date you entered (${prior.from}).`
+            : undefined;
+        },
+      },
+    ],
+    // Rendered per the dateFormat setting, like the zero-argument Time generators.
+    render: ({ from, to }, opts) => formatTimestamp(faker().date.between({ from, to }), opts?.dateFormat),
+  },
 ];
 
 /** Look a prompted command up by id; undefined when the id is unknown. */
@@ -174,6 +224,6 @@ export function toGenerator(command: PromptedCommand, params: Readonly<Record<st
     id: command.id,
     label: command.label,
     group: command.group,
-    generate: () => command.render(params),
+    generate: (opts) => command.render(params, opts),
   };
 }

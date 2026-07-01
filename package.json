@@ -171,6 +171,10 @@
         "title": "Insert Random: String (Length…)"
       },
       {
+        "command": "insertRandomText.dateBetween",
+        "title": "Insert Random: Date (Between…)"
+      },
+      {
         "command": "insertRandomText.uuid",
         "title": "Insert Random: UUID"
       },
@@ -695,6 +699,10 @@
         "title": "Insert Random: Set Output Format"
       },
       {
+        "command": "insertRandomText.setDateFormat",
+        "title": "Insert Random: Set Date Format"
+      },
+      {
         "command": "insertRandomText.setRecordFormat",
         "title": "Insert Random: Set Record Format"
       },
@@ -821,6 +829,26 @@
               "One value per line.",
               "A JSON array, e.g. [ \"a\", \"b\" ].",
               "A quoted, comma-separated list, e.g. \"a\", \"b\"."
+            ]
+          },
+          "insertRandomText.dateFormat": {
+            "title": "Date format",
+            "description": "How the timestamp Time generators (Date, Past/Future/Recent/Soon Date, Birthdate, Date (Between…)) render their value. Weekday and Month are unaffected.",
+            "type": "string",
+            "default": "iso",
+            "enum": [
+              "iso",
+              "isoDate",
+              "isoTime",
+              "unixSeconds",
+              "unixMillis"
+            ],
+            "enumDescriptions": [
+              "Full ISO 8601 timestamp, e.g. 2026-07-02T12:34:56.789Z.",
+              "Date only (YYYY-MM-DD), e.g. 2026-07-02.",
+              "Time only (HH:mm:ss), e.g. 12:34:56.",
+              "Unix time in seconds, e.g. 1783082096.",
+              "Unix time in milliseconds, e.g. 1783082096123."
             ]
           },
           "insertRandomText.recordFormat": {

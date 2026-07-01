@@ -44,6 +44,22 @@ describe('configuration — insertType (enum → target)', () => {
   });
 });
 
+describe('configuration — dateFormat (validated enum)', () => {
+  it("unset → 'iso' (default)", () => {
+    assert.strictEqual(read({}).dateFormat, 'iso');
+  });
+
+  it('every declared value passes through', () => {
+    for (const value of [ 'iso', 'isoDate', 'isoTime', 'unixSeconds', 'unixMillis' ]) {
+      assert.strictEqual(read({ [ConfigKey.DATE_FORMAT]: value }).dateFormat, value);
+    }
+  });
+
+  it("an unknown value → 'iso' (safe fallback)", () => {
+    assert.strictEqual(read({ [ConfigKey.DATE_FORMAT]: 'YYYY/MM/DD' }).dateFormat, 'iso');
+  });
+});
+
 describe('configuration — defaults when unset', () => {
   it('every setting falls back to its default when unset', () => {
     const settings = read({});
@@ -53,6 +69,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.seed, '');
     assert.strictEqual(settings.bulkCount, 1);
     assert.strictEqual(settings.outputFormat, 'plain');
+    assert.strictEqual(settings.dateFormat, 'iso');
     assert.strictEqual(settings.recordFormat, 'json');
     assert.strictEqual(settings.recordSqlTable, 'table');
   });
@@ -65,6 +82,7 @@ describe('configuration — defaults when unset', () => {
       [ConfigKey.SEED]: '42',
       [ConfigKey.BULK_COUNT]: 5,
       [ConfigKey.OUTPUT_FORMAT]: 'jsonArray',
+      [ConfigKey.DATE_FORMAT]: 'unixSeconds',
       [ConfigKey.RECORD_FORMAT]: 'csv',
       [ConfigKey.RECORD_SQL_TABLE]: 'users',
     });
@@ -74,6 +92,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.seed, '42');
     assert.strictEqual(settings.bulkCount, 5);
     assert.strictEqual(settings.outputFormat, 'jsonArray');
+    assert.strictEqual(settings.dateFormat, 'unixSeconds');
     assert.strictEqual(settings.recordFormat, 'csv');
     assert.strictEqual(settings.recordSqlTable, 'users');
   });
@@ -84,7 +103,7 @@ describe('configuration — read() snapshot', () => {
     const keys = Object.keys(read({})).sort();
     assert.deepStrictEqual(
       keys,
-      [ 'bulkCount', 'insertType', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
+      [ 'bulkCount', 'dateFormat', 'insertType', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
     );
   });
 });

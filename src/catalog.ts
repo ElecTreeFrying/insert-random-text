@@ -1,5 +1,15 @@
 import { faker } from './engine';
 
+/** How the timestamp-emitting Time generators render their drawn Date. */
+export type DateFormat = 'iso' | 'isoDate' | 'isoTime' | 'unixSeconds' | 'unixMillis';
+
+/** Per-call options threaded from the cached settings into {@link Generator.generate};
+ * only the timestamp-emitting Time generators read it — everything else ignores it. */
+export interface GenerateOptions {
+  /** Timestamp rendering; defaults to 'iso' (the full ISO 8601 string). */
+  readonly dateFormat?: DateFormat;
+}
+
 /** A single named data type the extension can generate and insert. */
 export interface Generator {
   /** Stable identifier — used in command ids and registry lookup. */
@@ -11,7 +21,23 @@ export interface Generator {
   /** When true, hidden from the Quick Pick (a back-compat-only generator). */
   readonly hidden?: boolean;
   /** Produce one fresh value. Called once per cursor — must never be memoized. */
-  generate(): string;
+  generate(options?: GenerateOptions): string;
+}
+
+/**
+ * Render a Date per the `dateFormat` setting. The ISO slices come from the UTC
+ * `toISOString()` — never local-time getters — so a seeded run renders the same
+ * text on any machine. `unixSeconds` floors (POSIX semantics: 1.5 s before the
+ * epoch is second -2), which matters for pre-1970 draws like `birthdate`.
+ */
+export function formatTimestamp(date: Date, format?: DateFormat): string {
+  switch (format) {
+    case 'isoDate':     return date.toISOString().slice(0, 10);
+    case 'isoTime':     return date.toISOString().slice(11, 19);
+    case 'unixSeconds': return Math.floor(date.getTime() / 1000).toString();
+    case 'unixMillis':  return date.getTime().toString();
+    default:            return date.toISOString();
+  }
 }
 
 /**
@@ -66,13 +92,13 @@ export const generators: readonly Generator[] = [
   { id: 'bookTitle', label: 'Book Title', group: 'Text', generate: () => faker().book.title() },
   { id: 'bookAuthor', label: 'Book Author', group: 'Text', generate: () => faker().book.author() },
 
-  // Time
-  { id: 'date', label: 'Date', group: 'Time', generate: () => faker().date.anytime().toISOString() },
-  { id: 'pastDate', label: 'Past Date', group: 'Time', generate: () => faker().date.past().toISOString() },
-  { id: 'futureDate', label: 'Future Date', group: 'Time', generate: () => faker().date.future().toISOString() },
-  { id: 'recentDate', label: 'Recent Date', group: 'Time', generate: () => faker().date.recent().toISOString() },
-  { id: 'soonDate', label: 'Soon Date', group: 'Time', generate: () => faker().date.soon().toISOString() },
-  { id: 'birthdate', label: 'Birthdate', group: 'Time', generate: () => faker().date.birthdate().toISOString() },
+  // Time — the timestamp emitters render per the dateFormat setting; weekday/month are names, not timestamps.
+  { id: 'date', label: 'Date', group: 'Time', generate: (opts) => formatTimestamp(faker().date.anytime(), opts?.dateFormat) },
+  { id: 'pastDate', label: 'Past Date', group: 'Time', generate: (opts) => formatTimestamp(faker().date.past(), opts?.dateFormat) },
+  { id: 'futureDate', label: 'Future Date', group: 'Time', generate: (opts) => formatTimestamp(faker().date.future(), opts?.dateFormat) },
+  { id: 'recentDate', label: 'Recent Date', group: 'Time', generate: (opts) => formatTimestamp(faker().date.recent(), opts?.dateFormat) },
+  { id: 'soonDate', label: 'Soon Date', group: 'Time', generate: (opts) => formatTimestamp(faker().date.soon(), opts?.dateFormat) },
+  { id: 'birthdate', label: 'Birthdate', group: 'Time', generate: (opts) => formatTimestamp(faker().date.birthdate(), opts?.dateFormat) },
   { id: 'weekday', label: 'Weekday', group: 'Time', generate: () => faker().date.weekday() },
   { id: 'month', label: 'Month', group: 'Time', generate: () => faker().date.month() },
 

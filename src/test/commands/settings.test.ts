@@ -203,6 +203,18 @@ describe('settingsCommands — remaining command wirings', () => {
     await clear(ConfigKey.RECORD_FORMAT);
   });
 
+  it('setDateFormat writes the chosen date format', async () => {
+    const original = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any) => (await items).find((i: any) => i.value === 'unixMillis');
+    try {
+      await SETTING_COMMANDS['insertRandomText.setDateFormat']();
+      assert.strictEqual(get(ConfigKey.DATE_FORMAT), 'unixMillis');
+    } finally {
+      (vscode.window as any).showQuickPick = original;
+    }
+    await clear(ConfigKey.DATE_FORMAT);
+  });
+
   it('setBulkCount writes the entered count as a number', async () => {
     const original = vscode.window.showInputBox;
     (vscode.window as any).showInputBox = async () => '7';

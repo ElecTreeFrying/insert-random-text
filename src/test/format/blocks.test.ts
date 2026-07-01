@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 
 import { buildBlocks, InsertOptions } from '../../formatter';
-import type { Generator } from '../../catalog';
+import type { Generator, GenerateOptions } from '../../catalog';
 
 // buildBlocks is the formatter's pure render core: it turns (cursorCount, generator, options) into one
 // string block per cursor, each holding `bulkCount` values shaped by `outputFormat`, with
@@ -109,6 +109,31 @@ describe('buildBlocks — format + newline / list escaping', () => {
   it('quotedList sqlDouble-escapes the quote char inside each value', () => {
     const [ block ] = buildBlocks(1, fixed("O'Brien"), { ...BASE, outputFormat: 'quotedList', quote: "'", escape: 'sqlDouble', bulkCount: 2 });
     assert.strictEqual(block, "'O''Brien', 'O''Brien'");
+  });
+});
+
+describe('buildBlocks — dateFormat threading', () => {
+  // The formatter is the only caller of generate() on the insert path — it must hand the dateFormat
+  // option through so the Time generators can render per the setting. A probe generator records what
+  // each draw received.
+  function probe(): { generator: Generator; seen: unknown[] } {
+    const seen: unknown[] = [];
+    return {
+      seen,
+      generator: { id: 'p', label: 'P', group: 'G', generate: (opts?: GenerateOptions) => { seen.push(opts?.dateFormat); return 'x'; } },
+    };
+  }
+
+  it('passes options.dateFormat into every generate() call (all cursors, all bulk items)', () => {
+    const { generator, seen } = probe();
+    buildBlocks(2, generator, { ...BASE, bulkCount: 2, dateFormat: 'unixSeconds' });
+    assert.deepStrictEqual(seen, [ 'unixSeconds', 'unixSeconds', 'unixSeconds', 'unixSeconds' ]);
+  });
+
+  it('passes no format when the option is unset (generators fall back to full ISO)', () => {
+    const { generator, seen } = probe();
+    buildBlocks(1, generator, BASE);
+    assert.deepStrictEqual(seen, [ undefined ]);
   });
 });
 

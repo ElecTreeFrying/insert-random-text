@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) (single-locale `en`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **159 contributed commands**, **no default keybindings**, **ten configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **161 contributed commands**, **no default keybindings**, **eleven configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,15 +10,15 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **159 commands**, in five families:
+The extension contributes **161 commands**, in five families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
 | Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
-| Prompted commands | 3 | `insertRandomText.numberRange` / `floatRange` / `stringLength` | Ask for parameters in input boxes, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
-| Settings commands | 11 | `insertRandomText.set*` / `toggle*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
+| Prompted commands | 4 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` | Ask for parameters in input boxes, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
+| Settings commands | 12 | `insertRandomText.set*` / `toggle*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
 Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
 
@@ -39,18 +39,19 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 
 ### Parameterized commands (prompted)
 
-Three commands ask for parameters in input boxes, then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
+Four commands ask for parameters in input boxes, then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
 
 | Command | Id | Input boxes | Draw |
 |---|---|---|---|
 | Insert Random: Number (Range…) | `insertRandomText.numberRange` | min, then max — whole numbers, `min ≤ max` enforced at the max box | A fresh integer in `[min, max]` per value |
 | Insert Random: Float (Range…) | `insertRandomText.floatRange` | min, then max — any finite numbers, `min ≤ max`; the range must contain a multiple of 0.01 | A fresh float in `[min, max]`, rendered with 2 decimals (same style as the Float type) |
 | Insert Random: String (Length…) | `insertRandomText.stringLength` | length — a whole number 1–1000 | A fresh alphanumeric string of exactly that length (same charset as the String type) |
+| Insert Random: Date (Between…) | `insertRandomText.dateBetween` | from, then to — `YYYY-MM-DD` or full ISO 8601, `from ≤ to` enforced at the to box; impossible calendar dates (e.g. `2026-02-31`) are rejected | A fresh instant in `[from, to]` per value, rendered per the [`dateFormat`](#configuration-reference) setting like the zero-argument Time types |
 
 Behaviors:
 
-- **Validation is live** (`validateInput`): invalid text shows an inline error and blocks accept — empty, non-numeric, fractional-where-integer, out-of-range, and `max < min` inputs never reach the generator.
-- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15).
+- **Validation is live** (`validateInput`): invalid text shows an inline error and blocks accept — empty, non-numeric, fractional-where-integer, out-of-range, and `max < min` inputs never reach the generator; dates additionally reject non-`YYYY-MM-DD`/ISO shapes, impossible calendar dates, and `to < from`.
+- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15) or a wide decade (Date: 2020-01-01 – 2030-12-31).
 - **Esc at any box cancels cleanly** — nothing is inserted, no error, and nothing new is remembered (values accepted *before* the cancel are remembered).
 - The seed is applied **after** the prompts, immediately before generation, so a pinned seed reproduces the same output regardless of typing time.
 - These are **not** registry entries: they don't appear in the Pick… menu or the Record… field list. Each is a one-off generator built from the entered parameters and fed into the shared insert path (`insertWith`).
@@ -207,6 +208,7 @@ Because the seed is re-applied at the **start of each command**, faker is reset 
 | `insertRandomText.uniquePerCursor` | On — fresh records at every cursor; off — one composed block repeated at each. |
 | `insertRandomText.seed` | Applied before the insert, exactly as for single-value commands. |
 | `insertType` | Honored — cursors, top of file, or clipboard, exactly as for [single values](#insert-targets). Top and Clipboard build a **single** record. |
+| `insertRandomText.dateFormat` | Honored — a timestamp Time field renders per the setting, same as a single-value insert. |
 | `withQuote` · `withNewLine` · `insertRandomText.outputFormat` | **Ignored.** Quoting/escaping is shape-driven — language-aware wrapping would corrupt the record. |
 
 ---
@@ -267,14 +269,16 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 
 ### Time (8)
 
+The six timestamp types draw a `Date` and render it per the [`insertRandomText.dateFormat`](#configuration-reference) setting (default `iso` — the full ISO 8601 string, matching pre-setting behavior). Weekday and Month emit names, not timestamps, and are unaffected.
+
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Date | `date` | `extension.insertRandomDate` | `date.anytime().toISOString()` |
-| Past Date | `pastDate` | `insertRandomText.pastDate` | `date.past().toISOString()` |
-| Future Date | `futureDate` | `insertRandomText.futureDate` | `date.future().toISOString()` |
-| Recent Date | `recentDate` | `insertRandomText.recentDate` | `date.recent().toISOString()` |
-| Soon Date | `soonDate` | `insertRandomText.soonDate` | `date.soon().toISOString()` |
-| Birthdate | `birthdate` | `insertRandomText.birthdate` | `date.birthdate().toISOString()` |
+| Date | `date` | `extension.insertRandomDate` | `date.anytime()`, rendered per `dateFormat` |
+| Past Date | `pastDate` | `insertRandomText.pastDate` | `date.past()`, rendered per `dateFormat` |
+| Future Date | `futureDate` | `insertRandomText.futureDate` | `date.future()`, rendered per `dateFormat` |
+| Recent Date | `recentDate` | `insertRandomText.recentDate` | `date.recent()`, rendered per `dateFormat` |
+| Soon Date | `soonDate` | `insertRandomText.soonDate` | `date.soon()`, rendered per `dateFormat` |
+| Birthdate | `birthdate` | `insertRandomText.birthdate` | `date.birthdate()`, rendered per `dateFormat` |
 | Weekday | `weekday` | `insertRandomText.weekday` | `date.weekday()` |
 | Month | `month` | `insertRandomText.month` | `date.month()` |
 
@@ -469,7 +473,7 @@ These carry `hidden: true` — they never appear in the Quick Pick and exist onl
 
 ## Configuration Reference
 
-Ten settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
+Eleven settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
 
 | Setting | Type | Default | Values | Notes |
 |---|---|---|---|---|
@@ -479,6 +483,7 @@ Ten settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, 
 | `insertRandomText.uniquePerCursor` | boolean | `true` | `true` / `false` | A different value at each cursor, or the same value repeated. |
 | `insertRandomText.bulkCount` | number | `1` | `1`–`1000` | How many values to insert at each cursor. Clamped to ≥ 1 at render time. |
 | `insertRandomText.outputFormat` | string (enum) | `plain` | `plain` · `jsonArray` · `quotedList` | How bulk values render. See [Output Formats](#output-formats). |
+| `insertRandomText.dateFormat` | string (enum) | `iso` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | How the timestamp [Time types](#time-8) render — full ISO 8601, `YYYY-MM-DD`, `HH:mm:ss`, or Unix seconds/milliseconds. ISO slices come from the UTC string; an unknown value falls back to `iso`. |
 | `insertRandomText.seed` | string | `""` | any number, or blank | Reproducible output; blank or non-numeric = random. See [Seeding](#seeding--reproducibility). |
 | `insertRandomText.recordFormat` | string (enum) | `json` | `json` · `sql` · `csv` | Structured shape for [Record](#multi-field-records) inserts: JSON object, SQL row, or CSV line. |
 | `insertRandomText.recordSqlTable` | string | `table` | any non-empty name | Table name used by the `sql` record shape. |
@@ -488,12 +493,13 @@ Ten settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, 
 
 ## Settings Commands
 
-`settingsCommands.ts` contributes 11 palette commands that **write** settings — so every setting is changeable without opening the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
+`settingsCommands.ts` contributes 12 palette commands that **write** settings — so every setting is changeable without opening the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
 
 | Command | Title | Mechanism |
 |---|---|---|
 | `insertRandomText.setInsertType` | Set Insert Type | Quick Pick over `Cursor` / `Top` / `Clipboard`. |
 | `insertRandomText.setOutputFormat` | Set Output Format | Quick Pick over `Plain` / `JSON array` / `Quoted list`. |
+| `insertRandomText.setDateFormat` | Set Date Format | Quick Pick over `ISO 8601 timestamp` / `ISO date` / `ISO time` / `Unix seconds` / `Unix milliseconds`. |
 | `insertRandomText.setRecordFormat` | Set Record Format | Quick Pick over `JSON object` / `SQL row` / `CSV line`. |
 | `insertRandomText.setRecordSqlTable` | Set Record SQL Table | Input box; rejects an empty table name. |
 | `insertRandomText.setBulkCount` | Set Bulk Count | Input box; validates a whole number `1`–`1000`. |
@@ -510,11 +516,11 @@ Writes go to the **open workspace** when one is present (so a change is visible 
 
 ### Enum picker behavior
 
-The enum pickers (`setInsertType` / `setOutputFormat` / `setRecordFormat`) mark the current value with a `$(check) Current` description and float it to the top of the list; `matchOnDetail` is on, so typing filters against each option's one-line detail. Selecting writes the value and shows a `$(check) <title> → <label>` status-bar confirmation. Escape cancels with no write.
+The enum pickers (`setInsertType` / `setOutputFormat` / `setDateFormat` / `setRecordFormat`) mark the current value with a `$(check) Current` description and float it to the top of the list; `matchOnDetail` is on, so typing filters against each option's one-line detail. Selecting writes the value and shows a `$(check) <title> → <label>` status-bar confirmation. Escape cancels with no write.
 
 ### Reset
 
-`resetSettings` shows a **modal** warning — *"Reset all Insert Random settings to their defaults?"* — with a single **Reset** button. Only on confirm does it clear every key (all nine `ConfigKey` entries **plus** `insertRandomText.contextMenu.enabled`) by writing `undefined`, which restores each to its package.json default, then confirms via the status bar. Dismissing the dialog changes nothing.
+`resetSettings` shows a **modal** warning — *"Reset all Insert Random settings to their defaults?"* — with a single **Reset** button. Only on confirm does it clear every key (all ten `ConfigKey` entries **plus** `insertRandomText.contextMenu.enabled`) by writing `undefined`, which restores each to its package.json default, then confirms via the status bar. Dismissing the dialog changes nothing.
 
 ---
 

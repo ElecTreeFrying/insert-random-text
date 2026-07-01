@@ -7,7 +7,7 @@
  * `json` uses `JSON.stringify`, `sql` single-quotes with `''` doubling, `csv`
  * wraps only the values that need it. `bulkCount` stacks records per shape.
  */
-import type { Generator } from './catalog';
+import type { DateFormat, Generator } from './catalog';
 
 /** The structured shape a record renders as. */
 export type RecordShape = 'json' | 'sql' | 'csv';
@@ -18,6 +18,8 @@ export interface RecordOptions {
   readonly bulkCount: number;
   /** Table name for the `sql` shape. */
   readonly sqlTable: string;
+  /** Timestamp rendering, handed through to each field draw (Time generators read it). */
+  readonly dateFormat?: DateFormat;
 }
 
 /** One rendered field within a record. */
@@ -67,7 +69,7 @@ function renderCsv(records: Field[][]): string {
 export function buildRecords(fields: Generator[], shape: RecordShape, opts: RecordOptions): string {
   const count = Math.max(1, Math.floor(opts.bulkCount || 1));
   const records: Field[][] = Array.from({ length: count }, () =>
-    fields.map((f) => ({ key: f.id, value: f.generate() })),
+    fields.map((f) => ({ key: f.id, value: f.generate({ dateFormat: opts.dateFormat }) })),
   );
   switch (shape) {
     case 'sql': return renderSql(records, opts.sqlTable);

@@ -101,6 +101,7 @@ Change any of these from the [Commands](#commands) below, or in VS Code Settings
 | `insertRandomText.uniquePerCursor` | `true` · `false` | `true` | A different value at each cursor (multi-cursor fill), or the same value repeated. |
 | `insertRandomText.bulkCount` | `1`–`1000` | `1` | How many values to insert at each cursor. |
 | `insertRandomText.outputFormat` | `plain` · `jsonArray` · `quotedList` | `plain` | How bulk values render — one per line, a JSON array, or a quoted comma-separated list. |
+| `insertRandomText.dateFormat` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | `iso` | How the timestamp Time types render — full ISO 8601, date only, time only, or Unix seconds/milliseconds. |
 | `insertRandomText.recordFormat` | `json` · `sql` · `csv` | `json` | Shape for **Insert Random: Record…** — a JSON object, a SQL INSERT row, or a CSV line. |
 | `insertRandomText.recordSqlTable` | any string | `table` | Table name used by the SQL record shape (when `recordFormat` is `sql`). |
 | `insertRandomText.seed` | any number, or empty | _(empty)_ | Reproducible output — the same seed yields the same values every run; empty = random. |
@@ -135,6 +136,18 @@ A few settings are easier to *see* than to describe.
 
 Records escape by shape, not by the file's language — and a bulk count stacks them: `json` wraps into an array, `sql` emits one `INSERT` per line, `csv` one line per record.
 
+**`dateFormat`** — how the timestamp Time types (Date, Past/Future/Recent/Soon Date, Birthdate, and **Date (Between…)**) render, everywhere they're drawn — single inserts and record fields alike. One drawn instant, five renderings:
+
+| Format | Result |
+|---|---|
+| `iso` | `2026-07-02T12:34:56.789Z` |
+| `isoDate` | `2026-07-02` |
+| `isoTime` | `12:34:56` |
+| `unixSeconds` | `1782995696` |
+| `unixMillis` | `1782995696789` |
+
+Weekday and Month are names, not timestamps — they're unaffected.
+
 **Automatic quoting** — the *same* "insert email" adapts to the file's language, so the result is always valid syntax, no setting required:
 
 - `.json` · `.go` · `.rs` · `.js` · `.py` → `"jane@example.com"` — double quotes
@@ -156,9 +169,9 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 |---|---|
 | **Insert Random: Pick…** | Choose any type from a grouped, searchable menu, then insert at every cursor. |
 | **Insert Random: Record…** | Multi-select fields and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
-| **Insert Random: Number (Range…) / Float (Range…) / String (Length…)** | Parameterized types — enter a min & max (or a length up to 1000) in an input box and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs are remembered and prefilled; Esc cancels cleanly. |
+| **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…)** | Parameterized types — enter a min & max, a length, or a from/to date in input boxes and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs are remembered and prefilled; Esc cancels cleanly. |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
-| **Insert Random: Set Insert Type / Output Format / Record Format** | Pick the value from a Quick Pick. |
+| **Insert Random: Set Insert Type / Output Format / Date Format / Record Format** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
 | **Insert Random: Toggle Wrap With Quotes / Trailing New Line / Unique Value Per Cursor / Editor Context Menu** | Flip a setting on or off. |
 | **Insert Random: Reset Settings to Defaults** | Restore every setting to its default. |

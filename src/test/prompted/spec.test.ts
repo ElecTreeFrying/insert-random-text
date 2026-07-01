@@ -9,10 +9,10 @@ import { load, seed } from '../../engine';
 // about a prompted command (validation rules, rendering, the Generator contract) is checkable here.
 
 describe('prompted — registry', () => {
-  it('exposes the three S2 commands, id-addressable', () => {
+  it('exposes the parameterized commands, id-addressable', () => {
     assert.deepStrictEqual(
       promptedCommands.map((command) => command.id),
-      [ 'numberRange', 'floatRange', 'stringLength' ],
+      [ 'numberRange', 'floatRange', 'stringLength', 'dateBetween' ],
     );
     for (const command of promptedCommands) {
       assert.strictEqual(getPromptedCommand(command.id), command);
@@ -41,6 +41,9 @@ describe('prompted — registry', () => {
       assert.strictEqual(max.validate(max.fallback, { min: min.fallback }), undefined,
         `${id} fallbacks must form a valid range`);
     }
+    const [ from, to ] = getPromptedCommand('dateBetween')!.steps;
+    assert.strictEqual(to.validate(to.fallback, { from: from.fallback }), undefined,
+      'dateBetween fallbacks must form a valid range');
   });
 });
 
@@ -111,6 +114,28 @@ describe('prompted — stringLength validation', () => {
   });
 });
 
+describe('prompted — dateBetween validation', () => {
+  const [ from, to ] = getPromptedCommand('dateBetween')?.steps ?? [];
+
+  it('from accepts YYYY-MM-DD and full ISO 8601 (padding tolerated)', () => {
+    for (const input of [ '2020-01-01', ' 2020-01-01 ', '2026-07-02T12:00:00Z', '2026-07-02T12:00', '2026-07-02T12:00:00.500+02:00' ]) {
+      assert.strictEqual(from.validate(input, {}), undefined, `'${input}' should be a valid date`);
+    }
+  });
+
+  it('from rejects empty, non-date, and impossible-calendar input', () => {
+    for (const input of [ '', '   ', 'yesterday', '01/02/2026', '20260702', '5', '2026-13-01', '2026-02-31' ]) {
+      assert.ok(from.validate(input, {}), `'${input}' should be rejected with a message`);
+    }
+  });
+
+  it('to enforces from ≤ to against the already-entered from', () => {
+    assert.ok(to.validate('2019-12-31', { from: '2020-01-01' }), 'to before from must be rejected');
+    assert.strictEqual(to.validate('2020-01-01', { from: '2020-01-01' }), undefined, 'to equal to from pins the date');
+    assert.strictEqual(to.validate('2020-01-02', { from: '2020-01-01' }), undefined);
+  });
+});
+
 describe('prompted — rendering (one-off Generator through toGenerator)', function () {
   this.timeout(15000);
 
@@ -158,6 +183,28 @@ describe('prompted — rendering (one-off Generator through toGenerator)', funct
     for (let i = 0; i < 20; i++) {
       assert.match(generator.generate(), /^[A-Za-z0-9]{12}$/);
     }
+  });
+
+  it('dateBetween draws a date within [from, to], full ISO by default', () => {
+    seed(20260702);
+    const generator = toGenerator(getPromptedCommand('dateBetween')!, { from: '2020-01-01', to: '2020-12-31' });
+    for (let i = 0; i < 25; i++) {
+      const value = generator.generate();
+      assert.match(value, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, `'${value}' is not full ISO`);
+      const drawn = new Date(value).getTime();
+      assert.ok(
+        drawn >= Date.parse('2020-01-01T00:00:00Z') && drawn <= Date.parse('2020-12-31T00:00:00Z'),
+        `${value} outside [from, to]`,
+      );
+    }
+  });
+
+  it('dateBetween renders through generate({ dateFormat }) — the pipeline threads the setting in', () => {
+    // A pinned range (from = to) makes each rendering exact.
+    const generator = toGenerator(getPromptedCommand('dateBetween')!, { from: '2020-06-15', to: '2020-06-15' });
+    assert.strictEqual(generator.generate({ dateFormat: 'isoDate' }), '2020-06-15');
+    assert.strictEqual(generator.generate({ dateFormat: 'unixSeconds' }), String(Date.parse('2020-06-15T00:00:00Z') / 1000));
+    assert.strictEqual(generator.generate(), '2020-06-15T00:00:00.000Z');
   });
 
   it('draws a fresh value on each generate() call — no memoization', () => {
