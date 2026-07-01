@@ -76,6 +76,9 @@ const COMMAND_TO_GENERATOR: Readonly<Record<string, string>> = {
   'insertRandomText.protocol': 'protocol',
   'insertRandomText.jwt': 'jwt',
   'insertRandomText.displayName': 'displayName',
+  // Media
+  'insertRandomText.imageUrl': 'imageUrl',
+  'insertRandomText.avatarUrl': 'avatarUrl',
   // Company
   'insertRandomText.company': 'company',
   'insertRandomText.catchPhrase': 'catchPhrase',
@@ -131,6 +134,7 @@ const COMMAND_TO_GENERATOR: Readonly<Record<string, string>> = {
   // IDs
   'insertRandomText.nanoid': 'nanoid',
   'insertRandomText.ulid': 'ulid',
+  'insertRandomText.mongodbObjectId': 'mongodbObjectId',
   // Text
   'insertRandomText.alpha': 'alpha',
   'insertRandomText.numeric': 'numeric',
@@ -226,6 +230,22 @@ function applySeed(): void {
   if (!Number.isNaN(value)) { seed(value); }
 }
 
+/**
+ * The Cursor-mode fill: replace every selection with its block in one edit, then
+ * collapse each cursor to sit right after its inserted text. Without the collapse
+ * a replaced selection stays highlighted (`replace` keeps the anchor); a bare
+ * caret already lands after the block, so collapsing to `end` is a no-op there.
+ */
+async function fillSelections(editor: vscode.TextEditor, blockFor: (index: number) => string): Promise<void> {
+  const { selections } = editor;
+  const applied = await editor.edit((builder) => {
+    selections.forEach((selection, index) => builder.replace(selection, blockFor(index)));
+  });
+  if (applied) {
+    editor.selections = editor.selections.map((selection) => new vscode.Selection(selection.end, selection.end));
+  }
+}
+
 /** Deliver a generator's output to the editor cursor(s), top of file, or clipboard. */
 async function insertGenerated(generatorId: string): Promise<void> {
   await load();
@@ -260,11 +280,8 @@ async function insertGenerated(generatorId: string): Promise<void> {
     await editor.edit((builder) => builder.insert(new vscode.Position(0, 0), block));
   } else {
     // Cursor: a fresh block at every selection — the multi-cursor fill.
-    const { selections } = editor;
-    const blocks = buildBlocks(selections.length, generator, options);
-    await editor.edit((builder) => {
-      selections.forEach((selection, index) => builder.replace(selection, blocks[index]));
-    });
+    const blocks = buildBlocks(editor.selections.length, generator, options);
+    await fillSelections(editor, (index) => blocks[index]);
   }
 }
 
@@ -359,12 +376,7 @@ async function pickAndInsertRecord(): Promise<void> {
 
   // Cursor: a record at every selection — the multi-cursor fill.
   const shared = settings.uniquePerCursor ? undefined : buildRecords(fields, shape, options);
-  const { selections } = editor;
-  await editor.edit((builder) => {
-    selections.forEach((selection) => {
-      builder.replace(selection, settings.uniquePerCursor ? buildRecords(fields, shape, options) : shared!);
-    });
-  });
+  await fillSelections(editor, () => (settings.uniquePerCursor ? buildRecords(fields, shape, options) : shared!));
 }
 
 export function activate(context: vscode.ExtensionContext): void {

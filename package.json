@@ -50,7 +50,10 @@
     "seed",
     "git",
     "ulid",
-    "multi-cursor"
+    "multi-cursor",
+    "guid",
+    "jwt",
+    "mongodb"
   ],
   "galleryBanner": {
     "color": "#494949",
@@ -658,6 +661,18 @@
       {
         "command": "insertRandomText.seat",
         "title": "Insert Random: Seat"
+      },
+      {
+        "command": "insertRandomText.imageUrl",
+        "title": "Insert Random: Image URL"
+      },
+      {
+        "command": "insertRandomText.avatarUrl",
+        "title": "Insert Random: Avatar URL"
+      },
+      {
+        "command": "insertRandomText.mongodbObjectId",
+        "title": "Insert Random: MongoDB ObjectId"
       },
       {
         "command": "insertRandomText.setInsertType",

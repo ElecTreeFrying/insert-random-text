@@ -172,6 +172,96 @@ describe('insert command — insertGenerated', function () {
   });
 });
 
+// After a Cursor-mode insert the block must read as *typed*: nothing stays selected and the caret sits
+// right after the inserted text — for a bare caret, a replaced selection, several of each, and a
+// bulkCount block alike. Guards the recurring competitor complaint (inserted text left highlighted).
+describe('insert — post-insert cursor behavior (nothing stays selected)', function () {
+  this.timeout(20000);
+
+  before(async () => {
+    await vscode.extensions.getExtension(EXTENSION_ID)?.activate();
+    await setConfig(ConfigKey.WITH_QUOTE, false);
+    await setConfig(ConfigKey.WITH_NEW_LINE, false);
+    await setConfig(ConfigKey.SEED, '4242');
+  });
+
+  after(async () => {
+    await setConfig(ConfigKey.WITH_QUOTE, undefined);
+    await setConfig(ConfigKey.WITH_NEW_LINE, undefined);
+    await setConfig(ConfigKey.SEED, undefined);
+    await setConfig(ConfigKey.BULK_COUNT, undefined);
+  });
+
+  afterEach(async () => {
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  });
+
+  function assertCaretsParkedAfterBlocks(editor: vscode.TextEditor): void {
+    for (const selection of editor.selections) {
+      assert.ok(selection.isEmpty, `inserted text must not stay selected — got ${JSON.stringify(selection)}`);
+      // Bare single-line value (quotes + newline off) → the block ends where its line ends.
+      const lineEnd = editor.document.lineAt(selection.active.line).range.end;
+      assert.ok(
+        selection.active.isEqual(lineEnd),
+        `the caret should sit at the end of its inserted block — at ${selection.active.line}:${selection.active.character}, line ends at :${lineEnd.character}`,
+      );
+    }
+  }
+
+  it('collapses the caret after the block at a bare cursor', async () => {
+    const editor = await openDoc('');
+    await vscode.commands.executeCommand(CMD);
+    assert.ok(editor.document.getText().length > 0, 'expected an inserted value');
+    assertCaretsParkedAfterBlocks(editor);
+  });
+
+  it('collapses the caret after replacing a non-empty selection', async () => {
+    const editor = await openDoc('REPLACEME');
+    editor.selection = new vscode.Selection(0, 0, 0, 'REPLACEME'.length);
+    await vscode.commands.executeCommand(CMD);
+    assert.ok(!editor.document.getText().includes('REPLACEME'), 'the selection should be replaced');
+    assertCaretsParkedAfterBlocks(editor);
+  });
+
+  it('collapses every caret in a mixed multi-cursor insert (bare caret + selection)', async () => {
+    const editor = await openDoc('\nREPLACEME');
+    editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 'REPLACEME'.length) ];
+    await vscode.commands.executeCommand(CMD);
+    assert.strictEqual(editor.selections.length, 2, 'both cursors should survive the insert');
+    assertCaretsParkedAfterBlocks(editor);
+  });
+
+  it('parks the caret after the whole block when bulkCount > 1 (multi-line block)', async () => {
+    await setConfig(ConfigKey.BULK_COUNT, 3);
+    const editor = await openDoc('');
+    await vscode.commands.executeCommand(CMD);
+    await setConfig(ConfigKey.BULK_COUNT, undefined);
+    assert.strictEqual(editor.document.lineCount, 3, 'plain bulk 3 → three lines');
+    const [ selection ] = editor.selections;
+    assert.ok(selection.isEmpty, 'the bulk block must not stay selected');
+    const documentEnd = editor.document.positionAt(editor.document.getText().length);
+    assert.ok(selection.active.isEqual(documentEnd), 'the caret should sit after the last bulk line');
+  });
+
+  it('collapses the caret after a Record… insert over a selection', async () => {
+    const editor = await openDoc('REPLACEME');
+    editor.selection = new vscode.Selection(0, 0, 0, 'REPLACEME'.length);
+    const original = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any) =>
+      [ (await items).find((i: any) => i.generatorId === 'person') ];
+    try {
+      await vscode.commands.executeCommand('insertRandomText.record');
+    } finally {
+      (vscode.window as any).showQuickPick = original;
+    }
+    assert.ok(editor.document.getText().startsWith('{'), 'expected a JSON record');
+    const [ selection ] = editor.selections;
+    assert.ok(selection.isEmpty, 'the inserted record must not stay selected');
+    const documentEnd = editor.document.positionAt(editor.document.getText().length);
+    assert.ok(selection.active.isEqual(documentEnd), 'the caret should sit after the record');
+  });
+});
+
 // Automatic quoting through the REAL insert path (currentInsertOptions → resolveQuotePolicy → wrap).
 // Own hooks because this needs quotes ON — the opposite of the bare-value suite above.
 describe('insert — automatic quoting', function () {

@@ -35,7 +35,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 ## Highlights
 
 - **Fill every cursor at once** — a _different_ value in each, in one step. The fastest way to seed a table, an array, or a fixture.
-- **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 19 categories (full list below).
+- **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 20 categories (full list below).
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
 - **Reproducible when you need it** — set a seed, get the same values every run — stable tests and snapshots.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
@@ -60,7 +60,7 @@ No setup required — tweak quotes, bulk count, output format, and seed whenever
 
 ## What it generates
 
-**130+ types across 19 categories** — every one is a direct `Insert Random:` command *and* a Quick Pick entry.
+**130+ types across 20 categories** — every one is a direct `Insert Random:` command *and* a Quick Pick entry.
 
 | Category | Types |
 |---|---|
@@ -70,9 +70,10 @@ No setup required — tweak quotes, bulk count, output format, and seed whenever
 | **Time** (8) | Date · Past Date · Future Date · Recent Date · Soon Date · Birthdate · Weekday · Month |
 | **Location** (15) | Country · Country Code · State · State Abbreviation · County · City · Zip Code · Street Name · Street Address · Secondary Address · Building Number · Direction · Latitude · Longitude · Time Zone |
 | **Network** (11) | IP Address · IPv6 Address · MAC Address · URL · Domain Name · Port · Protocol · HTTP Method · HTTP Status Code · User Agent · JWT |
+| **Media** (2) | Image URL · Avatar URL |
 | **Design** (4) | Color (hex) · Color (rgb) · Color (hsl) · Color Name |
 | **Security** (1) | Password |
-| **IDs** (4) | UUID · ULID · Nano ID · Hash |
+| **IDs** (5) | UUID · ULID · Nano ID · MongoDB ObjectId · Hash |
 | **Nature** (6) | Animal · Dog Breed · Cat Breed · Bird Species · Fish Species · Horse Breed |
 | **Company** (3) | Company Name · Catch Phrase · Buzz Phrase |
 | **Commerce** (7) | Product · Product Name · Price · Department · Product Material · Product Description · ISBN |

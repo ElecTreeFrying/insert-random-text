@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) (single-locale `en`); there are no network calls and no telemetry.
 
-**134 generator types across 19 categories** (plus 6 hidden back-compat variants — 140 registry entries in all), **153 contributed commands**, **no default keybindings**, **ten configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **156 contributed commands**, **no default keybindings**, **ten configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,11 +10,11 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **153 commands**, in four families:
+The extension contributes **156 commands**, in four families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
-| Generator commands | 140 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 126) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
+| Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
 | Settings commands | 11 | `insertRandomText.set*` / `toggle*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
@@ -24,9 +24,9 @@ Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" 
 ### Two command namespaces
 
 - **Legacy `extension.insertRandom*` (14 commands)** — the original ids, kept verbatim for **back-compat** so existing user keybindings keep working. They cover eight visible generators (`animal`, `person`, `date`, `country`, `number`, `string`, `lorem`, `hash`) and the six hidden Lorem/Hash size variants. These eight generators have **no** modern `insertRandomText.*` command — the legacy id is their only command.
-- **Modern `insertRandomText.<id>` (126 commands)** — every other generator. The command suffix is byte-identical to the generator's registry `id` (e.g. `insertRandomText.creditCard` → generator `creditCard`).
+- **Modern `insertRandomText.<id>` (129 commands)** — every other generator. The command suffix is byte-identical to the generator's registry `id` (e.g. `insertRandomText.creditCard` → generator `creditCard`).
 
-Both namespaces register through a single `COMMAND_TO_GENERATOR` map (140 entries) in `extension.ts`; each registered command calls one shared `insertGenerated(id)`. See the [Data Catalog](#data-catalog) for the exact command id of every type.
+Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entries) in `extension.ts`; each registered command calls one shared `insertGenerated(id)`. See the [Data Catalog](#data-catalog) for the exact command id of every type.
 
 ### Insert Random: Pick…
 
@@ -47,6 +47,7 @@ Where a generated value is delivered is governed by the `insertType` setting (`C
 Fill a fresh block at **every** selection in the active editor.
 
 - The extension iterates `editor.selections` and, in one `editor.edit`, calls `builder.replace(selection, block)` for each — so the block **replaces** any selected text and lands at a bare caret when the selection is empty. This is the multi-cursor fill.
+- After the edit, every cursor is **collapsed to sit right after its inserted block** — nothing stays selected, same as if the value had been typed. (Applies to the Record command's cursor fill too.)
 - Blocks are built with `buildBlocks(selections.length, generator, options)`, honoring [`uniquePerCursor`](#multi-cursor-fill--bulk-generation): a *different* value at each cursor when on, the *same* value repeated when off.
 - **Requires an active editor.** With no editor focused the command is a silent no-op.
 
@@ -193,7 +194,7 @@ Because the seed is re-applied at the **start of each command**, faker is reset 
 
 ## Data Catalog
 
-The generator registry (`catalog.ts`) is the single source of truth — it drives generation, the contributed commands, and the Quick Pick. **134 visible generators across 19 categories**, plus **6 hidden back-compat variants**. Groups appear in the order their first member is registered (which is the Quick Pick heading order). Every value is produced by the listed faker call; numeric and boolean generators are coerced to strings before insertion.
+The generator registry (`catalog.ts`) is the single source of truth — it drives generation, the contributed commands, and the Quick Pick. **137 visible generators across 20 categories**, plus **6 hidden back-compat variants**. Groups appear in the order their first member is registered (which is the Quick Pick heading order). Every value is produced by the listed faker call; numeric and boolean generators are coerced to strings before insertion.
 
 ### Identity (17)
 
@@ -294,6 +295,13 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 | User Agent | `userAgent` | `insertRandomText.userAgent` | `internet.userAgent()` |
 | JWT | `jwt` | `insertRandomText.jwt` | `internet.jwt()` |
 
+### Media (2)
+
+| Label | id | Command | faker source |
+|---|---|---|---|
+| Image URL | `imageUrl` | `insertRandomText.imageUrl` | `image.url()` |
+| Avatar URL | `avatarUrl` | `insertRandomText.avatarUrl` | `image.avatar()` |
+
 ### Design (4)
 
 | Label | id | Command | faker source |
@@ -309,13 +317,14 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 |---|---|---|---|
 | Password | `password` | `insertRandomText.password` | `internet.password()` |
 
-### IDs (4)
+### IDs (5)
 
 | Label | id | Command | faker source |
 |---|---|---|---|
 | UUID | `uuid` | `insertRandomText.uuid` | `string.uuid()` |
 | ULID | `ulid` | `insertRandomText.ulid` | `string.ulid()` |
 | Nano ID | `nanoid` | `insertRandomText.nanoid` | `string.nanoid()` |
+| MongoDB ObjectId | `mongodbObjectId` | `insertRandomText.mongodbObjectId` | `database.mongodbObjectId()` |
 | Hash | `hash` | `extension.insertRandomHash` | `string.hexadecimal({ length: 13, casing: 'lower', prefix: '' })` |
 
 ### Nature (6)

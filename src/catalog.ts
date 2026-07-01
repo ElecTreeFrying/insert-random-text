@@ -106,6 +106,10 @@ export const generators: readonly Generator[] = [
   { id: 'userAgent', label: 'User Agent', group: 'Network', generate: () => faker().internet.userAgent() },
   { id: 'jwt', label: 'JWT', group: 'Network', generate: () => faker().internet.jwt() },
 
+  // Media
+  { id: 'imageUrl', label: 'Image URL', group: 'Media', generate: () => faker().image.url() },
+  { id: 'avatarUrl', label: 'Avatar URL', group: 'Media', generate: () => faker().image.avatar() },
+
   // Design
   { id: 'color', label: 'Color (hex)', group: 'Design', generate: () => faker().color.rgb({ format: 'hex' }) },
   { id: 'rgb', label: 'Color (rgb)', group: 'Design', generate: () => faker().color.rgb({ format: 'css' }) },
@@ -119,6 +123,7 @@ export const generators: readonly Generator[] = [
   { id: 'uuid', label: 'UUID', group: 'IDs', generate: () => faker().string.uuid() },
   { id: 'ulid', label: 'ULID', group: 'IDs', generate: () => faker().string.ulid() },
   { id: 'nanoid', label: 'Nano ID', group: 'IDs', generate: () => faker().string.nanoid() },
+  { id: 'mongodbObjectId', label: 'MongoDB ObjectId', group: 'IDs', generate: () => faker().database.mongodbObjectId() },
   { id: 'hash', label: 'Hash', group: 'IDs', generate: () => faker().string.hexadecimal({ length: 13, casing: 'lower', prefix: '' }) },
 
   // Nature
