@@ -3,6 +3,8 @@
 out/**
 node_modules/**
 src/**
+qa/**
+docs/**
 .gitignore
 .gitattributes
 esbuild.js
@@ -13,8 +15,9 @@ esbuild.js
 **/.vscode-test.*
 package-lock.json
 CLAUDE.md
+SPEC.md
+RECORD-SHOWCASE.md
+images/*.gif
 .claude/**
 **/.DS_Store
 icon-preview.html
-images/icon-source.png
-images/icon@256.png
