@@ -16,6 +16,7 @@ The first stable release — a ground-up relaunch as **Random, Fake & Mock Data 
 - New settings: `insertRandomText.uniquePerCursor`, `insertRandomText.seed` (reproducible output), `insertRandomText.bulkCount`, `insertRandomText.outputFormat` (`plain` / `jsonArray` / `quotedList`), `insertRandomText.recordFormat`, `insertRandomText.recordSqlTable`, and an opt-in editor context-menu submenu (`insertRandomText.contextMenu.enabled`).
 - **Settings commands** — change any setting from the Command Palette: *Insert Random: Set Insert Type / Output Format / Record Format / Record SQL Table / Bulk Count / Seed*, *Toggle* commands for each boolean setting (Wrap With Quotes, Trailing New Line, Unique Value Per Cursor, Editor Context Menu), and *Reset Settings to Defaults*.
 - New **Image URL** and **Avatar URL** types (new **Media** category) — UI placeholders and Storybook props — plus **MongoDB ObjectId** under IDs.
+- **Parameterized types** — new *Insert Random: Number (Range…)*, *Float (Range…)*, and *String (Length…)* commands ask for a min & max (or a length up to 1000) in validated input boxes, then insert through the normal pipeline (multi-cursor, bulk, quoting, seed all apply). Last-used inputs are remembered and prefilled; Esc cancels cleanly.
 
 ### Fixes
 

@@ -159,6 +159,18 @@
         "title": "Insert Random: Record…"
       },
       {
+        "command": "insertRandomText.numberRange",
+        "title": "Insert Random: Number (Range…)"
+      },
+      {
+        "command": "insertRandomText.floatRange",
+        "title": "Insert Random: Float (Range…)"
+      },
+      {
+        "command": "insertRandomText.stringLength",
+        "title": "Insert Random: String (Length…)"
+      },
+      {
         "command": "insertRandomText.uuid",
         "title": "Insert Random: UUID"
       },

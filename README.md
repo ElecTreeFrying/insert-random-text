@@ -156,6 +156,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 |---|---|
 | **Insert Random: Pick…** | Choose any type from a grouped, searchable menu, then insert at every cursor. |
 | **Insert Random: Record…** | Multi-select fields and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
+| **Insert Random: Number (Range…) / Float (Range…) / String (Length…)** | Parameterized types — enter a min & max (or a length up to 1000) in an input box and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs are remembered and prefilled; Esc cancels cleanly. |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
 | **Insert Random: Set Insert Type / Output Format / Record Format** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |

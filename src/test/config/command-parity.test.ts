@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { getGenerator } from '../../catalog';
+import { promptedCommands } from '../../prompted';
 
 // COMMAND_TO_GENERATOR (extension.ts) is the wiring between a palette command and the generator it
 // inserts. extension.ts imports `vscode`, so we can't import the map under a plain-node run — read it
@@ -35,6 +36,8 @@ const commandMap = readCommandMap(extensionSrc);
 // The commands that are NOT generator-backed: the Quick Pick, the multi-field Record command, and every
 // settings command (set/toggle/reset).
 const META = /^insertRandomText\.(pick|record|set|toggle|reset)/;
+// Prompted (parameterized) commands are registered from `promptedCommands`, not COMMAND_TO_GENERATOR.
+const PROMPTED = new Set(promptedCommands.map((command) => `insertRandomText.${command.id}`));
 
 describe('COMMAND_TO_GENERATOR ↔ catalog parity', () => {
   it('parses a non-trivial map out of the source', () => {
@@ -54,9 +57,22 @@ describe('COMMAND_TO_GENERATOR ↔ catalog parity', () => {
     }
   });
 
-  it('every contributed generator command is wired (only pick/settings commands may be unmapped)', () => {
-    const unwired = declared.filter((command) => !commandMap[command] && !META.test(command));
+  it('every contributed generator command is wired (only pick/settings/prompted commands may be unmapped)', () => {
+    const unwired = declared.filter((command) => !commandMap[command] && !META.test(command) && !PROMPTED.has(command));
     assert.deepStrictEqual(unwired, [], `contributed but missing a COMMAND_TO_GENERATOR entry: ${unwired.join(', ')}`);
+  });
+
+  it('every prompted command is declared in package.json contributes.commands', () => {
+    const declaredSet = new Set(declared);
+    for (const command of PROMPTED) {
+      assert.ok(declaredSet.has(command), `${command} is a prompted command but not contributed in package.json`);
+    }
+  });
+
+  it('no prompted id collides with a catalog generator id (they share the insertRandomText.* namespace)', () => {
+    for (const { id } of promptedCommands) {
+      assert.strictEqual(getGenerator(id), undefined, `prompted id '${id}' shadows a catalog generator`);
+    }
   });
 
   it('every hidden generator is reachable through a command (else it is dead code)', () => {

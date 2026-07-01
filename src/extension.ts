@@ -3,6 +3,7 @@ import { ConfigKey, Configuration, Settings } from './configuration';
 import { Generator, generators, getGenerator } from './catalog';
 import { load, seed } from './engine';
 import { buildBlocks, InsertOptions, OutputFormat } from './formatter';
+import { PromptedCommand, promptedCommands, toGenerator } from './prompted';
 import { resolveQuotePolicy } from './quotePolicy';
 import { buildRecords, RecordShape } from './record';
 import { SETTING_COMMANDS } from './settingsCommands';
@@ -246,13 +247,21 @@ async function fillSelections(editor: vscode.TextEditor, blockFor: (index: numbe
   }
 }
 
-/** Deliver a generator's output to the editor cursor(s), top of file, or clipboard. */
+/** Deliver a registry generator's output through {@link insertWith}. */
 async function insertGenerated(generatorId: string): Promise<void> {
-  await load();
-
   const generator = getGenerator(generatorId);
   if (!generator) { return; }
+  await insertWith(generator);
+}
 
+/**
+ * The insert pipeline for ANY generator — registry entry or a one-off built by a
+ * prompted command: load faker, apply the seed, then deliver the output to the
+ * editor cursor(s), top of file, or clipboard per the cached settings. This is
+ * the seam prompted (parameterized) commands feed into.
+ */
+async function insertWith(generator: Generator): Promise<void> {
+  await load();
   applySeed();
   const languageId = vscode.window.activeTextEditor?.document.languageId;
   const options = currentInsertOptions(languageId);
@@ -283,6 +292,30 @@ async function insertGenerated(generatorId: string): Promise<void> {
     const blocks = buildBlocks(editor.selections.length, generator, options);
     await fillSelections(editor, (index) => blocks[index]);
   }
+}
+
+/**
+ * Run a prompted command: walk its input boxes in order — each prefilled with
+ * the last accepted value (`globalState`), falling back to the step's default —
+ * then insert the resulting one-off generator through {@link insertWith}.
+ * Esc at any box is a clean cancel: nothing is inserted, nothing is remembered.
+ */
+async function runPrompted(context: vscode.ExtensionContext, command: PromptedCommand): Promise<void> {
+  const params: Record<string, string> = {};
+  for (const step of command.steps) {
+    const memoryKey = `prompted.${command.id}.${step.key}`;
+    const input = await vscode.window.showInputBox({
+      prompt: step.prompt,
+      placeHolder: step.placeholder,
+      value: context.globalState.get<string>(memoryKey) ?? step.fallback,
+      validateInput: (raw) => step.validate(raw, params),
+    });
+    if (input === undefined) { return; }
+    const accepted = input.trim();
+    params[step.key] = accepted;
+    await context.globalState.update(memoryKey, accepted);
+  }
+  await insertWith(toGenerator(command, params));
 }
 
 type GeneratorPick = vscode.QuickPickItem & { generatorId?: string };
@@ -395,6 +428,13 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(RECORD_COMMAND, () => pickAndInsertRecord()),
   );
+
+  // Prompted (parameterized) commands — input boxes first, then the normal insert path.
+  for (const prompted of promptedCommands) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`insertRandomText.${prompted.id}`, () => runPrompted(context, prompted)),
+    );
+  }
 
   // Settings commands — change any setting from the Command Palette (Quick Pick / toggle / input).
   for (const [ commandId, handler ] of Object.entries(SETTING_COMMANDS)) {
