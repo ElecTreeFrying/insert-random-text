@@ -2,15 +2,17 @@ import * as vscode from 'vscode';
 import { ConfigKey, Configuration, Settings } from './configuration';
 import { Generator, generators, getGenerator } from './catalog';
 import { CUSTOM_LISTS_GROUP, customListGenerators, TEMPLATES_GROUP, templateGenerators } from './custom';
-import { load, seed } from './engine';
+import { faker, load, seed } from './engine';
 import { buildBlocks, InsertOptions, OutputFormat } from './formatter';
 import { PromptedCommand, promptedCommands, toGenerator } from './prompted';
+import { randomize } from './randomize';
 import { resolveQuotePolicy } from './quotePolicy';
 import { buildRecords, RecordShape } from './record';
 import { SETTING_COMMANDS } from './settingsCommands';
 
 const PICK_COMMAND = 'insertRandomText.pick';
 const RECORD_COMMAND = 'insertRandomText.record';
+const RANDOMIZE_COMMAND = 'insertRandomText.randomizeSelection';
 const CONFIG_KEYS: readonly string[] = Object.values(ConfigKey);
 
 /** Cached settings snapshot; replaced wholesale by {@link watchConfiguration}. */
@@ -503,6 +505,29 @@ async function pickAndInsertRecord(): Promise<void> {
   await fillSelections(editor, () => (settings.uniquePerCursor ? buildRecords(fields, shape, options) : shared!));
 }
 
+/**
+ * "Insert Random: Randomize Selection" — anonymize in place: replace each
+ * non-empty selection with a format-preserving randomization of its own text
+ * (digits → digits, letters → letters matching case, everything else kept).
+ * A replacement, not an insertion — insert type, quoting, newline, bulk and
+ * output format never apply; locale and seed do, because every character draw
+ * rides the shared faker RNG. Empty selections are left untouched, so a mixed
+ * multi-selection randomizes only what is actually selected.
+ */
+async function randomizeSelections(): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || editor.selections.every((selection) => selection.isEmpty)) {
+    void vscode.window.showInformationMessage('Select some text first — Randomize Selection replaces each selection in place.');
+    return;
+  }
+  await load(settings.locale);
+  applySeed();
+  const rng = (bound: number) => faker().number.int({ max: bound - 1 });
+  const blocks = editor.selections.map((selection) =>
+    (selection.isEmpty ? '' : randomize(editor.document.getText(selection), rng)));
+  await fillSelections(editor, (index) => blocks[index]);
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   watchConfiguration(context);
 
@@ -518,6 +543,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(RECORD_COMMAND, () => pickAndInsertRecord()),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(RANDOMIZE_COMMAND, () => randomizeSelections()),
   );
 
   // Prompted (parameterized) commands — input boxes first, then the normal insert path.

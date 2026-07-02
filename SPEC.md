@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **172 contributed commands**, **no default keybindings**, **fourteen configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **173 contributed commands**, **no default keybindings**, **fourteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,13 +10,14 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **172 commands**, in five families:
+The extension contributes **173 commands**, in six families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
 | Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
+| Randomize Selection | 1 | `insertRandomText.randomizeSelection` | "Insert Random: Randomize Selection" — anonymize in place: replace each selection with a same-shape randomization of its text (see [Randomize Selection](#insert-random-randomize-selection)). |
 | Prompted commands | 12 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
 | Settings commands | 15 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
@@ -36,6 +37,15 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 ### Insert Random: Record…
 
 `insertRandomText.record` opens the same catalog picker in **multi-select** mode — led by the user's [custom lists](#user-defined-data-saved-templates--custom-lists) when defined: tick any number of fields and one composed record — a JSON object, SQL `INSERT` row, or CSV line, per the `recordFormat` setting — is inserted at every cursor. Fully specified in [Multi-Field Records](#multi-field-records).
+
+### Insert Random: Randomize Selection
+
+`insertRandomText.randomizeSelection` anonymizes **in place**: every **non-empty** selection is replaced with a format-preserving randomization of its own text, per character — a digit becomes a random digit, `a–z` a random lowercase letter, `A–Z` a random uppercase letter, and everything else (punctuation, whitespace, non-ASCII) stays exactly where it was. `3.14` stays number-shaped, `Bob@x.io` stays email-shaped. The mapping lives in the pure `src/randomize.ts` (`randomize(text, rng)`); surrogate pairs are iterated as whole code points, so emoji pass through unsplit.
+
+- **A replacement, not an insertion.** The insert pipeline is bypassed: [`insertType`](#insert-targets), quote wrapping, trailing newline, `bulkCount`, `outputFormat`, and `uniquePerCursor` never apply. After the edit each cursor collapses to sit right after its replacement — same no-stays-selected contract as a Cursor-mode insert.
+- **Seed and locale apply.** Each character draw goes through the shared faker RNG (`number.int`), so a pinned [`seed`](#seeding--reproducibility) reproduces the same scrub, in draw order across selections.
+- **Empty selections are skipped**: a mixed multi-selection randomizes only the non-empty ones, and bare carets receive nothing. With no non-empty selection anywhere (or no editor at all), one info message is shown and nothing is edited (see [UX & Notifications](#ux--notifications)).
+- Contributed to the [context-menu submenu](#context-menu) in its own trailing group.
 
 ### Parameterized commands (prompted)
 
@@ -589,6 +599,7 @@ The extension is deliberately quiet. It uses **status-bar messages** (not modal/
 | `setSeed` invalid input | Inline input-box validation: *"Enter a number, or leave blank for random."* |
 | `setRecordSqlTable` invalid input | Inline input-box validation: *"Enter a table name."* |
 | A saved template fails to render | Error message: *"‹name›" failed to render: ‹faker's error› — fix it via Insert Random: Manage Templates.* Nothing is inserted. |
+| Randomize Selection with nothing selected (or no editor) | Info message: *Select some text first — Randomize Selection replaces each selection in place.* Nothing is edited. |
 | No active editor (Cursor / Top / Record…) | **Silent no-op** — nothing is inserted and no message is shown. |
 | Record… pick cancelled or empty | **Silent no-op** — nothing is inserted. |
 
@@ -621,12 +632,13 @@ An optional editor right-click entry, **off by default**.
 | `1_pick` | Insert Random: Pick… |
 | `2_common` | UUID · Full Name · Email · Number · Date |
 | `3_text` | Lorem |
+| `4_anonymize` | Randomize Selection |
 
 ---
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 172 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 173 commands activates the extension from a cold start. `extensionKind` is `workspace`.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.

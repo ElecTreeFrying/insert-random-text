@@ -38,6 +38,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 - **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 20 categories (full list below).
 - **Six locales** — names, addresses & text in English, German, French, Spanish, Brazilian Portuguese, or Japanese. One setting, no reload.
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
+- **Anonymize in place** — select real data and **Randomize Selection** re-rolls every letter and digit where it stands: `3.14` → `8.77`, `Bob@x.io` → `Kqe@v.zt`. Shapes intact, secrets gone.
 - **Reproducible when you need it** — set a seed, get the same values every run — stable tests and snapshots.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
 - **Stays in your editor** — fully offline, no account, nothing pasted from a website.
@@ -186,6 +187,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 | **Insert Random: Record…** | Multi-select fields (catalog types and your custom lists) and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
 | **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
 | **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
+| **Insert Random: Randomize Selection** | Anonymize in place — every selected letter and digit is re-rolled in kind (digits stay digits, letters keep their case, punctuation doesn't move), each selection replaced where it stands. See [Anonymize in place](#anonymize-in-place). |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
 | **Insert Random: Set Insert Type / Output Format / Date Format / Record Format / Locale** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
@@ -230,6 +232,18 @@ Save the templates you reuse, and the values only your project knows, straight i
 - **Insert Random: Manage Templates / Manage Custom Lists** jump straight to these settings. Both survive **Reset Settings to Defaults** — they're your data, not tuning.
 
 Everything rides the normal pipeline: multi-cursor, bulk count, quoting, and seed all apply.
+
+### Anonymize in place
+
+Pasted real data into a fixture, log, or bug report? Select it and run **Insert Random: Randomize Selection** — each selection is replaced by a same-shape randomization: digits stay digits, letters keep their case, punctuation and layout don't move.
+
+```
+jane.doe+prod@acme.com  →  wqzt.kfa+xjvn@ublr.pce
+```
+
+- Works on every non-empty selection at once — multi-select a column of secrets and scrub them in one step.
+- It's a replacement, not an insertion: quoting, bulk count, and the insert type don't apply. The [seed](#settings) does, so a seeded run scrubs reproducibly.
+- Also in the editor right-click menu, when the context-menu submenu is enabled.
 
 ### Keyboard shortcuts
 

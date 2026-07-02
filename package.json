@@ -37,7 +37,6 @@
     "faker",
     "lorem ipsum",
     "uuid",
-    "insert random",
     "sample data",
     "placeholder",
     "json",
@@ -55,7 +54,10 @@
     "jwt",
     "mongodb",
     "locale",
-    "i18n"
+    "i18n",
+    "anonymize",
+    "sanitize",
+    "redact"
   ],
   "galleryBanner": {
     "color": "#494949",
@@ -159,6 +161,10 @@
       {
         "command": "insertRandomText.record",
         "title": "Insert Random: Record…"
+      },
+      {
+        "command": "insertRandomText.randomizeSelection",
+        "title": "Insert Random: Randomize Selection"
       },
       {
         "command": "insertRandomText.numberRange",
@@ -806,7 +812,8 @@
         { "command": "insertRandomText.email", "group": "2_common" },
         { "command": "extension.insertRandomNumber", "group": "2_common" },
         { "command": "extension.insertRandomDate", "group": "2_common" },
-        { "command": "extension.insertLorem", "group": "3_text" }
+        { "command": "extension.insertLorem", "group": "3_text" },
+        { "command": "insertRandomText.randomizeSelection", "group": "4_anonymize" }
       ]
     },
     "configuration": [

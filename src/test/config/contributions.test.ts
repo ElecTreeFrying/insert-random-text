@@ -62,8 +62,14 @@ describe('package.json contributions — editor context menu', () => {
     }
   });
 
-  it('the submenu keeps its curated shape: Pick… first, 7 items total', () => {
-    assert.strictEqual(submenuItems.length, 7, 'the submenu is curated at 7 items — update this test deliberately if that changes');
+  it('the submenu keeps its curated shape: Pick… first, 8 items total', () => {
+    assert.strictEqual(submenuItems.length, 8, 'the submenu is curated at 8 items — update this test deliberately if that changes');
     assert.strictEqual(submenuItems[0].command, 'insertRandomText.pick');
+  });
+
+  it('Randomize Selection closes the submenu in its own group (S9 — anonymize in place)', () => {
+    const item = submenuItems.find((entry: { command: string }) => entry.command === 'insertRandomText.randomizeSelection');
+    assert.ok(item, 'the submenu lost its Randomize Selection entry');
+    assert.strictEqual(item.group, '4_anonymize', 'randomize is an action, not an insert — it gets its own trailing group');
   });
 });
