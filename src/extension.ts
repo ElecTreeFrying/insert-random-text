@@ -12,8 +12,17 @@ import { SETTING_COMMANDS } from './settingsCommands';
 
 const PICK_COMMAND = 'insertRandomText.pick';
 const RECORD_COMMAND = 'insertRandomText.record';
+const DATASET_COMMAND = 'insertRandomText.generateDataset';
 const RANDOMIZE_COMMAND = 'insertRandomText.randomizeSelection';
 const CONFIG_KEYS: readonly string[] = Object.values(ConfigKey);
+
+/** Generate Dataset… row-count bounds: a hard cap, and the point above which a
+ * modal confirmation interposes (never block, just make the user mean it). */
+const DATASET_ROW_CAP = 100_000;
+const DATASET_CONFIRM_ABOVE = 10_000;
+
+/** The language each dataset shape opens as (there is no built-in csv language). */
+const DATASET_LANGUAGES: Readonly<Record<RecordShape, string>> = { json: 'json', sql: 'sql', csv: 'plaintext' };
 
 /** Cached settings snapshot; replaced wholesale by {@link watchConfiguration}. */
 let settings: Settings;
@@ -435,6 +444,43 @@ async function pickAndInsert(): Promise<void> {
 }
 
 /**
+ * The shared multi-select field picker behind Record… and Generate Dataset…:
+ * every visible generator under its category separator, led by the user's
+ * custom lists (whose name becomes the field key). Custom lists lead; templates
+ * stay Pick…-only (a field wants one atomic value, which a list draw is and a
+ * free-form template may not be). Returns the picked generators in picker
+ * display order — picked custom lists first, then catalog order — or undefined
+ * when the pick is cancelled or confirmed empty.
+ */
+async function pickRecordFields(placeHolder: string): Promise<Generator[] | undefined> {
+  const byGroup = new Map<string, Generator[]>();
+  for (const generator of generators) {
+    if (generator.hidden) { continue; }
+    const members = byGroup.get(generator.group) ?? [];
+    members.push(generator);
+    byGroup.set(generator.group, members);
+  }
+  const items: GeneratorPick[] = customPickItems(false);
+  const customLists = items.filter((item) => item.generator).map((item) => item.generator!);
+  for (const [ group, members ] of byGroup) {
+    items.push({ label: group, kind: vscode.QuickPickItemKind.Separator });
+    for (const generator of members) {
+      items.push({ label: generator.label, description: generator.id, generatorId: generator.id });
+    }
+  }
+
+  const picks = await vscode.window.showQuickPick(items, { canPickMany: true, placeHolder, matchOnDescription: true });
+  if (!picks || picks.length === 0) { return undefined; }
+
+  const pickedIds = new Set(picks.map((pick) => pick.generatorId));
+  const pickedCustom = new Set(picks.filter((pick) => pick.generator).map((pick) => pick.generator!.id));
+  return [
+    ...customLists.filter((generator) => pickedCustom.has(generator.id)),
+    ...generators.filter((generator) => !generator.hidden && pickedIds.has(generator.id)),
+  ];
+}
+
+/**
  * "Insert Random: Record…" — multi-select fields from the catalog (plus the
  * user's custom lists, whose name becomes the field key), then deliver one
  * composed record (JSON object / SQL row / CSV line per `recordFormat`) to
@@ -445,39 +491,8 @@ async function pickAndInsert(): Promise<void> {
 async function pickAndInsertRecord(): Promise<void> {
   await load(settings.locale);
 
-  const byGroup = new Map<string, Generator[]>();
-  for (const generator of generators) {
-    if (generator.hidden) { continue; }
-    const members = byGroup.get(generator.group) ?? [];
-    members.push(generator);
-    byGroup.set(generator.group, members);
-  }
-  // Custom lists lead the field picker; templates stay Pick…-only (a record field
-  // wants one atomic value, which a list draw is and a free-form template may not be).
-  const items: GeneratorPick[] = customPickItems(false);
-  const customLists = items.filter((item) => item.generator).map((item) => item.generator!);
-  for (const [ group, members ] of byGroup) {
-    items.push({ label: group, kind: vscode.QuickPickItemKind.Separator });
-    for (const generator of members) {
-      items.push({ label: generator.label, description: generator.id, generatorId: generator.id });
-    }
-  }
-
-  const picks = await vscode.window.showQuickPick(items, {
-    canPickMany: true,
-    placeHolder: 'Pick fields for the record…',
-    matchOnDescription: true,
-  });
-  if (!picks || picks.length === 0) { return; }
-
-  // Preserve picker display order regardless of the order fields were ticked:
-  // picked custom lists first (they lead the picker), then catalog order.
-  const pickedIds = new Set(picks.map((pick) => pick.generatorId));
-  const pickedCustom = new Set(picks.filter((pick) => pick.generator).map((pick) => pick.generator!.id));
-  const fields = [
-    ...customLists.filter((generator) => pickedCustom.has(generator.id)),
-    ...generators.filter((generator) => !generator.hidden && pickedIds.has(generator.id)),
-  ];
+  const fields = await pickRecordFields('Pick fields for the record…');
+  if (!fields) { return; }
 
   applySeed();
   const shape = settings.recordFormat as RecordShape;
@@ -503,6 +518,78 @@ async function pickAndInsertRecord(): Promise<void> {
   // Cursor: a record at every selection — the multi-cursor fill.
   const shared = settings.uniquePerCursor ? undefined : buildRecords(fields, shape, options);
   await fillSelections(editor, () => (settings.uniquePerCursor ? buildRecords(fields, shape, options) : shared!));
+}
+
+/** Pick the dataset shape, leading with the current `recordFormat` setting
+ * marked as such (`showQuickPick` has no true preselection — floating the
+ * configured shape to the top makes it the active row, one Enter away). */
+async function pickDatasetShape(): Promise<RecordShape | undefined> {
+  const shapes: (vscode.QuickPickItem & { value: RecordShape })[] = [
+    { value: 'json', label: 'JSON', detail: 'An array of objects — one record per line' },
+    { value: 'sql', label: 'SQL', detail: `INSERT statements into ${settings.recordSqlTable}` },
+    { value: 'csv', label: 'CSV', detail: 'One line per record, led by a header row of field names' },
+  ];
+  const currentIdx = shapes.findIndex((shape) => shape.value === settings.recordFormat);
+  if (currentIdx >= 0) {
+    const [ current ] = shapes.splice(currentIdx, 1);
+    current.description = '$(check) Current record format';
+    shapes.unshift(current);
+  }
+  const picked = await vscode.window.showQuickPick(shapes, { placeHolder: 'Dataset format…' });
+  return picked?.value;
+}
+
+/** Row-count validation for Generate Dataset…: a whole number, 1 up to the cap. */
+function validateRowCount(raw: string): string | undefined {
+  const value = Number(raw.trim());
+  if (!Number.isInteger(value) || value < 1) { return 'Enter a whole number of rows (1 or more).'; }
+  if (value > DATASET_ROW_CAP) { return `Row count is capped at ${DATASET_ROW_CAP.toLocaleString('en-US')}.`; }
+  return undefined;
+}
+
+/**
+ * "Insert Random: Generate Dataset…" — the Record… machinery pointed at a file:
+ * pick fields, pick a shape (the `recordFormat` setting leads the pick), enter
+ * a row count (default `bulkCount`, capped at 100,000, confirmed above 10,000),
+ * and the whole dataset opens as a NEW untitled document — a JSON array, SQL
+ * `INSERT` statements, or CSV with a header row. A file, not an insertion:
+ * `insertType` never applies and no editor needs to be open. Locale, seed,
+ * `dateFormat`, and `recordSqlTable` all apply; Esc anywhere generates nothing.
+ */
+async function generateDataset(): Promise<void> {
+  await load(settings.locale);
+
+  const fields = await pickRecordFields('Pick fields for the dataset…');
+  if (!fields) { return; }
+  const shape = await pickDatasetShape();
+  if (!shape) { return; }
+
+  const input = await vscode.window.showInputBox({
+    prompt: `How many rows? (up to ${DATASET_ROW_CAP.toLocaleString('en-US')})`,
+    value: String(settings.bulkCount),
+    validateInput: validateRowCount,
+  });
+  if (input === undefined) { return; }
+  const rows = Number(input.trim());
+
+  if (rows > DATASET_CONFIRM_ABOVE) {
+    const go = await vscode.window.showWarningMessage(
+      `Generate ${rows.toLocaleString('en-US')} rows?`,
+      { modal: true, detail: 'A dataset this large can take a moment to build and open.' },
+      'Generate',
+    );
+    if (go !== 'Generate') { return; }
+  }
+
+  applySeed();
+  const content = buildRecords(fields, shape, {
+    bulkCount: rows,
+    sqlTable: settings.recordSqlTable,
+    dateFormat: settings.dateFormat,
+    dataset: true,
+  });
+  const document = await vscode.workspace.openTextDocument({ content, language: DATASET_LANGUAGES[shape] });
+  await vscode.window.showTextDocument(document);
 }
 
 /**
@@ -543,6 +630,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(RECORD_COMMAND, () => pickAndInsertRecord()),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(DATASET_COMMAND, () => generateDataset()),
   );
 
   context.subscriptions.push(

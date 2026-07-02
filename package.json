@@ -1,7 +1,7 @@
 {
   "name": "insert-random-text",
   "displayName": "Random, Fake & Mock Data Generator",
-  "description": "Insert 130+ types of random & fake data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON & more — at every cursor. Multi-cursor, bulk, seeded, fully offline.",
+  "description": "Insert 130+ types of random & fake data — names, emails, addresses, finance, git, UUIDs, lorem ipsum & more — at every cursor, or generate whole JSON, CSV & SQL datasets. Multi-cursor, bulk, seeded, fully offline.",
   "publisher": "ElecTreeFrying",
   "version": "0.1.4",
   "author": {
@@ -47,7 +47,7 @@
     "credit card",
     "iban",
     "seed",
-    "git",
+    "csv",
     "ulid",
     "multi-cursor",
     "guid",
@@ -161,6 +161,10 @@
       {
         "command": "insertRandomText.record",
         "title": "Insert Random: Record…"
+      },
+      {
+        "command": "insertRandomText.generateDataset",
+        "title": "Insert Random: Generate Dataset…"
       },
       {
         "command": "insertRandomText.randomizeSelection",

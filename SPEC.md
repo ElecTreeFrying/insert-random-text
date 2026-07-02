@@ -1,8 +1,8 @@
 # Random, Fake & Mock Data Generator — Functionality Specification
 
-A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
+A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line — and a [Generate Dataset command](#dataset-generation) turns the same records into a whole new file, up to 100,000 rows. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **173 contributed commands**, **no default keybindings**, **fourteen configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **174 contributed commands**, **no default keybindings**, **fourteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,13 +10,14 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **173 commands**, in six families:
+The extension contributes **174 commands**, in seven families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
 | Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
+| Generate Dataset | 1 | `insertRandomText.generateDataset` | "Insert Random: Generate Dataset…" — build up to 100,000 records and open them as a new file (see [Dataset Generation](#dataset-generation)). |
 | Randomize Selection | 1 | `insertRandomText.randomizeSelection` | "Insert Random: Randomize Selection" — anonymize in place: replace each selection with a same-shape randomization of its text (see [Randomize Selection](#insert-random-randomize-selection)). |
 | Prompted commands | 12 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
 | Settings commands | 15 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
@@ -37,6 +38,10 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 ### Insert Random: Record…
 
 `insertRandomText.record` opens the same catalog picker in **multi-select** mode — led by the user's [custom lists](#user-defined-data-saved-templates--custom-lists) when defined: tick any number of fields and one composed record — a JSON object, SQL `INSERT` row, or CSV line, per the `recordFormat` setting — is inserted at every cursor. Fully specified in [Multi-Field Records](#multi-field-records).
+
+### Insert Random: Generate Dataset…
+
+`insertRandomText.generateDataset` points the record machinery at a **file** instead of the cursor: the same multi-select field picker, then a shape pick, then a row count, and the composed dataset opens as a **new untitled document**. It is not an insertion — [`insertType`](#insert-targets) never applies and no editor needs to be open. Fully specified in [Dataset Generation](#dataset-generation).
 
 ### Insert Random: Randomize Selection
 
@@ -251,7 +256,7 @@ Change it from the palette with [Set Locale](#settings-commands).
 |---|---|---|---|
 | **`json`** (default) | A bare object — `{ "firstName": "Ada", "email": "a@x.dev" }` — keys are generator ids. | Records wrap into a JSON array: `[ { … }, { … } ]`. | `JSON.stringify` per key and value. |
 | **`sql`** | `INSERT INTO <table> (firstName, email) VALUES ('Ada', 'a@x.dev');` — `<table>` from `insertRandomText.recordSqlTable`. | One statement per line. | Values single-quoted; an embedded `'` is doubled (`''`). |
-| **`csv`** | `Ada,a@x.dev` — values only, **no header row**. | One line per record. | A value containing `,`, `"`, CR, or LF is wrapped in `"…"` with internal `"` doubled; anything else is untouched. |
+| **`csv`** | `Ada,a@x.dev` — values only, **no header row** (only a [dataset](#dataset-generation) adds one). | One line per record. | A value containing `,`, `"`, CR, or LF is wrapped in `"…"` with internal `"` doubled; anything else is untouched. |
 
 ### Which settings apply
 
@@ -264,6 +269,42 @@ Change it from the palette with [Set Locale](#settings-commands).
 | `insertRandomText.dateFormat` | Honored — a timestamp Time field renders per the setting, same as a single-value insert. |
 | `insertRandomText.locale` | Honored — every field draws from the active locale's data set (see [Locales](#locales)). |
 | `withQuote` · `withNewLine` · `insertRandomText.outputFormat` | **Ignored.** Quoting/escaping is shape-driven — language-aware wrapping would corrupt the record. |
+
+---
+
+## Dataset Generation
+
+`insertRandomText.generateDataset` — **"Insert Random: Generate Dataset…"** — builds the same [records](#multi-field-records) in volume and opens them as a **new untitled document** instead of inserting at the cursor. A file, not an insertion: [`insertType`](#insert-targets) never applies, the active editor is never touched, and the command **works with no editor open at all**.
+
+### Flow
+
+1. The same **multi-select field picker** as [Record…](#multi-field-records) — custom lists lead and their name becomes the field key — with the placeholder *"Pick fields for the dataset…"*.
+2. A **shape pick** — JSON / SQL / CSV — with the current `insertRandomText.recordFormat` value floated to the top and marked *"$(check) Current record format"* (so Enter accepts the configured shape). The pick does **not** change the setting.
+3. A **row-count input box**, prefilled with the `insertRandomText.bulkCount` setting. Validated live: a whole number, `1` to the hard cap of **100,000**. Above **10,000** a modal confirmation interposes (*"Generate N rows?"* / **Generate**) — dismissing it generates nothing.
+4. The [seed](#seeding--reproducibility) is applied, the dataset is built, and it opens as a new **untitled** document via `openTextDocument({ content, language })` — focused and ready to save. Esc at any step is a clean cancel: nothing is generated, nothing opens.
+
+### Dataset shapes
+
+Same field draws and per-value escaping as [record shapes](#record-shapes), rendered as a standalone file (the `dataset` option of `buildRecords` in `record.ts` — pure and unit-tested):
+
+| Shape | File rendering | Opens as |
+|---|---|---|
+| **`json`** | Always a JSON **array** — even for one row — with **one record per line** (a 100k-row single-line array would choke the editor's tokenizer). | `json` |
+| **`sql`** | One `INSERT INTO <table> (…) VALUES (…);` per row — `<table>` from `insertRandomText.recordSqlTable`. | `sql` |
+| **`csv`** | A **header row of the field keys** (escaped like any CSV value — a custom-list name may contain a comma), then one line per row. Only datasets get the header — [record-at-cursor](#record-shapes) stays headerless. | `plaintext` (VS Code has no built-in csv language) |
+
+Every dataset ends with a single trailing newline, per file convention.
+
+### Which settings apply
+
+| Setting | Effect on datasets |
+|---|---|
+| `insertRandomText.bulkCount` | Only the **default** of the row-count box — the entered count is what is generated. |
+| `insertRandomText.recordFormat` | Only the **preselected** shape in the pick — the picked shape is what renders. |
+| `insertRandomText.recordSqlTable` | Table name for the `sql` shape, as for records. |
+| `insertRandomText.seed` | Applied after the prompts, before the draws — a seeded run regenerates the identical dataset. |
+| `insertRandomText.dateFormat` · `insertRandomText.locale` | Honored — exactly as for [records](#which-settings-apply). |
+| `insertType` · `withQuote` · `withNewLine` · `insertRandomText.outputFormat` · `insertRandomText.uniquePerCursor` | **Ignored.** The output is a file — there is no cursor, no wrapping, and every row is a fresh draw by construction. |
 
 ---
 
@@ -535,12 +576,12 @@ Fourteen settings. Three **legacy** keys stay flat and non-namespaced (`insertTy
 | `withQuote` | boolean | `true` | `true` / `false` | Wrap each value in quotes. Master switch for the quote policy. |
 | `withNewLine` | boolean | `true` | `true` / `false` | Append a newline (`\n`) after each block. |
 | `insertRandomText.uniquePerCursor` | boolean | `true` | `true` / `false` | A different value at each cursor, or the same value repeated. |
-| `insertRandomText.bulkCount` | number | `1` | `1`–`1000` | How many values to insert at each cursor. Clamped to ≥ 1 at render time. |
+| `insertRandomText.bulkCount` | number | `1` | `1`–`1000` | How many values to insert at each cursor. Clamped to ≥ 1 at render time. Also the default row count offered by [Generate Dataset…](#dataset-generation). |
 | `insertRandomText.outputFormat` | string (enum) | `plain` | `plain` · `jsonArray` · `quotedList` | How bulk values render. See [Output Formats](#output-formats). |
 | `insertRandomText.dateFormat` | string (enum) | `iso` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | How the timestamp [Time types](#time-8) render — full ISO 8601, `YYYY-MM-DD`, `HH:mm:ss`, or Unix seconds/milliseconds. ISO slices come from the UTC string; an unknown value falls back to `iso`. |
 | `insertRandomText.seed` | string | `""` | any number, or blank | Reproducible output; blank or non-numeric = random. See [Seeding](#seeding--reproducibility). |
 | `insertRandomText.locale` | string (enum) | `en` | `en` · `de` · `fr` · `es` · `pt_BR` · `ja` | Which faker locale data set generators draw from. An unknown value falls back to `en`. See [Locales](#locales). |
-| `insertRandomText.recordFormat` | string (enum) | `json` | `json` · `sql` · `csv` | Structured shape for [Record](#multi-field-records) inserts: JSON object, SQL row, or CSV line. |
+| `insertRandomText.recordFormat` | string (enum) | `json` | `json` · `sql` · `csv` | Structured shape for [Record](#multi-field-records) inserts: JSON object, SQL row, or CSV line. Also the preselected shape in [Generate Dataset…](#dataset-generation). |
 | `insertRandomText.recordSqlTable` | string | `table` | any non-empty name | Table name used by the `sql` record shape. |
 | `insertRandomText.templates` | object | `{}` | name → template string | Saved faker templates — a **Templates** group atop [Pick…](#insert-random-pick). Non-string / empty entries are dropped (console-warned). See [User-defined data](#user-defined-data-saved-templates--custom-lists). |
 | `insertRandomText.customLists` | object | `{}` | name → string array | Custom value lists — a **Custom Lists** group atop Pick…, and [Record…](#multi-field-records) fields keyed by the name. Non-string items are dropped (console-warned). |
@@ -602,11 +643,15 @@ The extension is deliberately quiet. It uses **status-bar messages** (not modal/
 | Randomize Selection with nothing selected (or no editor) | Info message: *Select some text first — Randomize Selection replaces each selection in place.* Nothing is edited. |
 | No active editor (Cursor / Top / Record…) | **Silent no-op** — nothing is inserted and no message is shown. |
 | Record… pick cancelled or empty | **Silent no-op** — nothing is inserted. |
+| Generate Dataset… cancelled at any step | **Silent no-op** — nothing is generated, no document opens. |
+| Generate Dataset… above 10,000 rows | Modal warning: *Generate ‹N› rows?* with a **Generate** button — dismissing generates nothing. |
+| Generate Dataset… invalid row count | Inline input-box validation: *"Enter a whole number of rows (1 or more)."* / *"Row count is capped at 100,000."* |
 
 ### Quick Pick behaviors
 
 - **Insert Random: Pick…** — entries grouped under category separator headings (visible generators only), led by the user's **Templates** and **Custom Lists** groups when defined (their descriptions are the template text / list values, so content is searchable), placeholder *"Insert Random — pick a type to insert at every cursor…"*, `matchOnDescription` on (search by label **or** registry id). Selecting inserts; Escape cancels.
 - **Insert Random: Record…** — the same grouped listing in **multi-select** mode (`canPickMany`), led by the **Custom Lists** group when defined, placeholder *"Pick fields for the record…"*; ticked fields compose one record in picker display order (custom lists first, then catalog order). Escape, or confirming with nothing ticked, cancels.
+- **Insert Random: Generate Dataset…** — the same multi-select field picker (placeholder *"Pick fields for the dataset…"*), then a three-option shape pick (JSON / SQL / CSV) with the configured `recordFormat` floated to the top marked `$(check) Current record format`. Escape at either pick cancels.
 - **Enum settings pickers** — current value marked `$(check) Current` and floated to the top; `matchOnDetail` on.
 
 ---
@@ -638,7 +683,7 @@ An optional editor right-click entry, **off by default**.
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 173 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 174 commands activates the extension from a cold start. `extensionKind` is `workspace`.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.

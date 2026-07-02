@@ -22,7 +22,7 @@
 
 Drop a multi-cursor selection down a column and fill every row with a _different_ realistic value in one step — names, emails, IDs, dates, prices, whatever the column needs. All generated right where you're typing: no website, no signup, fully offline.
 
-**Perfect for** test fixtures & database seeds · mock API responses · sample CSV/SQL rows · UI placeholder & Storybook props · throwaway IDs, addresses & credentials.
+**Perfect for** test fixtures & database seeds · mock API responses · whole CSV / JSON / SQL datasets · UI placeholder & Storybook props · throwaway IDs, addresses & credentials.
 
 ![Random, Fake & Mock Data Generator demo](images/playback.gif "Insert random data at the cursor")
 
@@ -38,6 +38,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 - **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 20 categories (full list below).
 - **Six locales** — names, addresses & text in English, German, French, Spanish, Brazilian Portuguese, or Japanese. One setting, no reload.
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
+- **Whole datasets in one command** — **Generate Dataset…** builds up to 100,000 rows of JSON, CSV (with a header), or SQL `INSERT`s and opens them as a new file. No signup, no row caps, no export button — instant and offline.
 - **Anonymize in place** — select real data and **Randomize Selection** re-rolls every letter and digit where it stands: `3.14` → `8.77`, `Bob@x.io` → `Kqe@v.zt`. Shapes intact, secrets gone.
 - **Reproducible when you need it** — set a seed, get the same values every run — stable tests and snapshots.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
@@ -185,6 +186,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 |---|---|
 | **Insert Random: Pick…** | Choose any type — led by your saved templates and custom lists, when you've defined some — from a grouped, searchable menu, then insert at every cursor. |
 | **Insert Random: Record…** | Multi-select fields (catalog types and your custom lists) and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
+| **Insert Random: Generate Dataset…** | Pick fields, a format, and a row count — up to 100,000 rows of JSON, CSV (with a header row), or SQL `INSERT`s open as a new file. See [Generate whole datasets](#generate-whole-datasets). |
 | **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
 | **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
 | **Insert Random: Randomize Selection** | Anonymize in place — every selected letter and digit is re-rolled in kind (digits stay digits, letters keep their case, punctuation doesn't move), each selection replaced where it stands. See [Anonymize in place](#anonymize-in-place). |
@@ -232,6 +234,16 @@ Save the templates you reuse, and the values only your project knows, straight i
 - **Insert Random: Manage Templates / Manage Custom Lists** jump straight to these settings. Both survive **Reset Settings to Defaults** — they're your data, not tuning.
 
 Everything rides the normal pipeline: multi-cursor, bulk count, quoting, and seed all apply.
+
+### Generate whole datasets
+
+Need a file of test data, not a value at the cursor? **Insert Random: Generate Dataset…** walks three quick steps — pick fields (your [custom lists](#your-own-data) included), pick a format, enter a row count — and opens the result as a new untitled file, ready to save:
+
+- **JSON** — an array of objects, one record per line.
+- **CSV** — one line per record, led by a **header row** of the field names.
+- **SQL** — one `INSERT INTO your_table (…) VALUES (…);` per record, using your configured table name.
+
+Up to **100,000 rows**, generated locally in an instant — no signup, no row caps, no export step, no data leaving your editor. The format pick starts on your `recordFormat` setting, the row count starts at your bulk count, and [locale, seed](#settings), and date format all apply — a seeded run regenerates the identical dataset every time. Works with no editor open.
 
 ### Anonymize in place
 

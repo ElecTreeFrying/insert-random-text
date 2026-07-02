@@ -126,3 +126,58 @@ describe('buildRecords — field order', () => {
     assert.strictEqual(buildRecords([ field('first', '1'), field('second', '2') ], 'csv', OPTS), '1,2');
   });
 });
+
+describe('buildRecords — dataset mode (records → file)', () => {
+  // dataset: true renders the same records as a STANDALONE FILE for Generate Dataset…:
+  // csv gains a header row of field keys, json is always an array (one record per line, so a
+  // 100k-row file stays scrollable), and the text ends with a trailing newline. At-cursor
+  // records never pass the flag — the headerless/bare-object pins above are the other half
+  // of this contract.
+
+  it('csv leads with a header row of field keys and ends with a newline', () => {
+    assert.strictEqual(
+      buildRecords([ field('a', 'x'), field('b', 'y') ], 'csv', { ...OPTS, dataset: true }),
+      'a,b\nx,y\n',
+    );
+  });
+
+  it('csv header cells are escaped (a custom-list name can hold a comma)', () => {
+    assert.strictEqual(
+      buildRecords([ field('name, formal', 'x') ], 'csv', { ...OPTS, dataset: true }),
+      '"name, formal"\nx\n',
+    );
+  });
+
+  it('csv stacks one line per record under the single header', () => {
+    assert.strictEqual(
+      buildRecords([ field('n', 'A') ], 'csv', { ...OPTS, bulkCount: 3, dataset: true }),
+      'n\nA\nA\nA\n',
+    );
+  });
+
+  it('json is an array even for a single record, one record per line', () => {
+    assert.strictEqual(
+      buildRecords([ field('n', 'A') ], 'json', { ...OPTS, dataset: true }),
+      '[\n  { "n": "A" }\n]\n',
+    );
+  });
+
+  it('json stacks records one per line and stays parseable', () => {
+    const out = buildRecords([ field('n', 'A') ], 'json', { ...OPTS, bulkCount: 2, dataset: true });
+    assert.strictEqual(out, '[\n  { "n": "A" },\n  { "n": "A" }\n]\n');
+    const parsed = JSON.parse(out);
+    assert.ok(Array.isArray(parsed) && parsed.length === 2);
+  });
+
+  it('sql keeps its one-statement-per-line body, plus the trailing newline', () => {
+    assert.strictEqual(
+      buildRecords([ field('n', 'A') ], 'sql', { ...OPTS, bulkCount: 2, dataset: true }),
+      "INSERT INTO table (n) VALUES ('A');\nINSERT INTO table (n) VALUES ('A');\n",
+    );
+  });
+
+  it('an explicit dataset: false behaves exactly like the at-cursor default', () => {
+    assert.strictEqual(buildRecords([ field('a', 'x') ], 'csv', { ...OPTS, dataset: false }), 'x');
+    assert.strictEqual(buildRecords([ field('n', 'A') ], 'json', { ...OPTS, dataset: false }), '{ "n": "A" }');
+  });
+});
