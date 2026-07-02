@@ -477,6 +477,14 @@ describe('insert — Record… (multi-field)', function () {
     assert.ok(clip !== 'SENTINEL' && clip.includes('person'), `a clipboard record needs no editor, got ${clip}`);
   });
 
+  it('never appends the trailing newline to a record — even with withNewLine on (its default)', async () => {
+    // Single-value inserts get the withNewLine treatment; a record's shape IS its final text.
+    const editor = await openDoc('');
+    await runRecordPicking([ 'person' ]);
+    const text = editor.document.getText();
+    assert.ok(text.length > 0 && !text.endsWith('\n'), `expected a bare record block, got ${JSON.stringify(text)}`);
+  });
+
   it('inserts one record at the top in Top mode', async () => {
     await setConfig(ConfigKey.INSERT_TYPE, 'Top');
     const editor = await openDoc('existing');
@@ -486,5 +494,115 @@ describe('insert — Record… (multi-field)', function () {
     await runRecordPicking([ 'person' ]);
     assert.ok(!editor.document.lineAt(0).text.startsWith('existing'), 'Top mode should insert the record before the existing text');
     assert.ok(editor.document.getText().includes('existing'), 'the existing text must survive a Top insert');
+  });
+});
+
+describe('insert — picker & status-bar UI contract', function () {
+  // The Host can't render a Quick Pick or read the status bar, but it CAN pin the exact data handed to
+  // them — group order, the id in each description (what matchOnDescription filters on), placeholder
+  // text, pick options, and the confirm message. The one thing left for a human eye is that VS Code
+  // draws that data correctly, which is a one-time check in qa/checklists/manual-qa.md, not a per-release sweep.
+  this.timeout(20000);
+
+  before(async () => {
+    await vscode.extensions.getExtension(EXTENSION_ID)?.activate();
+  });
+
+  afterEach(async () => {
+    await setConfig(ConfigKey.INSERT_TYPE, undefined);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  });
+
+  // Group order in both pickers = first appearance among visible generators, in registry order.
+  const expectedGroups: string[] = [];
+  for (const generator of generators) {
+    if (!generator.hidden && !expectedGroups.includes(generator.group)) {
+      expectedGroups.push(generator.group);
+    }
+  }
+
+  async function capturePicker(command: string): Promise<{ items: any[]; options: any }> {
+    let captured: { items: any[]; options: any } = { items: [], options: undefined };
+    const original = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any, options: any) => {
+      captured = { items: await items, options };
+      return undefined; // dismiss — we only want the data.
+    };
+    try {
+      await vscode.commands.executeCommand(command);
+    } finally {
+      (vscode.window as any).showQuickPick = original;
+    }
+    return captured;
+  }
+
+  it('Pick… separators appear in catalog group order', async () => {
+    const { items } = await capturePicker('insertRandomText.pick');
+    const separators = items.filter((i) => i.kind === vscode.QuickPickItemKind.Separator).map((i) => i.label);
+    assert.deepStrictEqual(separators, expectedGroups, 'picker groups must mirror catalog registry order');
+  });
+
+  it('Pick… entries carry the generator id as description, and the picker filters on it', async () => {
+    const { items, options } = await capturePicker('insertRandomText.pick');
+    for (const item of items.filter((i) => i.generatorId)) {
+      assert.strictEqual(item.description, item.generatorId, `'${item.label}' should expose its id for filtering`);
+    }
+    assert.strictEqual(options.matchOnDescription, true, 'without matchOnDescription, typing an id filters nothing');
+  });
+
+  it('Pick… shows its placeholder', async () => {
+    const { options } = await capturePicker('insertRandomText.pick');
+    assert.strictEqual(options.placeHolder, 'Insert Random — pick a type to insert at every cursor…');
+  });
+
+  it('Record… is the multi-select variant: same groups, hidden excluded, id filter, placeholder', async () => {
+    const { items, options } = await capturePicker('insertRandomText.record');
+    assert.strictEqual(options.canPickMany, true, 'the Record picker must be multi-select');
+    assert.strictEqual(options.matchOnDescription, true);
+    assert.strictEqual(options.placeHolder, 'Pick fields for the record…');
+    const separators = items.filter((i) => i.kind === vscode.QuickPickItemKind.Separator).map((i) => i.label);
+    assert.deepStrictEqual(separators, expectedGroups);
+    const ids = new Set(items.filter((i) => i.generatorId).map((i) => i.generatorId));
+    for (const hidden of generators.filter((g) => g.hidden)) {
+      assert.ok(!ids.has(hidden.id), `hidden generator '${hidden.id}' must not be a record field`);
+    }
+  });
+
+  async function captureStatusBar(run: () => Promise<void>): Promise<string[]> {
+    const messages: string[] = [];
+    const original = vscode.window.setStatusBarMessage;
+    (vscode.window as any).setStatusBarMessage = (message: string) => {
+      messages.push(message);
+      return { dispose() { } };
+    };
+    try {
+      await run();
+    } finally {
+      (vscode.window as any).setStatusBarMessage = original;
+    }
+    return messages;
+  }
+
+  it('a Clipboard-mode copy confirms in the status bar, named after the generator', async () => {
+    await setConfig(ConfigKey.INSERT_TYPE, 'Clipboard');
+    const messages = await captureStatusBar(async () => {
+      await vscode.commands.executeCommand(CMD); // → the 'String' generator.
+    });
+    assert.deepStrictEqual(messages, [ '$(clippy) Copied random string to clipboard' ]);
+  });
+
+  it('a Clipboard-mode record copy confirms in the status bar', async () => {
+    await setConfig(ConfigKey.INSERT_TYPE, 'Clipboard');
+    const originalPick = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any) => [ (await items).find((i: any) => i.generatorId === 'person') ];
+    let messages: string[];
+    try {
+      messages = await captureStatusBar(async () => {
+        await vscode.commands.executeCommand('insertRandomText.record');
+      });
+    } finally {
+      (vscode.window as any).showQuickPick = originalPick;
+    }
+    assert.deepStrictEqual(messages, [ '$(clippy) Copied random record to clipboard' ]);
   });
 });

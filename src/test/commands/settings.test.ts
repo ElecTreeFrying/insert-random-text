@@ -252,3 +252,43 @@ describe('settingsCommands — remaining command wirings', () => {
     await clear(ConfigKey.RECORD_SQL_TABLE);
   });
 });
+
+describe('settingsCommands — status-bar confirms', () => {
+  // Every write confirms via setStatusBarMessage. The bar itself can't be read back, but the message
+  // handed to it can — pinned for one toggle and one enum picker; all handlers share confirm().
+  async function captureStatusBar(run: () => Promise<void>): Promise<string[]> {
+    const messages: string[] = [];
+    const original = vscode.window.setStatusBarMessage;
+    (vscode.window as any).setStatusBarMessage = (message: string) => {
+      messages.push(message);
+      return { dispose() { } };
+    };
+    try {
+      await run();
+    } finally {
+      (vscode.window as any).setStatusBarMessage = original;
+    }
+    return messages;
+  }
+
+  it('a toggle names the setting and its new state', async () => {
+    await setGlobal(ConfigKey.WITH_QUOTE, true);
+    const messages = await captureStatusBar(() => SETTING_COMMANDS['insertRandomText.toggleQuotes']());
+    assert.deepStrictEqual(messages, [ '$(check) Wrap with quotes: Off' ]);
+    await clear(ConfigKey.WITH_QUOTE);
+  });
+
+  it('an enum picker confirms the chosen label', async () => {
+    const originalPick = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any) => (await items).find((i: any) => i.value === 'Top');
+    let messages: string[];
+    try {
+      messages = await captureStatusBar(() => SETTING_COMMANDS['insertRandomText.setInsertType']());
+    } finally {
+      (vscode.window as any).showQuickPick = originalPick;
+    }
+    assert.strictEqual(messages.length, 1);
+    assert.ok(/^\$\(check\) Insert type → /.test(messages[0]), `expected an 'Insert type → …' confirm, got '${messages[0]}'`);
+    await clear(ConfigKey.INSERT_TYPE);
+  });
+});
