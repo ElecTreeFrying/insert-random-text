@@ -5,7 +5,8 @@ import { faker } from './engine';
  * Parameterized ("prompted") insert commands — types that ask for parameters in
  * input boxes or Quick Picks before inserting: Number (Range…), Float (Range…),
  * String (Length…), Date (Between…), Words/Sentences/Paragraphs (Count…),
- * UUID (Format…), Password (Options…), Phone (Format…).
+ * UUID (Format…), Password (Options…), Phone (Format…), From Template…,
+ * From Pattern….
  *
  * These are deliberately NOT catalog entries: the registry stays a list of
  * zero-argument generators, while each prompted command declares its steps
@@ -148,12 +149,51 @@ export function formatUuid(uuid: string, format: string): string {
   }
 }
 
+/** Render a mustache template — faker's `helpers.fake` — for From Template…. */
+function renderTemplate(template: string): string {
+  return faker().helpers.fake(template);
+}
+
+/** Render a regex-subset pattern — faker's `helpers.fromRegExp` — for From Pattern…. */
+function renderPattern(pattern: string): string {
+  return faker().helpers.fromRegExp(pattern);
+}
+
+const TEMPLATE_EXAMPLE = '{{person.firstName}} <{{internet.email}}>';
+const PATTERN_EXAMPLE = '[A-Z]{3}-[0-9]{4}';
+
+/**
+ * Shared validate for the free-form template/pattern boxes: the only authority
+ * on whether such input renders is faker itself, so prove it with one test
+ * render and surface faker's error plus a working example when it throws.
+ * A render's structure is deterministic (only leaf values vary), so one success
+ * here means insert-time renders cannot throw. Empty input needs the explicit
+ * reject because faker renders '' to '' without complaint.
+ */
+function validateByRendering(
+  input: string,
+  noun: string,
+  example: string,
+  render: (value: string) => string,
+): string | undefined {
+  const trimmed = input.trim();
+  if (trimmed === '') { return `Enter a ${noun} — e.g. ${example}`; }
+  try {
+    render(trimmed);
+    return undefined;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `${message} — a working example: ${example}`;
+  }
+}
+
 /**
  * The prompted-command registry. Fallbacks reproduce the matching zero-argument
  * catalog types (Number: 0–1000, Float: 0–1000 at 2 decimals, String: 15
  * alphanumeric chars, Password: 15 chars, and the lowercase / no-symbols / human
  * pick defaults), so accepting the prefills behaves like the plain command.
- * The lorem counts prefill 3 — faker's own words/paragraphs default.
+ * The lorem counts prefill 3 — faker's own words/paragraphs default — and the
+ * template/pattern boxes prefill their documented examples.
  */
 export const promptedCommands: readonly PromptedCommand[] = [
   {
@@ -362,6 +402,36 @@ export const promptedCommands: readonly PromptedCommand[] = [
       },
     ],
     render: ({ style }) => faker().phone.number({ style: style as 'human' | 'national' | 'international' }),
+  },
+  {
+    id: 'fromTemplate',
+    label: 'From Template…',
+    group: 'Custom',
+    steps: [
+      {
+        key: 'template',
+        prompt: 'Template — text with {{module.method}} placeholders; every cursor and bulk item re-renders with fresh values.',
+        placeholder: `e.g. ${TEMPLATE_EXAMPLE}`,
+        fallback: TEMPLATE_EXAMPLE,
+        validate: (input) => validateByRendering(input, 'template', TEMPLATE_EXAMPLE, renderTemplate),
+      },
+    ],
+    render: ({ template }) => renderTemplate(template),
+  },
+  {
+    id: 'fromPattern',
+    label: 'From Pattern…',
+    group: 'Custom',
+    steps: [
+      {
+        key: 'pattern',
+        prompt: 'Pattern — a fresh string is drawn to match it at every cursor and bulk item.',
+        placeholder: `e.g. ${PATTERN_EXAMPLE} — faker supports a limited regex subset (classes, ranges, quantifiers)`,
+        fallback: PATTERN_EXAMPLE,
+        validate: (input) => validateByRendering(input, 'pattern', PATTERN_EXAMPLE, renderPattern),
+      },
+    ],
+    render: ({ pattern }) => renderPattern(pattern),
   },
 ];
 

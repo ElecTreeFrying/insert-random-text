@@ -170,6 +170,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 | **Insert Random: Pick…** | Choose any type from a grouped, searchable menu, then insert at every cursor. |
 | **Insert Random: Record…** | Multi-select fields and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
 | **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
+| **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
 | **Insert Random: Set Insert Type / Output Format / Date Format / Record Format** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
@@ -181,6 +182,17 @@ See [SPEC — §Commands][SPEC-commands] for the two command namespaces and back
 [SPEC-commands]: SPEC.md#commands
 [SPEC-targets]: SPEC.md#insert-targets
 [SPEC-records]: SPEC.md#multi-field-records
+
+### Templates & patterns
+
+When no built-in type fits, write your own — one input box exposes faker's entire surface:
+
+- **Insert Random: From Template…** — mustache-style placeholders, re-rendered with fresh values at every cursor and bulk item:
+  `{{person.firstName}} <{{internet.email}}>` → `Jane <Vicky.DAmore99@gmail.com>`
+- **Insert Random: From Pattern…** — a regex-like pattern (faker supports a limited subset: character classes, ranges, quantifiers):
+  `[A-Z]{3}-[0-9]{4}` → `WUZ-7314`
+
+Input is validated as you type by test-rendering it — a typo shows faker's error plus a working example right in the box, and nothing is inserted until it renders. Your last template and pattern are remembered and prefilled.
 
 ### Keyboard shortcuts
 

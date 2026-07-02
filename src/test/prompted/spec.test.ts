@@ -19,7 +19,16 @@ function pickSteps(id: string): readonly PickStep[] {
   return (getPromptedCommand(id)?.steps ?? []).filter((step): step is PickStep => step.kind === 'pick');
 }
 
-describe('prompted — registry', () => {
+describe('prompted — registry', function () {
+  this.timeout(15000);
+
+  // The template/pattern validators prove their input by test-rendering through
+  // faker, so the registry checks that exercise validate() need the engine live —
+  // mirroring the glue, which awaits load() before the first box opens.
+  before(async () => {
+    await load();
+  });
+
   it('exposes the parameterized commands, id-addressable', () => {
     assert.deepStrictEqual(
       promptedCommands.map((command) => command.id),
@@ -27,6 +36,7 @@ describe('prompted — registry', () => {
         'numberRange', 'floatRange', 'stringLength', 'dateBetween',
         'wordsCount', 'sentencesCount', 'paragraphsCount',
         'uuidFormat', 'passwordOptions', 'phoneFormat',
+        'fromTemplate', 'fromPattern',
       ],
     );
     for (const command of promptedCommands) {
@@ -244,6 +254,72 @@ describe('prompted — passwordOptions length validation', () => {
   });
 });
 
+describe('prompted — fromTemplate / fromPattern (custom input)', function () {
+  this.timeout(15000);
+
+  // validate() proves free-form input by test-rendering it through faker.
+  before(async () => {
+    await load();
+  });
+
+  it('carries the two custom-input commands, one box each', () => {
+    assert.deepStrictEqual(
+      [ 'fromTemplate', 'fromPattern' ].map((id) => {
+        const { label, group, steps } = getPromptedCommand(id)!;
+        return { id, label, group, keys: steps.map((step) => step.key) };
+      }),
+      [
+        { id: 'fromTemplate', label: 'From Template…', group: 'Custom', keys: [ 'template' ] },
+        { id: 'fromPattern', label: 'From Pattern…', group: 'Custom', keys: [ 'pattern' ] },
+      ],
+    );
+  });
+
+  it('prefills the documented examples as fallbacks', () => {
+    const [ template ] = inputSteps('fromTemplate');
+    assert.strictEqual(template.fallback, '{{person.firstName}} <{{internet.email}}>');
+    const [ pattern ] = inputSteps('fromPattern');
+    assert.strictEqual(pattern.fallback, '[A-Z]{3}-[0-9]{4}');
+  });
+
+  it('documents the limited regex subset in the pattern box placeholder', () => {
+    const [ pattern ] = inputSteps('fromPattern');
+    assert.match(pattern.placeholder, /limited regex subset/i);
+  });
+
+  it('template box accepts anything that renders — placeholders, call args, plain text', () => {
+    const [ template ] = inputSteps('fromTemplate');
+    for (const input of [ '{{person.firstName}} <{{internet.email}}>', 'x-{{string.numeric(3)}}', 'plain text', ' {{internet.email}} ' ]) {
+      assert.strictEqual(template.validate(input, {}), undefined, `'${input}' should render`);
+    }
+  });
+
+  it('template box rejects empty input and unresolvable expressions, offering a working example', () => {
+    const [ template ] = inputSteps('fromTemplate');
+    for (const input of [ '', '   ', '{{nope.nope}}', '{{person.nope}}' ]) {
+      const message = template.validate(input, {});
+      assert.ok(message, `'${input}' should be rejected with a message`);
+      assert.ok(message!.includes('{{person.firstName}}'), `the message must carry a working example (got: ${message})`);
+    }
+  });
+
+  it('pattern box accepts the regex subset faker renders', () => {
+    const [ pattern ] = inputSteps('fromPattern');
+    for (const input of [ '[A-Z]{3}-[0-9]{4}', 'a{2,4}', 'abc?', '[0-9]*x', ' [a-f]{8} ' ]) {
+      assert.strictEqual(pattern.validate(input, {}), undefined, `'${input}' should render`);
+    }
+  });
+
+  it('pattern box rejects empty input and throwing patterns, offering a working example', () => {
+    const [ pattern ] = inputSteps('fromPattern');
+    for (const input of [ '', '   ', '[z-a]', 'a{4,2}' ]) {
+      const message = pattern.validate(input, {});
+      assert.ok(message, `'${input}' should be rejected with a message`);
+      assert.ok(message!.includes('[A-Z]{3}-[0-9]{4}'), `the message must carry a working example (got: ${message})`);
+    }
+  });
+});
+
 describe('prompted — formatUuid (the pure uuid post-transform)', () => {
   const SAMPLE = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
 
@@ -390,6 +466,35 @@ describe('prompted — rendering (one-off Generator through toGenerator)', funct
     assert.match(national.generate(), /^\(\d{3}\) \d{3}-\d{4}$/);
     const international = toGenerator(getPromptedCommand('phoneFormat')!, { style: 'international' });
     assert.match(international.generate(), /^\+\d{8,15}$/);
+  });
+
+  it('fromTemplate re-renders the mustache template with fresh draws each call', () => {
+    seed(20260702);
+    const generator = toGenerator(getPromptedCommand('fromTemplate')!, { template: 'x-{{string.numeric(3)}}' });
+    for (let i = 0; i < 10; i++) { assert.match(generator.generate(), /^x-\d{3}$/); }
+    const fresh = toGenerator(getPromptedCommand('fromTemplate')!, { template: '{{string.alphanumeric(12)}}' });
+    assert.notStrictEqual(fresh.generate(), fresh.generate(), 'each generate() re-renders with fresh values');
+  });
+
+  it('fromTemplate passes plain text through unchanged', () => {
+    const generator = toGenerator(getPromptedCommand('fromTemplate')!, { template: 'plain text' });
+    assert.strictEqual(generator.generate(), 'plain text');
+  });
+
+  it('fromPattern draws a string matching the entered pattern', () => {
+    seed(20260702);
+    const generator = toGenerator(getPromptedCommand('fromPattern')!, { pattern: '[A-Z]{3}-[0-9]{4}' });
+    for (let i = 0; i < 10; i++) { assert.match(generator.generate(), /^[A-Z]{3}-\d{4}$/); }
+  });
+
+  it('fromTemplate and fromPattern reproduce under the same seed', () => {
+    const template = toGenerator(getPromptedCommand('fromTemplate')!, { template: '{{string.alphanumeric(16)}}' });
+    const pattern = toGenerator(getPromptedCommand('fromPattern')!, { pattern: '[a-z0-9]{16}' });
+    seed(7);
+    const first = [ template.generate(), pattern.generate() ];
+    seed(7);
+    const second = [ template.generate(), pattern.generate() ];
+    assert.deepStrictEqual(first, second);
   });
 
   it('draws a fresh value on each generate() call — no memoization', () => {

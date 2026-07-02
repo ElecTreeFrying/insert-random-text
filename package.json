@@ -199,6 +199,14 @@
         "title": "Insert Random: Phone (Format…)"
       },
       {
+        "command": "insertRandomText.fromTemplate",
+        "title": "Insert Random: From Template…"
+      },
+      {
+        "command": "insertRandomText.fromPattern",
+        "title": "Insert Random: From Pattern…"
+      },
+      {
         "command": "insertRandomText.uuid",
         "title": "Insert Random: UUID"
       },

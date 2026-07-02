@@ -306,6 +306,10 @@ type StepPick = vscode.QuickPickItem & { value: string };
  * inserted, nothing is remembered.
  */
 async function runPrompted(context: vscode.ExtensionContext, command: PromptedCommand): Promise<void> {
+  // Validation may test-render through faker (the template/pattern boxes), so
+  // the engine must be live before the first box opens; insertWith's own
+  // load() then no-ops.
+  await load();
   const params: Record<string, string> = {};
   for (const step of command.steps) {
     const memoryKey = `prompted.${command.id}.${step.key}`;

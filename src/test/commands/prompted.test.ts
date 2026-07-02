@@ -17,6 +17,8 @@ const PARAGRAPHS_COUNT = 'insertRandomText.paragraphsCount';
 const UUID_FORMAT = 'insertRandomText.uuidFormat';
 const PASSWORD_OPTIONS = 'insertRandomText.passwordOptions';
 const PHONE_FORMAT = 'insertRandomText.phoneFormat';
+const FROM_TEMPLATE = 'insertRandomText.fromTemplate';
+const FROM_PATTERN = 'insertRandomText.fromPattern';
 
 async function setConfig(key: string, value: unknown): Promise<void> {
   const changed = new Promise<void>((resolve) => {
@@ -42,6 +44,8 @@ interface ReceivedPrompts {
 
 /** Stub showInputBox AND showQuickPick with one scripted answer per prompt, consumed in flow order
  * (undefined = Esc; a pick answer selects the item whose `value` matches, failing loudly on a typo).
+ * A scripted box answer runs through the box's real validateInput first — a real input box would
+ * refuse it, so a failing answer is a test bug and throws loudly, like the pick-typo guard.
  * Records what every box and pick received, so tests can assert prefills and item ordering. */
 function stubPrompts(answers: readonly (string | undefined)[]): { received: ReceivedPrompts; restore(): void } {
   const originalInput = vscode.window.showInputBox;
@@ -50,7 +54,12 @@ function stubPrompts(answers: readonly (string | undefined)[]): { received: Rece
   let cursor = 0;
   (vscode.window as any).showInputBox = async (options: vscode.InputBoxOptions) => {
     received.inputs.push(options);
-    return answers[cursor++];
+    const answer = answers[cursor++];
+    if (answer !== undefined && options.validateInput) {
+      const error = await options.validateInput(answer);
+      if (error) { throw new Error(`scripted answer '${answer}' failed the box's validation: ${error}`); }
+    }
+    return answer;
   };
   (vscode.window as any).showQuickPick = async (items: any, options: vscode.QuickPickOptions) => {
     const resolved = await items;
@@ -200,6 +209,54 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     const editor = await openDoc('');
     await runPromptedCommand(PHONE_FORMAT, [ 'international' ]);
     assert.match(editor.document.getText(), /^\+\d{8,15}$/);
+  });
+
+  it('From Template… renders the entered mustache template through the pipeline', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(FROM_TEMPLATE, [ 'T-{{string.numeric(4)}}' ]);
+    assert.match(editor.document.getText(), /^T-\d{4}$/);
+  });
+
+  it('From Pattern… inserts a string matching the entered pattern', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(FROM_PATTERN, [ '[A-Z]{2}-[0-9]{2}' ]);
+    assert.match(editor.document.getText(), /^[A-Z]{2}-\d{2}$/);
+  });
+
+  it('Esc at the template box cancels cleanly — nothing inserted, no error', async () => {
+    const editor = await openDoc('');
+    await assert.doesNotReject(async () => { await runPromptedCommand(FROM_TEMPLATE, [ undefined ]); });
+    assert.strictEqual(editor.document.getText(), '', 'a cancelled template box must insert nothing');
+  });
+
+  it('fills every cursor with a fresh template rendering (multi-cursor)', async () => {
+    const editor = await openDoc('\n'); // two empty lines.
+    editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 0) ];
+    await runPromptedCommand(FROM_TEMPLATE, [ '{{string.alphanumeric(12)}}' ]);
+    const [ line0, line1 ] = editor.document.getText().split('\n');
+    assert.match(line0, /^[A-Za-z0-9]{12}$/, 'first cursor gets a rendering');
+    assert.match(line1, /^[A-Za-z0-9]{12}$/, 'second cursor gets a rendering');
+    assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct renders per cursor');
+  });
+
+  it('is reproducible under the pinned seed — the validation test-render never shifts the inserted draw', async () => {
+    const first = await openDoc('');
+    await runPromptedCommand(FROM_TEMPLATE, [ '{{string.alphanumeric(16)}}' ]);
+    const a = first.document.getText();
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    const second = await openDoc('');
+    await runPromptedCommand(FROM_TEMPLATE, [ '{{string.alphanumeric(16)}}' ]);
+    const b = second.document.getText();
+    assert.strictEqual(a, b, 'same seed + same template → same inserted value');
+  });
+
+  it('remembers the last pattern and prefills the next run', async () => {
+    await openDoc('');
+    await runPromptedCommand(FROM_PATTERN, [ '[a-f]{6}' ]);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await openDoc('');
+    const received = await runPromptedCommand(FROM_PATTERN, [ '[a-f]{6}' ]);
+    assert.strictEqual(received.inputs[0].value, '[a-f]{6}', 'the pattern box should prefill the last accepted pattern');
   });
 
   it('Esc at the first box cancels cleanly — nothing inserted, no error', async () => {
