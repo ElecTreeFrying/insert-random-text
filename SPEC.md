@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) (single-locale `en`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **161 contributed commands**, **no default keybindings**, **eleven configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **164 contributed commands**, **no default keybindings**, **eleven configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,14 +10,14 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **161 commands**, in five families:
+The extension contributes **164 commands**, in five families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
 | Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
-| Prompted commands | 4 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` | Ask for parameters in input boxes, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
+| Prompted commands | 7 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` | Ask for parameters in input boxes, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
 | Settings commands | 12 | `insertRandomText.set*` / `toggle*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
 Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
@@ -39,7 +39,7 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 
 ### Parameterized commands (prompted)
 
-Four commands ask for parameters in input boxes, then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
+Seven commands ask for parameters in input boxes, then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
 
 | Command | Id | Input boxes | Draw |
 |---|---|---|---|
@@ -47,11 +47,14 @@ Four commands ask for parameters in input boxes, then insert through the **same 
 | Insert Random: Float (Range…) | `insertRandomText.floatRange` | min, then max — any finite numbers, `min ≤ max`; the range must contain a multiple of 0.01 | A fresh float in `[min, max]`, rendered with 2 decimals (same style as the Float type) |
 | Insert Random: String (Length…) | `insertRandomText.stringLength` | length — a whole number 1–1000 | A fresh alphanumeric string of exactly that length (same charset as the String type) |
 | Insert Random: Date (Between…) | `insertRandomText.dateBetween` | from, then to — `YYYY-MM-DD` or full ISO 8601, `from ≤ to` enforced at the to box; impossible calendar dates (e.g. `2026-02-31`) are rejected | A fresh instant in `[from, to]` per value, rendered per the [`dateFormat`](#configuration-reference) setting like the zero-argument Time types |
+| Insert Random: Words (Count…) | `insertRandomText.wordsCount` | count — a whole number 1–100 | Exactly that many lorem words, space-separated |
+| Insert Random: Sentences (Count…) | `insertRandomText.sentencesCount` | count — a whole number 1–100 | Exactly that many lorem sentences, space-separated |
+| Insert Random: Paragraphs (Count…) | `insertRandomText.paragraphsCount` | count — a whole number 1–100 | Exactly that many lorem paragraphs, newline-separated |
 
 Behaviors:
 
 - **Validation is live** (`validateInput`): invalid text shows an inline error and blocks accept — empty, non-numeric, fractional-where-integer, out-of-range, and `max < min` inputs never reach the generator; dates additionally reject non-`YYYY-MM-DD`/ISO shapes, impossible calendar dates, and `to < from`.
-- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15) or a wide decade (Date: 2020-01-01 – 2030-12-31).
+- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15, lorem counts: 3) or a wide decade (Date: 2020-01-01 – 2030-12-31).
 - **Esc at any box cancels cleanly** — nothing is inserted, no error, and nothing new is remembered (values accepted *before* the cancel are remembered).
 - The seed is applied **after** the prompts, immediately before generation, so a pinned seed reproduces the same output regardless of typing time.
 - These are **not** registry entries: they don't appear in the Pick… menu or the Record… field list. Each is a one-off generator built from the entered parameters and fed into the shared insert path (`insertWith`).

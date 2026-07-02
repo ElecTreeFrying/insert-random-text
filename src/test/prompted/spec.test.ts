@@ -12,7 +12,7 @@ describe('prompted — registry', () => {
   it('exposes the parameterized commands, id-addressable', () => {
     assert.deepStrictEqual(
       promptedCommands.map((command) => command.id),
-      [ 'numberRange', 'floatRange', 'stringLength', 'dateBetween' ],
+      [ 'numberRange', 'floatRange', 'stringLength', 'dateBetween', 'wordsCount', 'sentencesCount', 'paragraphsCount' ],
     );
     for (const command of promptedCommands) {
       assert.strictEqual(getPromptedCommand(command.id), command);
@@ -136,6 +136,26 @@ describe('prompted — dateBetween validation', () => {
   });
 });
 
+describe('prompted — count validation (wordsCount / sentencesCount / paragraphsCount)', () => {
+  for (const id of [ 'wordsCount', 'sentencesCount', 'paragraphsCount' ]) {
+    describe(id, () => {
+      const [ count ] = getPromptedCommand(id)?.steps ?? [];
+
+      it('accepts 1 through 100 (padding tolerated)', () => {
+        for (const input of [ '1', '3', '100', ' 42 ' ]) {
+          assert.strictEqual(count.validate(input, {}), undefined, `'${input}' should be a valid count`);
+        }
+      });
+
+      it('rejects out-of-range and non-integer input', () => {
+        for (const input of [ '0', '101', '-3', '2.5', 'abc', '' ]) {
+          assert.ok(count.validate(input, {}), `'${input}' should be rejected with a message`);
+        }
+      });
+    });
+  }
+});
+
 describe('prompted — rendering (one-off Generator through toGenerator)', function () {
   this.timeout(15000);
 
@@ -205,6 +225,36 @@ describe('prompted — rendering (one-off Generator through toGenerator)', funct
     assert.strictEqual(generator.generate({ dateFormat: 'isoDate' }), '2020-06-15');
     assert.strictEqual(generator.generate({ dateFormat: 'unixSeconds' }), String(Date.parse('2020-06-15T00:00:00Z') / 1000));
     assert.strictEqual(generator.generate(), '2020-06-15T00:00:00.000Z');
+  });
+
+  it('wordsCount draws exactly N space-separated words (boundaries 1 and 100 included)', () => {
+    seed(20260702);
+    for (const count of [ 1, 5, 100 ]) {
+      const value = toGenerator(getPromptedCommand('wordsCount')!, { count: String(count) }).generate();
+      const words = value.split(' ');
+      assert.strictEqual(words.length, count, `'${value.slice(0, 40)}…' should hold ${count} words`);
+      for (const word of words) { assert.match(word, /^\S+$/, 'every word must be non-empty'); }
+    }
+  });
+
+  it('sentencesCount draws exactly N period-terminated sentences', () => {
+    seed(20260702);
+    for (const count of [ 1, 4 ]) {
+      const value = toGenerator(getPromptedCommand('sentencesCount')!, { count: String(count) }).generate();
+      assert.strictEqual((value.match(/\./g) ?? []).length, count, `'${value}' should hold ${count} sentences`);
+      assert.match(value, /^[A-Z]/, 'a sentence starts capitalized');
+      assert.ok(value.endsWith('.'), 'the last sentence ends with a period');
+    }
+  });
+
+  it('paragraphsCount draws exactly N newline-separated paragraphs', () => {
+    seed(20260702);
+    for (const count of [ 1, 3 ]) {
+      const value = toGenerator(getPromptedCommand('paragraphsCount')!, { count: String(count) }).generate();
+      const paragraphs = value.split('\n');
+      assert.strictEqual(paragraphs.length, count, `${count} paragraphs expected`);
+      for (const paragraph of paragraphs) { assert.match(paragraph, /\./, 'each paragraph holds sentences'); }
+    }
   });
 
   it('draws a fresh value on each generate() call — no memoization', () => {

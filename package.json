@@ -175,6 +175,18 @@
         "title": "Insert Random: Date (Between…)"
       },
       {
+        "command": "insertRandomText.wordsCount",
+        "title": "Insert Random: Words (Count…)"
+      },
+      {
+        "command": "insertRandomText.sentencesCount",
+        "title": "Insert Random: Sentences (Count…)"
+      },
+      {
+        "command": "insertRandomText.paragraphsCount",
+        "title": "Insert Random: Paragraphs (Count…)"
+      },
+      {
         "command": "insertRandomText.uuid",
         "title": "Insert Random: UUID"
       },

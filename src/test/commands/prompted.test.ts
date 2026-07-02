@@ -11,6 +11,9 @@ const NUMBER_RANGE = 'insertRandomText.numberRange';
 const FLOAT_RANGE = 'insertRandomText.floatRange';
 const STRING_LENGTH = 'insertRandomText.stringLength';
 const DATE_BETWEEN = 'insertRandomText.dateBetween';
+const WORDS_COUNT = 'insertRandomText.wordsCount';
+const SENTENCES_COUNT = 'insertRandomText.sentencesCount';
+const PARAGRAPHS_COUNT = 'insertRandomText.paragraphsCount';
 
 async function setConfig(key: string, value: unknown): Promise<void> {
   const changed = new Promise<void>((resolve) => {
@@ -120,6 +123,27 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     assert.strictEqual(editor.document.getText(), String(Date.parse('2020-06-15T00:00:00Z') / 1000));
   });
 
+  it('Words (Count…) inserts exactly the entered number of words', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(WORDS_COUNT, [ '5' ]);
+    assert.strictEqual(editor.document.getText().split(' ').length, 5);
+  });
+
+  it('Sentences (Count…) inserts exactly the entered number of sentences', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(SENTENCES_COUNT, [ '4' ]);
+    const text = editor.document.getText();
+    assert.strictEqual((text.match(/\./g) ?? []).length, 4, `'${text}' should hold 4 sentences`);
+  });
+
+  it('Paragraphs (Count…) inserts the entered number of newline-separated paragraphs', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(PARAGRAPHS_COUNT, [ '2' ]);
+    const lines = editor.document.getText().split('\n');
+    assert.strictEqual(lines.length, 2, 'count 2 → two paragraphs');
+    for (const line of lines) { assert.ok(line.length > 0, 'paragraphs must be non-empty'); }
+  });
+
   it('Esc at the first box cancels cleanly — nothing inserted, no error', async () => {
     const editor = await openDoc('');
     await assert.doesNotReject(async () => { await runPromptedCommand(NUMBER_RANGE, [ undefined ]); });
@@ -138,12 +162,28 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     assert.strictEqual(editor.document.getText(), '', 'a mid-flow cancel must insert nothing');
   });
 
+  it('Esc at the count box cancels cleanly (single-step command)', async () => {
+    const editor = await openDoc('');
+    await assert.doesNotReject(async () => { await runPromptedCommand(WORDS_COUNT, [ undefined ]); });
+    assert.strictEqual(editor.document.getText(), '', 'a cancelled count prompt must insert nothing');
+  });
+
   it('fills every cursor with a fresh value (multi-cursor)', async () => {
     const editor = await openDoc('\n'); // two empty lines.
     editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 0) ];
     await runPromptedCommand(NUMBER_RANGE, [ '1', '1000000' ]);
     const [ line0, line1 ] = editor.document.getText().split('\n');
     assert.ok(line0.length > 0 && line1.length > 0, 'both cursors should receive a value');
+    assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct values per cursor');
+  });
+
+  it('fills every cursor with fresh words (multi-cursor, multi-word values)', async () => {
+    const editor = await openDoc('\n'); // two empty lines.
+    editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 0) ];
+    await runPromptedCommand(WORDS_COUNT, [ '3' ]);
+    const [ line0, line1 ] = editor.document.getText().split('\n');
+    assert.strictEqual(line0.split(' ').length, 3, 'first cursor gets 3 words');
+    assert.strictEqual(line1.split(' ').length, 3, 'second cursor gets 3 words');
     assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct values per cursor');
   });
 
@@ -185,6 +225,15 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     const lines = editor.document.getText().split('\n');
     assert.strictEqual(lines.length, 3, 'plain bulk 3 → three lines');
     for (const line of lines) { assert.match(line, /^[A-Za-z0-9]{6}$/); }
+  });
+
+  it('honors bulkCount with multi-line values — 2 paragraphs × bulk 2 → four lines', async () => {
+    await setConfig(ConfigKey.BULK_COUNT, 2);
+    const editor = await openDoc('');
+    await runPromptedCommand(PARAGRAPHS_COUNT, [ '2' ]);
+    await setConfig(ConfigKey.BULK_COUNT, undefined);
+    const lines = editor.document.getText().split('\n');
+    assert.strictEqual(lines.length, 4, '2 bulk blocks × 2-paragraph values, all newline-joined');
   });
 
   it('honors Clipboard mode — document untouched, value copied', async () => {

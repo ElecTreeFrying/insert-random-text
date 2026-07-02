@@ -4,7 +4,7 @@ import { faker } from './engine';
 /**
  * Parameterized ("prompted") insert commands — types that ask for parameters in
  * input boxes before inserting: Number (Range…), Float (Range…), String
- * (Length…), Date (Between…).
+ * (Length…), Date (Between…), Words/Sentences/Paragraphs (Count…).
  *
  * These are deliberately NOT catalog entries: the registry stays a list of
  * zero-argument generators, while each prompted command declares its input steps
@@ -88,10 +88,27 @@ function maxAtLeastMin(min: string): string {
   return `Max must be at least the min you entered (${min}).`;
 }
 
+const COUNT_ERROR = 'Enter a whole number between 1 and 100.';
+
+/** The single count box shared by the lorem trio (words/sentences/paragraphs). */
+function countStep(prompt: string): PromptStep {
+  return {
+    key: 'count',
+    prompt,
+    placeholder: 'e.g. 3',
+    fallback: '3',
+    validate: (input) => {
+      const value = parseInteger(input);
+      return value !== undefined && value >= 1 && value <= 100 ? undefined : COUNT_ERROR;
+    },
+  };
+}
+
 /**
  * The prompted-command registry. Fallbacks reproduce the matching zero-argument
  * catalog types (Number: 0–1000, Float: 0–1000 at 2 decimals, String: 15
  * alphanumeric chars), so accepting the prefills behaves like the plain command.
+ * The lorem counts prefill 3 — faker's own words/paragraphs default.
  */
 export const promptedCommands: readonly PromptedCommand[] = [
   {
@@ -205,6 +222,27 @@ export const promptedCommands: readonly PromptedCommand[] = [
     ],
     // Rendered per the dateFormat setting, like the zero-argument Time generators.
     render: ({ from, to }, opts) => formatTimestamp(faker().date.between({ from, to }), opts?.dateFormat),
+  },
+  {
+    id: 'wordsCount',
+    label: 'Words (Count…)',
+    group: 'Text',
+    steps: [ countStep('Words — how many lorem words to insert (1–100).') ],
+    render: ({ count }) => faker().lorem.words(Number(count)),
+  },
+  {
+    id: 'sentencesCount',
+    label: 'Sentences (Count…)',
+    group: 'Text',
+    steps: [ countStep('Sentences — how many lorem sentences to insert (1–100).') ],
+    render: ({ count }) => faker().lorem.sentences(Number(count)),
+  },
+  {
+    id: 'paragraphsCount',
+    label: 'Paragraphs (Count…)',
+    group: 'Text',
+    steps: [ countStep('Paragraphs — how many lorem paragraphs to insert (1–100).') ],
+    render: ({ count }) => faker().lorem.paragraphs(Number(count)),
   },
 ];
 
