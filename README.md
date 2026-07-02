@@ -20,7 +20,7 @@
 
 **Names** · **Emails** · **Addresses** · **Finance** · **Git** · **Dates** · **UUIDs** · **Lorem ipsum** · **Mock JSON**
 
-Drop a multi-cursor selection down a column and fill every row with a _different_ realistic value in one step — names, emails, IDs, dates, prices, whatever the column needs. All generated right where you're typing: no website, no signup, fully offline.
+Drop a multi-cursor selection down a column and fill every row with a _different_ realistic value in one step — names, emails, IDs, dates, prices, whatever the column needs. All generated right where you're typing: no website, no signup, no waiting on a model — instant, offline, and reproducible when you seed it.
 
 **Perfect for** test fixtures & database seeds · mock API responses · whole CSV / JSON / SQL datasets · UI placeholder & Storybook props · throwaway IDs, addresses & credentials.
 
@@ -34,18 +34,20 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 
 ## Highlights
 
-- **Fill every cursor at once** — a _different_ value in each, in one step. The fastest way to seed a table, an array, or a fixture.
+- **Fill every cursor at once** — a _different_ value in each, in one step. Forty cursors at a bulk count of 25 is a thousand values in one command — the fastest way to seed a table, an array, or a fixture.
 - **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 20 categories (full list below).
 - **Six locales** — names, addresses & text in English, German, French, Spanish, Brazilian Portuguese, or Japanese. One setting, no reload.
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
-- **Whole datasets in one command** — **Generate Dataset…** builds up to 100,000 rows of JSON, CSV (with a header), or SQL `INSERT`s and opens them as a new file. No signup, no row caps, no export button — instant and offline.
+- **Whole datasets in one command** — **Generate Dataset…** builds up to 100,000 rows of JSON, CSV (with a header), or SQL `INSERT`s and opens them as a new file. No signup, no export button, and none of the row caps web generators make you pay to lift — instant, offline, free.
 - **Anonymize in place** — select real data and **Randomize Selection** re-rolls every letter and digit where it stands: `3.14` → `8.77`, `Bob@x.io` → `Kqe@v.zt`. Shapes intact, secrets gone.
-- **Reproducible when you need it** — set a seed, get the same values every run — stable tests and snapshots.
+- **Reproducible when you need it** — set a seed and every run replays the identical values — something AI generators can't promise, even with a seed parameter. Stable tests, snapshots, and demos.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
-- **Stays in your editor** — fully offline, no account, nothing pasted from a website.
+- **Stays in your editor** — fully offline: no account, no telemetry, no model calls. Your code never leaves your machine to get mock data back.
 - **Or skip the editor entirely** — Clipboard mode copies a value straight to your clipboard (filenames, terminals, anywhere).
 - **Configure from the Command Palette** — insert type, quotes, bulk count, output format, seed, and locale, without ever opening Settings.
-- **Powered by [Faker][faker]** — coherent, realistic data, not random noise.
+- **Powered by [Faker][faker]** — the actively maintained, community-governed faker library, bundled into the extension (nothing fetched at runtime). Coherent, realistic data, not random noise.
+
+Need a page of plausible narrative prose? That's a job for your AI assistant — and it's welcome to it. Need a thousand structured values that parse, replay identically under a seed, and never leave your machine? That's this extension's lane.
 
 [faker]: https://fakerjs.dev
 
@@ -244,7 +246,7 @@ Need a file of test data, not a value at the cursor? **Insert Random: Generate D
 - **CSV** — one line per record, led by a **header row** of the field names.
 - **SQL** — one `INSERT INTO your_table (…) VALUES (…);` per record, using your configured table name.
 
-Up to **100,000 rows**, generated locally in an instant — no signup, no row caps, no export step, no data leaving your editor. The format pick starts on your `recordFormat` setting, the row count starts at your bulk count, and [locale, seed](#settings), and date format all apply — a seeded run regenerates the identical dataset every time. Works with no editor open.
+Up to **100,000 rows**, generated locally in an instant — no signup, no paywalled row caps, no export step, no data leaving your editor. The format pick starts on your `recordFormat` setting, the row count starts at your bulk count, and [locale, seed](#settings), and date format all apply — a seeded run regenerates the identical dataset every time. Works with no editor open.
 
 ### Anonymize in place
 
@@ -285,7 +287,7 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 - **VS Code** 1.97.0 or later.
 - **Compatible hosts:** Cursor, VSCodium, Code Server, and other forks that implement the VS Code API at the same engine version.
 - **Platforms:** macOS, Windows, Linux.
-- **Privacy:** No network calls, no telemetry — every value is generated locally.
+- **Privacy:** No network calls, no telemetry, no model calls — every value is generated locally by the bundled library.
 
 ---
 

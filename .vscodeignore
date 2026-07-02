@@ -18,6 +18,7 @@ CLAUDE.md
 SPEC.md
 RECORD-SHOWCASE.md
 images/*.gif
+images/still-*.png
 .claude/**
 **/.DS_Store
 icon-preview.html
