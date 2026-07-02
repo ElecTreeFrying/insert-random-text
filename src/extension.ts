@@ -198,6 +198,12 @@ function watchConfiguration(context: vscode.ExtensionContext, reader = new Confi
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (CONFIG_KEYS.some((key) => event.affectsConfiguration(key))) {
         settings = reader.read();
+        // Swap the active faker eagerly on a locale change (the first use of a
+        // locale imports its data set); a failure here is harmless — the next
+        // insert awaits its own load() and surfaces any real problem there.
+        if (event.affectsConfiguration(ConfigKey.LOCALE)) {
+          void load(settings.locale).catch(() => undefined);
+        }
       }
     }),
   );
@@ -263,7 +269,7 @@ async function insertGenerated(generatorId: string): Promise<void> {
  * the seam prompted (parameterized) commands feed into.
  */
 async function insertWith(generator: Generator): Promise<void> {
-  await load();
+  await load(settings.locale);
   applySeed();
   const languageId = vscode.window.activeTextEditor?.document.languageId;
   const options = currentInsertOptions(languageId);
@@ -310,7 +316,7 @@ async function runPrompted(context: vscode.ExtensionContext, command: PromptedCo
   // Validation may test-render through faker (the template/pattern boxes), so
   // the engine must be live before the first box opens; insertWith's own
   // load() then no-ops.
-  await load();
+  await load(settings.locale);
   const params: Record<string, string> = {};
   for (const step of command.steps) {
     const memoryKey = `prompted.${command.id}.${step.key}`;
@@ -397,7 +403,7 @@ async function insertCustom(generator: Generator): Promise<void> {
  * category, led by the user's saved templates and custom lists when defined.
  * The chosen generator runs through the same insert path. */
 async function pickAndInsert(): Promise<void> {
-  await load();
+  await load(settings.locale);
 
   const byGroup = new Map<string, Generator[]>();
   for (const generator of generators) {
@@ -435,7 +441,7 @@ async function pickAndInsert(): Promise<void> {
  * cancelled pick inserts nothing; Cursor/Top with no active editor is a no-op.
  */
 async function pickAndInsertRecord(): Promise<void> {
-  await load();
+  await load(settings.locale);
 
   const byGroup = new Map<string, Generator[]>();
   for (const generator of generators) {

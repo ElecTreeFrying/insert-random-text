@@ -53,7 +53,9 @@
     "multi-cursor",
     "guid",
     "jwt",
-    "mongodb"
+    "mongodb",
+    "locale",
+    "i18n"
   ],
   "galleryBanner": {
     "color": "#494949",
@@ -751,6 +753,10 @@
         "title": "Insert Random: Set Seed"
       },
       {
+        "command": "insertRandomText.setLocale",
+        "title": "Insert Random: Set Locale"
+      },
+      {
         "command": "insertRandomText.toggleQuotes",
         "title": "Insert Random: Toggle Wrap With Quotes"
       },
@@ -846,6 +852,28 @@
             "description": "Set a number for reproducible output — the same seed produces the same values every run. Leave blank for random.",
             "type": "string",
             "default": ""
+          },
+          "insertRandomText.locale": {
+            "title": "Locale",
+            "description": "Language/region the generated data draws from — names, addresses, words and more come out localized. A type without localized data falls back to English.",
+            "type": "string",
+            "default": "en",
+            "enum": [
+              "en",
+              "de",
+              "fr",
+              "es",
+              "pt_BR",
+              "ja"
+            ],
+            "enumDescriptions": [
+              "English (default).",
+              "German — Deutsch.",
+              "French — Français.",
+              "Spanish — Español.",
+              "Brazilian Portuguese — Português (Brasil).",
+              "Japanese — 日本語."
+            ]
           },
           "insertRandomText.bulkCount": {
             "title": "Bulk count",

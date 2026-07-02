@@ -1,4 +1,5 @@
 import type { DateFormat } from './catalog';
+import { LOCALES, LocaleId } from './engine';
 
 /** The narrow slice of `vscode.workspace` this reader needs (kept minimal so it
  * can be substituted in isolation). */
@@ -27,6 +28,8 @@ export interface Settings {
   withNewLine: boolean;
   uniquePerCursor: boolean;
   seed: string;
+  /** Which faker locale data set generators draw from. */
+  locale: LocaleId;
   bulkCount: number;
   outputFormat: string;
   /** How the timestamp-emitting Time generators render their Date. */
@@ -48,6 +51,7 @@ export const ConfigKey = {
   WITH_NEW_LINE: 'withNewLine',
   UNIQUE_PER_CURSOR: 'insertRandomText.uniquePerCursor',
   SEED: 'insertRandomText.seed',
+  LOCALE: 'insertRandomText.locale',
   BULK_COUNT: 'insertRandomText.bulkCount',
   OUTPUT_FORMAT: 'insertRandomText.outputFormat',
   DATE_FORMAT: 'insertRandomText.dateFormat',
@@ -89,6 +93,7 @@ export class Configuration {
       withNewLine: this.withNewLine,
       uniquePerCursor: this.uniquePerCursor,
       seed: this.seed,
+      locale: this.locale,
       bulkCount: this.bulkCount,
       outputFormat: this.outputFormat,
       dateFormat: this.dateFormat,
@@ -108,6 +113,7 @@ export class Configuration {
   get withNewLine(): boolean { return this.value<boolean>(ConfigKey.WITH_NEW_LINE) ?? true; }
   get uniquePerCursor(): boolean { return this.value<boolean>(ConfigKey.UNIQUE_PER_CURSOR) ?? true; }
   get seed(): string { return this.value<string>(ConfigKey.SEED) ?? ''; }
+  get locale(): LocaleId { const value = this.value<LocaleId>(ConfigKey.LOCALE) ?? 'en'; return LOCALES.includes(value) ? value : 'en'; }
   get bulkCount(): number { return this.value<number>(ConfigKey.BULK_COUNT) ?? 1; }
   get outputFormat(): string { return this.value<string>(ConfigKey.OUTPUT_FORMAT) ?? 'plain'; }
   get dateFormat(): DateFormat { const value = this.value<DateFormat>(ConfigKey.DATE_FORMAT) ?? 'iso'; return DATE_FORMATS.includes(value) ? value : 'iso'; }

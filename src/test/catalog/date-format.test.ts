@@ -93,7 +93,13 @@ describe('Time generators — generate({ dateFormat })', function () {
     const iso = date.generate({ dateFormat: 'iso' });
     seed(7);
     const millis = date.generate({ dateFormat: 'unixMillis' });
-    assert.strictEqual(String(new Date(iso).getTime()), millis);
+    // The two draws share a seed but not the wall clock: faker's date generators
+    // window around a refDate defaulting to *now*, so back-to-back draws can sit
+    // a few ms apart (this exact-equality assert flaked). Equality up to that
+    // jitter still pins the threading — a real format bug (e.g. seconds instead
+    // of millis) is off by orders of magnitude, not milliseconds.
+    const delta = Math.abs(new Date(iso).getTime() - Number(millis));
+    assert.ok(delta <= 1000, `iso and unixMillis should render the same drawn instant (delta ${delta}ms)`);
   });
 
   it('weekday and month ignore dateFormat (they are names, not timestamps)', () => {

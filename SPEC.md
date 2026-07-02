@@ -1,8 +1,8 @@
 # Random, Fake & Mock Data Generator — Functionality Specification
 
-A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) (single-locale `en`); there are no network calls and no telemetry.
+A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **171 contributed commands**, **no default keybindings**, **thirteen configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **172 contributed commands**, **no default keybindings**, **fourteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,7 +10,7 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **171 commands**, in five families:
+The extension contributes **172 commands**, in five families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
@@ -18,7 +18,7 @@ The extension contributes **171 commands**, in five families:
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
 | Prompted commands | 12 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
-| Settings commands | 14 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
+| Settings commands | 15 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
 Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
 
@@ -196,6 +196,30 @@ With no quote (`quote === ''`) the value is returned untouched. The `jsonArray` 
 
 Because the seed is re-applied at the **start of each command**, faker is reset to the same starting point every time — so two separate runs of the same command with the same seed produce **identical** output. Within a single command, the sequence advances, so multi-cursor and bulk values differ from one another while remaining reproducible run-to-run.
 
+Sequences are **per locale**: under the same seed, `de` draws different (German) values than `en`, but each locale reproduces its own sequence run-to-run (see [Locales](#locales)).
+
+---
+
+## Locales
+
+`insertRandomText.locale` picks the language/region every generator draws from. Six faker locale data sets ship in the bundle:
+
+| Value | Data set |
+|---|---|
+| `en` (default) | English |
+| `de` | German — Deutsch |
+| `fr` | French — Français |
+| `es` | Spanish — Español |
+| `pt_BR` | Brazilian Portuguese — Português (Brasil) |
+| `ja` | Japanese — 日本語 |
+
+- **Everything follows it** — single inserts, [record fields](#multi-field-records), [prompted commands](#parameterized-commands-prompted), and template/pattern rendering (including [saved templates](#user-defined-data-saved-templates--custom-lists)) all draw from the active locale.
+- **Fallback** — a type without localized data falls back through faker's locale chain (e.g. `de` → `en` → `base`), so every generator always yields a value; locale-free types (UUIDs, numbers, hashes, …) are unaffected.
+- **Per-locale instances, cached** — `engine.ts` holds one faker instance per locale, imported on first use and cached; `faker()` returns the **active** one. Switching applies to the **next insert** with no reload (the [config watcher](#configuration-flow) also swaps eagerly).
+- **Normalization** — an unknown or unshipped value (e.g. `zh_CN`, `pt-br`, `DE`) falls back to `en`; locale ids are exact, as faker spells them.
+
+Change it from the palette with [Set Locale](#settings-commands).
+
 ---
 
 ## Multi-Field Records
@@ -228,6 +252,7 @@ Because the seed is re-applied at the **start of each command**, faker is reset 
 | `insertRandomText.seed` | Applied before the insert, exactly as for single-value commands. |
 | `insertType` | Honored — cursors, top of file, or clipboard, exactly as for [single values](#insert-targets). Top and Clipboard build a **single** record. |
 | `insertRandomText.dateFormat` | Honored — a timestamp Time field renders per the setting, same as a single-value insert. |
+| `insertRandomText.locale` | Honored — every field draws from the active locale's data set (see [Locales](#locales)). |
 | `withQuote` · `withNewLine` · `insertRandomText.outputFormat` | **Ignored.** Quoting/escaping is shape-driven — language-aware wrapping would corrupt the record. |
 
 ---
@@ -492,7 +517,7 @@ These carry `hidden: true` — they never appear in the Quick Pick and exist onl
 
 ## Configuration Reference
 
-Thirteen settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there, and the two object settings are validated — junk entries dropped with a console warning). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
+Fourteen settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there, and the two object settings are validated — junk entries dropped with a console warning). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
 
 | Setting | Type | Default | Values | Notes |
 |---|---|---|---|---|
@@ -504,6 +529,7 @@ Thirteen settings. Three **legacy** keys stay flat and non-namespaced (`insertTy
 | `insertRandomText.outputFormat` | string (enum) | `plain` | `plain` · `jsonArray` · `quotedList` | How bulk values render. See [Output Formats](#output-formats). |
 | `insertRandomText.dateFormat` | string (enum) | `iso` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | How the timestamp [Time types](#time-8) render — full ISO 8601, `YYYY-MM-DD`, `HH:mm:ss`, or Unix seconds/milliseconds. ISO slices come from the UTC string; an unknown value falls back to `iso`. |
 | `insertRandomText.seed` | string | `""` | any number, or blank | Reproducible output; blank or non-numeric = random. See [Seeding](#seeding--reproducibility). |
+| `insertRandomText.locale` | string (enum) | `en` | `en` · `de` · `fr` · `es` · `pt_BR` · `ja` | Which faker locale data set generators draw from. An unknown value falls back to `en`. See [Locales](#locales). |
 | `insertRandomText.recordFormat` | string (enum) | `json` | `json` · `sql` · `csv` | Structured shape for [Record](#multi-field-records) inserts: JSON object, SQL row, or CSV line. |
 | `insertRandomText.recordSqlTable` | string | `table` | any non-empty name | Table name used by the `sql` record shape. |
 | `insertRandomText.templates` | object | `{}` | name → template string | Saved faker templates — a **Templates** group atop [Pick…](#insert-random-pick). Non-string / empty entries are dropped (console-warned). See [User-defined data](#user-defined-data-saved-templates--custom-lists). |
@@ -514,7 +540,7 @@ Thirteen settings. Three **legacy** keys stay flat and non-namespaced (`insertTy
 
 ## Settings Commands
 
-`settingsCommands.ts` contributes 14 palette commands that **write or open** settings — so every setting is changeable without hunting through the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
+`settingsCommands.ts` contributes 15 palette commands that **write or open** settings — so every setting is changeable without hunting through the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
 
 | Command | Title | Mechanism |
 |---|---|---|
@@ -525,6 +551,7 @@ Thirteen settings. Three **legacy** keys stay flat and non-namespaced (`insertTy
 | `insertRandomText.setRecordSqlTable` | Set Record SQL Table | Input box; rejects an empty table name. |
 | `insertRandomText.setBulkCount` | Set Bulk Count | Input box; validates a whole number `1`–`1000`. |
 | `insertRandomText.setSeed` | Set Seed | Input box; validates a number, or blank for random. |
+| `insertRandomText.setLocale` | Set Locale | Quick Pick over `English` / `German — Deutsch` / `French — Français` / `Spanish — Español` / `Brazilian Portuguese — Português (Brasil)` / `Japanese — 日本語`. |
 | `insertRandomText.toggleQuotes` | Toggle Wrap With Quotes | Flip `withQuote`. |
 | `insertRandomText.toggleNewLine` | Toggle Trailing New Line | Flip `withNewLine`. |
 | `insertRandomText.toggleUniquePerCursor` | Toggle Unique Value Per Cursor | Flip `insertRandomText.uniquePerCursor`. |
@@ -539,7 +566,7 @@ Writes go to the **open workspace** when one is present (so a change is visible 
 
 ### Enum picker behavior
 
-The enum pickers (`setInsertType` / `setOutputFormat` / `setDateFormat` / `setRecordFormat`) mark the current value with a `$(check) Current` description and float it to the top of the list; `matchOnDetail` is on, so typing filters against each option's one-line detail. Selecting writes the value and shows a `$(check) <title> → <label>` status-bar confirmation. Escape cancels with no write.
+The enum pickers (`setInsertType` / `setOutputFormat` / `setDateFormat` / `setRecordFormat` / `setLocale`) mark the current value with a `$(check) Current` description and float it to the top of the list; `matchOnDetail` is on, so typing filters against each option's one-line detail. Selecting writes the value and shows a `$(check) <title> → <label>` status-bar confirmation. Escape cancels with no write.
 
 ### Reset
 
@@ -575,7 +602,7 @@ The extension is deliberately quiet. It uses **status-bar messages** (not modal/
 
 ## Configuration Flow
 
-`extension.ts` holds a **single module-level `settings` snapshot**. On activation, `watchConfiguration()` reads it once via `Configuration.read()`, then subscribes to `workspace.onDidChangeConfiguration`; when an event affects any key in `CONFIG_KEYS` (the twelve `ConfigKey` values), the whole snapshot is re-read and replaced wholesale. Commands read this **cached** snapshot at invocation — they never re-read individual settings — so anything that bypasses `watchConfiguration` would see stale config.
+`extension.ts` holds a **single module-level `settings` snapshot**. On activation, `watchConfiguration()` reads it once via `Configuration.read()`, then subscribes to `workspace.onDidChangeConfiguration`; when an event affects any key in `CONFIG_KEYS` (the thirteen `ConfigKey` values), the whole snapshot is re-read and replaced wholesale. A change to `insertRandomText.locale` additionally fires `load(locale)` right away, so the active faker instance swaps without waiting for the next insert. Commands read this **cached** snapshot at invocation — they never re-read individual settings — so anything that bypasses `watchConfiguration` would see stale config.
 
 `insertRandomText.contextMenu.enabled` is intentionally **not** in `CONFIG_KEYS`: it never influences generation, only the menu's `when` clause, which VS Code re-evaluates natively when the value changes.
 
@@ -599,7 +626,7 @@ An optional editor right-click entry, **off by default**.
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 171 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 172 commands activates the extension from a cold start. `extensionKind` is `workspace`.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
-- **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load()`, a dynamic `import('@faker-js/faker/locale/en')` that is idempotent (guarded by a module-level `instance`). Only the single-locale `/locale/en` entry is imported — never the package root — so the other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to `faker().seed(value)`.
+- **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.

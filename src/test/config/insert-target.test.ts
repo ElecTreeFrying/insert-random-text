@@ -68,6 +68,27 @@ describe('configuration — dateFormat (validated enum)', () => {
   });
 });
 
+describe('configuration — locale (validated enum)', () => {
+  it("unset → 'en' (default)", () => {
+    assert.strictEqual(read({}).locale, 'en');
+  });
+
+  it('every shipped locale passes through', () => {
+    for (const value of [ 'en', 'de', 'fr', 'es', 'pt_BR', 'ja' ]) {
+      assert.strictEqual(read({ [ConfigKey.LOCALE]: value }).locale, value);
+    }
+  });
+
+  it("an unshipped faker locale → 'en' (safe fallback)", () => {
+    assert.strictEqual(read({ [ConfigKey.LOCALE]: 'zh_CN' }).locale, 'en');
+  });
+
+  it("a case or separator mismatch → 'en' (ids are exact: 'pt_BR', not 'pt-br')", () => {
+    assert.strictEqual(read({ [ConfigKey.LOCALE]: 'DE' }).locale, 'en');
+    assert.strictEqual(read({ [ConfigKey.LOCALE]: 'pt-br' }).locale, 'en');
+  });
+});
+
 // The two settings-defined data pools (S7) are user-edited JSON objects, so the reader must survive any
 // shape: junk entries are dropped (never thrown on) and each drop is logged to the console.
 describe('configuration — templates (validated object)', () => {
@@ -162,6 +183,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.withNewLine, true);
     assert.strictEqual(settings.uniquePerCursor, true);
     assert.strictEqual(settings.seed, '');
+    assert.strictEqual(settings.locale, 'en');
     assert.strictEqual(settings.bulkCount, 1);
     assert.strictEqual(settings.outputFormat, 'plain');
     assert.strictEqual(settings.dateFormat, 'iso');
@@ -177,6 +199,7 @@ describe('configuration — defaults when unset', () => {
       [ConfigKey.WITH_NEW_LINE]: false,
       [ConfigKey.UNIQUE_PER_CURSOR]: false,
       [ConfigKey.SEED]: '42',
+      [ConfigKey.LOCALE]: 'ja',
       [ConfigKey.BULK_COUNT]: 5,
       [ConfigKey.OUTPUT_FORMAT]: 'jsonArray',
       [ConfigKey.DATE_FORMAT]: 'unixSeconds',
@@ -187,6 +210,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.withNewLine, false);
     assert.strictEqual(settings.uniquePerCursor, false);
     assert.strictEqual(settings.seed, '42');
+    assert.strictEqual(settings.locale, 'ja');
     assert.strictEqual(settings.bulkCount, 5);
     assert.strictEqual(settings.outputFormat, 'jsonArray');
     assert.strictEqual(settings.dateFormat, 'unixSeconds');
@@ -200,7 +224,7 @@ describe('configuration — read() snapshot', () => {
     const keys = Object.keys(read({})).sort();
     assert.deepStrictEqual(
       keys,
-      [ 'bulkCount', 'customLists', 'dateFormat', 'insertType', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'templates', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
+      [ 'bulkCount', 'customLists', 'dateFormat', 'insertType', 'locale', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'templates', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
     );
   });
 });

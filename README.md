@@ -36,12 +36,13 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 
 - **Fill every cursor at once** — a _different_ value in each, in one step. The fastest way to seed a table, an array, or a fixture.
 - **130+ realistic types** — stop hand-typing fake data: identity, finance, git, system, network, and more across 20 categories (full list below).
+- **Six locales** — names, addresses & text in English, German, French, Spanish, Brazilian Portuguese, or Japanese. One setting, no reload.
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
 - **Reproducible when you need it** — set a seed, get the same values every run — stable tests and snapshots.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
 - **Stays in your editor** — fully offline, no account, nothing pasted from a website.
 - **Or skip the editor entirely** — Clipboard mode copies a value straight to your clipboard (filenames, terminals, anywhere).
-- **Configure from the Command Palette** — insert type, quotes, bulk count, output format, and seed, without ever opening Settings.
+- **Configure from the Command Palette** — insert type, quotes, bulk count, output format, seed, and locale, without ever opening Settings.
 - **Powered by [Faker][faker]** — coherent, realistic data, not random noise.
 
 [faker]: https://fakerjs.dev
@@ -54,7 +55,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 2. Type **Insert Random**, then pick a type — or run **Insert Random: Pick…** to browse all 130+.
 3. It drops in at every cursor. Multi-select a column first to fill every row at once.
 
-No setup required — tweak quotes, bulk count, output format, and seed whenever you want them.
+No setup required — tweak quotes, bulk count, output format, seed, and locale whenever you want them.
 
 ---
 
@@ -107,6 +108,7 @@ Change any of these from the [Commands](#commands) below, or in VS Code Settings
 | `insertRandomText.templates` | object: name → template | `{}` | Your saved faker templates — shown in a **Templates** group at the top of **Insert Random: Pick…**. See [Your own data](#your-own-data). |
 | `insertRandomText.customLists` | object: name → string array | `{}` | Your own value lists — shown in a **Custom Lists** group at the top of **Pick…**, and available as **Record…** fields. See [Your own data](#your-own-data). |
 | `insertRandomText.seed` | any number, or empty | _(empty)_ | Reproducible output — the same seed yields the same values every run; empty = random. |
+| `insertRandomText.locale` | `en` · `de` · `fr` · `es` · `pt_BR` · `ja` | `en` | Language/region generated data draws from — names, addresses, words and more come out localized. |
 | `withQuote` | `true` · `false` | `true` | Wrap each inserted value in quotes. |
 | `withNewLine` | `true` · `false` | `true` | Append a newline after each value. |
 | `insertRandomText.contextMenu.enabled` | `true` · `false` | `false` | Add an "Insert Random" submenu to the editor right-click menu. |
@@ -150,6 +152,17 @@ Records escape by shape, not by the file's language — and a bulk count stacks 
 
 Weekday and Month are names, not timestamps — they're unaffected.
 
+**`locale`** — the language/region every type draws from. The same "insert first name · street address" under four locales:
+
+| Locale | Result |
+|---|---|
+| `en` (default) | `Ignatius` · `34683 Courtney Lakes` |
+| `de` | `Jonna` · `Im Nesselrader Kamp 346` |
+| `fr` | `Danielle` · `12 Boulevard de Presbourg` |
+| `ja` | `愛菜` · `5丁目1番3号` |
+
+Templates, patterns, and records follow it too; a type without localized data (UUIDs, numbers, …) falls back to English. Seeded runs stay reproducible per locale.
+
 **Automatic quoting** — the *same* "insert email" adapts to the file's language, so the result is always valid syntax, no setting required:
 
 - `.json` · `.go` · `.rs` · `.js` · `.py` → `"jane@example.com"` — double quotes
@@ -174,7 +187,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 | **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
 | **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
-| **Insert Random: Set Insert Type / Output Format / Date Format / Record Format** | Pick the value from a Quick Pick. |
+| **Insert Random: Set Insert Type / Output Format / Date Format / Record Format / Locale** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
 | **Insert Random: Toggle Wrap With Quotes / Trailing New Line / Unique Value Per Cursor / Editor Context Menu** | Flip a setting on or off. |
 | **Insert Random: Manage Templates / Manage Custom Lists** | Jump to the setting where your saved templates / custom lists live. See [Your own data](#your-own-data). |

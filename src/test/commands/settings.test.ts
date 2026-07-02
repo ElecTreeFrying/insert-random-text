@@ -203,6 +203,18 @@ describe('settingsCommands — remaining command wirings', () => {
     await clear(ConfigKey.RECORD_FORMAT);
   });
 
+  it('setLocale writes the chosen locale', async () => {
+    const original = vscode.window.showQuickPick;
+    (vscode.window as any).showQuickPick = async (items: any) => (await items).find((i: any) => i.value === 'de');
+    try {
+      await SETTING_COMMANDS['insertRandomText.setLocale']();
+      assert.strictEqual(get(ConfigKey.LOCALE), 'de');
+    } finally {
+      (vscode.window as any).showQuickPick = original;
+    }
+    await clear(ConfigKey.LOCALE);
+  });
+
   it('setDateFormat writes the chosen date format', async () => {
     const original = vscode.window.showQuickPick;
     (vscode.window as any).showQuickPick = async (items: any) => (await items).find((i: any) => i.value === 'unixMillis');

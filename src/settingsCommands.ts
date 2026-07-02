@@ -82,6 +82,15 @@ const RECORD_FORMAT_OPTIONS: readonly EnumOption[] = [
   { value: 'csv', label: 'CSV line', detail: 'value,value,…' },
 ];
 
+const LOCALE_OPTIONS: readonly EnumOption[] = [
+  { value: 'en', label: 'English', detail: 'Names, addresses & text in English (default).' },
+  { value: 'de', label: 'German — Deutsch', detail: 'German names, addresses & text.' },
+  { value: 'fr', label: 'French — Français', detail: 'French names, addresses & text.' },
+  { value: 'es', label: 'Spanish — Español', detail: 'Spanish names, addresses & text.' },
+  { value: 'pt_BR', label: 'Brazilian Portuguese — Português (Brasil)', detail: 'Brazilian Portuguese names, addresses & text.' },
+  { value: 'ja', label: 'Japanese — 日本語', detail: 'Japanese names, addresses & text.' },
+];
+
 const DATE_FORMAT_OPTIONS: readonly EnumOption[] = [
   { value: 'iso', label: 'ISO 8601 timestamp', detail: 'Full timestamp, e.g. 2026-07-02T12:34:56.789Z.' },
   { value: 'isoDate', label: 'ISO date', detail: 'Date only (YYYY-MM-DD), e.g. 2026-07-02.' },
@@ -162,6 +171,7 @@ export const SETTING_COMMANDS: Readonly<Record<string, () => Promise<void>>> = {
   'insertRandomText.setRecordSqlTable': setRecordSqlTable,
   'insertRandomText.setBulkCount': setBulkCount,
   'insertRandomText.setSeed': setSeed,
+  'insertRandomText.setLocale': () => chooseEnum('Locale', ConfigKey.LOCALE, LOCALE_OPTIONS, 'en'),
   'insertRandomText.toggleQuotes': () => toggleBoolean(ConfigKey.WITH_QUOTE, 'Wrap with quotes', true),
   'insertRandomText.toggleNewLine': () => toggleBoolean(ConfigKey.WITH_NEW_LINE, 'Trailing new line', true),
   'insertRandomText.toggleUniquePerCursor': () => toggleBoolean(ConfigKey.UNIQUE_PER_CURSOR, 'Unique value per cursor', true),
