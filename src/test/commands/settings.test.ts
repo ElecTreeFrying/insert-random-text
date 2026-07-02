@@ -21,12 +21,20 @@ const clear = (key: string) => setGlobal(key, undefined);
 describe('settingsCommands — toggles (no UI)', () => {
   afterEach(async () => {
     await clear(ConfigKey.UNIQUE_PER_CURSOR);
+    await clear(ConfigKey.STRICT_UNIQUE);
   });
 
   it('toggleUniquePerCursor flips the boolean', async () => {
     await setGlobal(ConfigKey.UNIQUE_PER_CURSOR, false);
     await SETTING_COMMANDS['insertRandomText.toggleUniquePerCursor']();
     assert.strictEqual(get(ConfigKey.UNIQUE_PER_CURSOR), true);
+  });
+
+  it('toggleStrictUnique flips the boolean (off by default → first toggle turns it on)', async () => {
+    await SETTING_COMMANDS['insertRandomText.toggleStrictUnique']();
+    assert.strictEqual(get(ConfigKey.STRICT_UNIQUE), true, 'the default is false, so the first toggle lands on true');
+    await SETTING_COMMANDS['insertRandomText.toggleStrictUnique']();
+    assert.strictEqual(get(ConfigKey.STRICT_UNIQUE), false);
   });
 });
 

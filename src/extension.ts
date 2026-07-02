@@ -232,6 +232,7 @@ function currentInsertOptions(languageId?: string): InsertOptions {
     escape: policy.escape,
     newline: settings.withNewLine ? '\n' : '',
     uniquePerCursor: settings.uniquePerCursor,
+    strictUnique: settings.strictUnique,
     bulkCount: settings.bulkCount,
     outputFormat: settings.outputFormat as OutputFormat,
     dateFormat: settings.dateFormat,

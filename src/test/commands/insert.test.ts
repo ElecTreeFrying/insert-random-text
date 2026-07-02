@@ -2,7 +2,8 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 
 import { ConfigKey } from '../../configuration';
-import { generators } from '../../catalog';
+import { generators, getGenerator } from '../../catalog';
+import { load, seed } from '../../engine';
 
 // Drives the real insert path end-to-end through executeCommand (insertGenerated isn't exported — the
 // command IS the public surface). Runs in the Extension Host. To keep assertions exact, the suite turns
@@ -62,6 +63,27 @@ describe('insert command — insertGenerated', function () {
     const [ line0, line1 ] = editor.document.getText().split('\n');
     assert.ok(line0.length > 0 && line1.length > 0, 'both cursors should receive a value');
     assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct values per cursor');
+  });
+
+  it('strict unique re-draws duplicates inside a bulk block (setting threaded through the pipeline)', async () => {
+    // Premise: under the suite's seed (12345) the natural weekday × 5 draw repeats (Monday twice
+    // on faker 10.5) — proven here so this test can never pass with the setting left unthreaded.
+    // If a faker upgrade changes the sequence, pick a new duplicate-bearing seed.
+    await load('en');
+    seed(12345);
+    const weekday = getGenerator('weekday')!;
+    const natural = Array.from({ length: 5 }, () => weekday.generate());
+    assert.ok(new Set(natural).size < 5, 'premise broken: seed 12345 no longer draws a duplicate weekday — choose another');
+
+    await setConfig(ConfigKey.STRICT_UNIQUE, true);
+    await setConfig(ConfigKey.BULK_COUNT, 5);
+    const editor = await openDoc('');
+    await vscode.commands.executeCommand('insertRandomText.weekday');
+    const lines = editor.document.getText().split('\n');
+    await setConfig(ConfigKey.STRICT_UNIQUE, undefined);
+    await setConfig(ConfigKey.BULK_COUNT, undefined);
+    assert.strictEqual(lines.length, 5, 'bulk 5 → five lines');
+    assert.strictEqual(new Set(lines).size, 5, `strict unique should re-draw the duplicate weekday, got: ${lines.join(', ')}`);
   });
 
   it('is reproducible under a fixed seed (applySeed re-seeds every run)', async () => {

@@ -779,6 +779,10 @@
         "title": "Insert Random: Toggle Unique Value Per Cursor"
       },
       {
+        "command": "insertRandomText.toggleStrictUnique",
+        "title": "Insert Random: Toggle Strict Unique"
+      },
+      {
         "command": "insertRandomText.toggleContextMenu",
         "title": "Insert Random: Toggle Editor Context Menu"
       },
@@ -857,6 +861,12 @@
             "description": "Insert a different random value at each cursor (multi-cursor fill). When off, the same value is repeated at every cursor.",
             "type": "boolean",
             "default": true
+          },
+          "insertRandomText.strictUnique": {
+            "title": "Strict unique",
+            "description": "Re-draw duplicates so values meant to differ within one insert really do — the values of a bulk block, and values across cursors when unique value per cursor is on. Bounded at 25 re-draws per value, so a small pool (booleans, weekdays) that runs out keeps its duplicate instead of hanging. Applies to single-type inserts, not records.",
+            "type": "boolean",
+            "default": false
           },
           "insertRandomText.seed": {
             "title": "Seed",

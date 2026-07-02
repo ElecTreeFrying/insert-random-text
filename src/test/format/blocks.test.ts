@@ -1,7 +1,9 @@
 import * as assert from 'assert';
 
 import { buildBlocks, InsertOptions } from '../../formatter';
+import { getGenerator } from '../../catalog';
 import type { Generator, GenerateOptions } from '../../catalog';
+import { load, seed } from '../../engine';
 
 // buildBlocks is the formatter's pure render core: it turns (cursorCount, generator, options) into one
 // string block per cursor, each holding `bulkCount` values shaped by `outputFormat`, with
@@ -134,6 +136,121 @@ describe('buildBlocks — dateFormat threading', () => {
     const { generator, seen } = probe();
     buildBlocks(1, generator, BASE);
     assert.deepStrictEqual(seen, [ undefined ]);
+  });
+});
+
+describe('buildBlocks — strictUnique (seen-set re-draws)', () => {
+  // A scripted duplicating source: cycles through a fixed sequence, so both the duplicate draw and
+  // the value a re-draw lands on are exact.
+  function cycle(values: readonly string[]): Generator {
+    let n = 0;
+    return { id: 'y', label: 'Y', group: 'G', generate: () => values[n++ % values.length] };
+  }
+
+  it('is off by default: duplicate draws pass through', () => {
+    const [ block ] = buildBlocks(1, cycle([ 'a', 'a', 'b' ]), { ...BASE, bulkCount: 3 });
+    assert.strictEqual(block, 'a\na\nb');
+  });
+
+  it('explicit false behaves exactly like absent', () => {
+    const [ block ] = buildBlocks(1, cycle([ 'a', 'a', 'b' ]), { ...BASE, bulkCount: 3, strictUnique: false });
+    assert.strictEqual(block, 'a\na\nb');
+  });
+
+  it('re-draws a duplicate within a bulk block when on', () => {
+    const [ block ] = buildBlocks(1, cycle([ 'a', 'a', 'b' ]), { ...BASE, bulkCount: 2, strictUnique: true });
+    assert.strictEqual(block, 'a\nb');
+  });
+
+  it('spans every cursor when uniquePerCursor is on (cross-cursor values are meant to differ)', () => {
+    assert.deepStrictEqual(
+      buildBlocks(2, cycle([ 'a', 'a', 'b' ]), { ...BASE, strictUnique: true }),
+      [ 'a', 'b' ],
+    );
+  });
+
+  it('dedups only within the shared block when uniquePerCursor is off (cursors repeat by design)', () => {
+    assert.deepStrictEqual(
+      buildBlocks(2, cycle([ 'a', 'a', 'b' ]), { ...BASE, uniquePerCursor: false, bulkCount: 2, strictUnique: true }),
+      [ 'a\nb', 'a\nb' ],
+    );
+  });
+
+  it('keeps the duplicate once the re-draw budget is exhausted (never hangs)', () => {
+    const [ block ] = buildBlocks(1, fixed('x'), { ...BASE, bulkCount: 3, strictUnique: true });
+    assert.strictEqual(block, 'x\nx\nx');
+  });
+
+  it('spends exactly the 25-re-draw budget before keeping a duplicate', () => {
+    // A single-value domain: the first draw is fresh; the second exhausts the budget (one draw +
+    // 25 re-draws) and keeps the duplicate. The budget is part of the seeded-output contract —
+    // changing it shifts every seeded strict-unique sequence, so update this pin deliberately.
+    let draws = 0;
+    const constant: Generator = { id: 'k', label: 'K', group: 'G', generate: () => { draws++; return 'x'; } };
+    const [ block ] = buildBlocks(1, constant, { ...BASE, bulkCount: 2, strictUnique: true });
+    assert.strictEqual(block, 'x\nx');
+    assert.strictEqual(draws, 27, 'value 1: one draw; value 2: one draw + 25 re-draws');
+  });
+
+  it('hands dateFormat to re-draws too (every draw carries the same options)', () => {
+    const seen: unknown[] = [];
+    let n = 0;
+    const values = [ 'a', 'a', 'b' ];
+    const dupThenFresh: Generator = {
+      id: 'd', label: 'D', group: 'G',
+      generate: (opts?: GenerateOptions) => { seen.push(opts?.dateFormat); return values[n++]; },
+    };
+    const [ block ] = buildBlocks(1, dupThenFresh, { ...BASE, bulkCount: 2, strictUnique: true, dateFormat: 'isoDate' });
+    assert.strictEqual(block, 'a\nb');
+    assert.deepStrictEqual(seen, [ 'isoDate', 'isoDate', 'isoDate' ]);
+  });
+});
+
+describe('buildBlocks — strictUnique with the real engine', function () {
+  this.timeout(10000);
+  before(async () => { await load(); });
+
+  it('uuid × 200 in one bulk block → zero duplicates', () => {
+    seed(1234);
+    const uuid = getGenerator('uuid')!;
+    const [ block ] = buildBlocks(1, uuid, { ...BASE, bulkCount: 200, strictUnique: true });
+    const values = block.split('\n');
+    assert.strictEqual(values.length, 200);
+    assert.strictEqual(new Set(values).size, 200, 'strict unique must leave no duplicate among 200 uuids');
+  });
+
+  it('boolean × bulk 10 terminates, duplicates allowed once the domain is exhausted', () => {
+    seed(1);
+    const boolean = getGenerator('boolean')!;
+    const [ block ] = buildBlocks(1, boolean, { ...BASE, bulkCount: 10, strictUnique: true });
+    const values = block.split('\n');
+    assert.strictEqual(values.length, 10, 'exhaustion must keep the duplicate and move on — all 10 values delivered');
+    assert.ok(values.every((value) => value === 'true' || value === 'false'), `unexpected values: ${block}`);
+  });
+
+  it('weekday × 5 under a duplicate-bearing seed → five distinct values', () => {
+    // Premise: seed 12345's natural weekday sequence repeats (Monday twice on faker 10.5) —
+    // verified here so this test can never pass without a re-draw actually happening. If a faker
+    // upgrade changes the sequence, pick a new duplicate-bearing seed.
+    const weekday = getGenerator('weekday')!;
+    seed(12345);
+    const natural = Array.from({ length: 5 }, () => weekday.generate());
+    assert.ok(new Set(natural).size < 5, 'premise broken: this seed no longer draws a duplicate — choose another');
+
+    seed(12345);
+    const [ block ] = buildBlocks(1, weekday, { ...BASE, bulkCount: 5, strictUnique: true });
+    assert.strictEqual(new Set(block.split('\n')).size, 5, `expected five distinct weekdays, got: ${block}`);
+  });
+
+  it('same seed → same output with strict unique on (re-draws are deterministic)', () => {
+    // 3 cursors × bulk 3 from a 7-value domain forces re-draws AND exhaustion — both must replay
+    // identically under the same seed.
+    const weekday = getGenerator('weekday')!;
+    seed(42);
+    const first = buildBlocks(3, weekday, { ...BASE, bulkCount: 3, strictUnique: true });
+    seed(42);
+    const second = buildBlocks(3, weekday, { ...BASE, bulkCount: 3, strictUnique: true });
+    assert.deepStrictEqual(first, second);
   });
 });
 

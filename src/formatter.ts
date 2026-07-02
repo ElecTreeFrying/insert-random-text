@@ -20,6 +20,8 @@ export interface InsertOptions {
   readonly outputFormat: OutputFormat;
   /** Timestamp rendering, handed through to each generate() (Time generators read it). */
   readonly dateFormat?: DateFormat;
+  /** Re-draw duplicates so values meant to differ within one insert really do (bounded). */
+  readonly strictUnique?: boolean;
 }
 
 /**
@@ -44,10 +46,33 @@ function wrap(value: string, quote: string, escape: EscapeStyle): string {
   return `${quote}${escaped}${quote}`;
 }
 
+/**
+ * Re-draw budget per value under `strictUnique`. Bounded so a small value pool
+ * (booleans, weekdays) exhausts and keeps its duplicate instead of hanging.
+ * Every re-draw consumes RNG state, so this number is part of the seeded-output
+ * contract — changing it shifts every seeded strict-unique sequence.
+ */
+const UNIQUE_RETRIES = 25;
+
+/**
+ * Draw through the operation's seen-set: a value already produced is re-drawn, up
+ * to {@link UNIQUE_RETRIES} times; on exhaustion the duplicate is kept — never a
+ * hang, never an error.
+ */
+function uniqueDraw(draw: () => string, seen: Set<string>): string {
+  let value = draw();
+  for (let retry = 0; retry < UNIQUE_RETRIES && seen.has(value); retry++) {
+    value = draw();
+  }
+  seen.add(value);
+  return value;
+}
+
 /** Render the string inserted at one cursor: `bulkCount` fresh values, formatted. */
-function formatBlock(generator: Generator, options: InsertOptions): string {
+function formatBlock(generator: Generator, options: InsertOptions, seen?: Set<string>): string {
   const count = Math.max(1, Math.floor(options.bulkCount || 1));
-  const values = Array.from({ length: count }, () => generator.generate({ dateFormat: options.dateFormat }));
+  const draw = () => generator.generate({ dateFormat: options.dateFormat });
+  const values = Array.from({ length: count }, () => (seen ? uniqueDraw(draw, seen) : draw()));
   const escape = options.escape ?? 'backslash';
 
   switch (options.outputFormat) {
@@ -72,9 +97,13 @@ function formatBlock(generator: Generator, options: InsertOptions): string {
  * @param cursorCount one block is produced per cursor/selection
  */
 export function buildBlocks(cursorCount: number, generator: Generator, options: InsertOptions): string[] {
+  // One seen-set per insert operation: with uniquePerCursor it spans every cursor's
+  // block; without, cursors repeat one block by design, so it covers only the values
+  // inside that shared block — strict unique never applies to values meant to match.
+  const seen = options.strictUnique ? new Set<string>() : undefined;
   if (!options.uniquePerCursor) {
-    const shared = formatBlock(generator, options);
+    const shared = formatBlock(generator, options, seen);
     return Array.from({ length: cursorCount }, () => shared);
   }
-  return Array.from({ length: cursorCount }, () => formatBlock(generator, options));
+  return Array.from({ length: cursorCount }, () => formatBlock(generator, options, seen));
 }

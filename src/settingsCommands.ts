@@ -175,6 +175,7 @@ export const SETTING_COMMANDS: Readonly<Record<string, () => Promise<void>>> = {
   'insertRandomText.toggleQuotes': () => toggleBoolean(ConfigKey.WITH_QUOTE, 'Wrap with quotes', true),
   'insertRandomText.toggleNewLine': () => toggleBoolean(ConfigKey.WITH_NEW_LINE, 'Trailing new line', true),
   'insertRandomText.toggleUniquePerCursor': () => toggleBoolean(ConfigKey.UNIQUE_PER_CURSOR, 'Unique value per cursor', true),
+  'insertRandomText.toggleStrictUnique': () => toggleBoolean(ConfigKey.STRICT_UNIQUE, 'Strict unique', false),
   'insertRandomText.toggleContextMenu': () => toggleBoolean(CONTEXT_MENU_KEY, 'Editor context menu', false),
   'insertRandomText.manageTemplates': () => openSettingsAt(ConfigKey.TEMPLATES),
   'insertRandomText.manageCustomLists': () => openSettingsAt(ConfigKey.CUSTOM_LISTS),

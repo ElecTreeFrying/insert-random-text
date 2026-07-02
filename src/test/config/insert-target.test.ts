@@ -182,6 +182,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.withQuote, true);
     assert.strictEqual(settings.withNewLine, true);
     assert.strictEqual(settings.uniquePerCursor, true);
+    assert.strictEqual(settings.strictUnique, false);
     assert.strictEqual(settings.seed, '');
     assert.strictEqual(settings.locale, 'en');
     assert.strictEqual(settings.bulkCount, 1);
@@ -198,6 +199,7 @@ describe('configuration — defaults when unset', () => {
       [ConfigKey.WITH_QUOTE]: false,
       [ConfigKey.WITH_NEW_LINE]: false,
       [ConfigKey.UNIQUE_PER_CURSOR]: false,
+      [ConfigKey.STRICT_UNIQUE]: true,
       [ConfigKey.SEED]: '42',
       [ConfigKey.LOCALE]: 'ja',
       [ConfigKey.BULK_COUNT]: 5,
@@ -209,6 +211,7 @@ describe('configuration — defaults when unset', () => {
     assert.strictEqual(settings.withQuote, false);
     assert.strictEqual(settings.withNewLine, false);
     assert.strictEqual(settings.uniquePerCursor, false);
+    assert.strictEqual(settings.strictUnique, true);
     assert.strictEqual(settings.seed, '42');
     assert.strictEqual(settings.locale, 'ja');
     assert.strictEqual(settings.bulkCount, 5);
@@ -224,7 +227,7 @@ describe('configuration — read() snapshot', () => {
     const keys = Object.keys(read({})).sort();
     assert.deepStrictEqual(
       keys,
-      [ 'bulkCount', 'customLists', 'dateFormat', 'insertType', 'locale', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'templates', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
+      [ 'bulkCount', 'customLists', 'dateFormat', 'insertType', 'locale', 'outputFormat', 'recordFormat', 'recordSqlTable', 'seed', 'strictUnique', 'templates', 'uniquePerCursor', 'withNewLine', 'withQuote' ],
     );
   });
 });

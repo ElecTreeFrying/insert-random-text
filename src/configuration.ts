@@ -27,6 +27,8 @@ export interface Settings {
   withQuote: boolean;
   withNewLine: boolean;
   uniquePerCursor: boolean;
+  /** Re-draw duplicates within one insert wherever values are meant to differ (bounded). */
+  strictUnique: boolean;
   seed: string;
   /** Which faker locale data set generators draw from. */
   locale: LocaleId;
@@ -50,6 +52,7 @@ export const ConfigKey = {
   WITH_QUOTE: 'withQuote',
   WITH_NEW_LINE: 'withNewLine',
   UNIQUE_PER_CURSOR: 'insertRandomText.uniquePerCursor',
+  STRICT_UNIQUE: 'insertRandomText.strictUnique',
   SEED: 'insertRandomText.seed',
   LOCALE: 'insertRandomText.locale',
   BULK_COUNT: 'insertRandomText.bulkCount',
@@ -92,6 +95,7 @@ export class Configuration {
       withQuote: this.withQuote,
       withNewLine: this.withNewLine,
       uniquePerCursor: this.uniquePerCursor,
+      strictUnique: this.strictUnique,
       seed: this.seed,
       locale: this.locale,
       bulkCount: this.bulkCount,
@@ -112,6 +116,7 @@ export class Configuration {
   get withQuote(): boolean { return this.value<boolean>(ConfigKey.WITH_QUOTE) ?? true; }
   get withNewLine(): boolean { return this.value<boolean>(ConfigKey.WITH_NEW_LINE) ?? true; }
   get uniquePerCursor(): boolean { return this.value<boolean>(ConfigKey.UNIQUE_PER_CURSOR) ?? true; }
+  get strictUnique(): boolean { return this.value<boolean>(ConfigKey.STRICT_UNIQUE) ?? false; }
   get seed(): string { return this.value<string>(ConfigKey.SEED) ?? ''; }
   get locale(): LocaleId { const value = this.value<LocaleId>(ConfigKey.LOCALE) ?? 'en'; return LOCALES.includes(value) ? value : 'en'; }
   get bulkCount(): number { return this.value<number>(ConfigKey.BULK_COUNT) ?? 1; }

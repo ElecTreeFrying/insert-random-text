@@ -102,6 +102,7 @@ Change any of these from the [Commands](#commands) below, or in VS Code Settings
 |---|---|---|---|
 | `insertType` | `Cursor` · `Top` · `Clipboard` | `Cursor` | Where values go — each cursor, the top of the file, or the clipboard. |
 | `insertRandomText.uniquePerCursor` | `true` · `false` | `true` | A different value at each cursor (multi-cursor fill), or the same value repeated. |
+| `insertRandomText.strictUnique` | `true` · `false` | `false` | Re-draw duplicates so values meant to differ within one insert really do — bulk values, and across cursors when `uniquePerCursor` is on. A small pool (booleans, weekdays) that runs out keeps its duplicate. |
 | `insertRandomText.bulkCount` | `1`–`1000` | `1` | How many values to insert at each cursor. |
 | `insertRandomText.outputFormat` | `plain` · `jsonArray` · `quotedList` | `plain` | How bulk values render — one per line, a JSON array, or a quoted comma-separated list. |
 | `insertRandomText.dateFormat` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | `iso` | How the timestamp Time types render — full ISO 8601, date only, time only, or Unix seconds/milliseconds. |
@@ -193,7 +194,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
 | **Insert Random: Set Insert Type / Output Format / Date Format / Record Format / Locale** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
-| **Insert Random: Toggle Wrap With Quotes / Trailing New Line / Unique Value Per Cursor / Editor Context Menu** | Flip a setting on or off. |
+| **Insert Random: Toggle Wrap With Quotes / Trailing New Line / Unique Value Per Cursor / Strict Unique / Editor Context Menu** | Flip a setting on or off. |
 | **Insert Random: Manage Templates / Manage Custom Lists** | Jump to the setting where your saved templates / custom lists live. See [Your own data](#your-own-data). |
 | **Insert Random: Reset Settings to Defaults** | Restore every setting to its default — your saved templates and custom lists are kept. |
 
