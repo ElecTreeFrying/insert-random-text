@@ -187,6 +187,18 @@
         "title": "Insert Random: Paragraphs (Count…)"
       },
       {
+        "command": "insertRandomText.uuidFormat",
+        "title": "Insert Random: UUID (Format…)"
+      },
+      {
+        "command": "insertRandomText.passwordOptions",
+        "title": "Insert Random: Password (Options…)"
+      },
+      {
+        "command": "insertRandomText.phoneFormat",
+        "title": "Insert Random: Phone (Format…)"
+      },
+      {
         "command": "insertRandomText.uuid",
         "title": "Insert Random: UUID"
       },

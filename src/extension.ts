@@ -295,26 +295,51 @@ async function insertWith(generator: Generator): Promise<void> {
   }
 }
 
+/** The Quick Pick item shape for a pick step's options. */
+type StepPick = vscode.QuickPickItem & { value: string };
+
 /**
- * Run a prompted command: walk its input boxes in order — each prefilled with
- * the last accepted value (`globalState`), falling back to the step's default —
- * then insert the resulting one-off generator through {@link insertWith}.
- * Esc at any box is a clean cancel: nothing is inserted, nothing is remembered.
+ * Run a prompted command: walk its steps in order — input boxes prefilled with
+ * the last accepted value (`globalState`), Quick Picks with the last pick
+ * floated to the top and marked — then insert the resulting one-off generator
+ * through {@link insertWith}. Esc at any step is a clean cancel: nothing is
+ * inserted, nothing is remembered.
  */
 async function runPrompted(context: vscode.ExtensionContext, command: PromptedCommand): Promise<void> {
   const params: Record<string, string> = {};
   for (const step of command.steps) {
     const memoryKey = `prompted.${command.id}.${step.key}`;
-    const input = await vscode.window.showInputBox({
-      prompt: step.prompt,
-      placeHolder: step.placeholder,
-      value: context.globalState.get<string>(memoryKey) ?? step.fallback,
-      validateInput: (raw) => step.validate(raw, params),
-    });
-    if (input === undefined) { return; }
-    const accepted = input.trim();
-    params[step.key] = accepted;
-    await context.globalState.update(memoryKey, accepted);
+    if (step.kind === 'pick') {
+      // On a virgin run nothing is remembered: no marker, and declaration order
+      // already leads with the step's fallback option.
+      const remembered = context.globalState.get<string>(memoryKey);
+      const items: StepPick[] = step.options.map((option) => ({
+        label: option.label,
+        detail: option.detail,
+        description: option.value === remembered ? '$(check) Last used' : undefined,
+        value: option.value,
+      }));
+      const rememberedIdx = items.findIndex((item) => item.value === remembered);
+      if (rememberedIdx > 0) {
+        const [ item ] = items.splice(rememberedIdx, 1);
+        items.unshift(item);
+      }
+      const picked = await vscode.window.showQuickPick(items, { placeHolder: step.prompt, matchOnDetail: true });
+      if (!picked) { return; }
+      params[step.key] = picked.value;
+      await context.globalState.update(memoryKey, picked.value);
+    } else {
+      const input = await vscode.window.showInputBox({
+        prompt: step.prompt,
+        placeHolder: step.placeholder,
+        value: context.globalState.get<string>(memoryKey) ?? step.fallback,
+        validateInput: (raw) => step.validate(raw, params),
+      });
+      if (input === undefined) { return; }
+      const accepted = input.trim();
+      params[step.key] = accepted;
+      await context.globalState.update(memoryKey, accepted);
+    }
   }
   await insertWith(toGenerator(command, params));
 }

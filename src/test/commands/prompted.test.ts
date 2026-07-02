@@ -3,9 +3,9 @@ import * as vscode from 'vscode';
 
 import { ConfigKey } from '../../configuration';
 
-// The prompted commands end-to-end through executeCommand: input boxes (stubbed) → one-off generator →
-// the normal insert pipeline. Suite baseline mirrors insert.test.ts: quotes + newline OFF and a pinned
-// seed, so assertions are exact; pinned ranges (min = max) pin the inserted value outright.
+// The prompted commands end-to-end through executeCommand: input boxes and Quick Picks (stubbed) →
+// one-off generator → the normal insert pipeline. Suite baseline mirrors insert.test.ts: quotes +
+// newline OFF and a pinned seed, so assertions are exact; pinned ranges (min = max) pin the value outright.
 const EXTENSION_ID = 'ElecTreeFrying.insert-random-text';
 const NUMBER_RANGE = 'insertRandomText.numberRange';
 const FLOAT_RANGE = 'insertRandomText.floatRange';
@@ -14,6 +14,9 @@ const DATE_BETWEEN = 'insertRandomText.dateBetween';
 const WORDS_COUNT = 'insertRandomText.wordsCount';
 const SENTENCES_COUNT = 'insertRandomText.sentencesCount';
 const PARAGRAPHS_COUNT = 'insertRandomText.paragraphsCount';
+const UUID_FORMAT = 'insertRandomText.uuidFormat';
+const PASSWORD_OPTIONS = 'insertRandomText.passwordOptions';
+const PHONE_FORMAT = 'insertRandomText.phoneFormat';
 
 async function setConfig(key: string, value: unknown): Promise<void> {
   const changed = new Promise<void>((resolve) => {
@@ -31,19 +34,44 @@ async function openDoc(content: string): Promise<vscode.TextEditor> {
   return vscode.window.showTextDocument(doc);
 }
 
-/** Stub showInputBox with a scripted answer per box (undefined = Esc); records each box's options. */
-function stubInputBox(answers: readonly (string | undefined)[]): { received: vscode.InputBoxOptions[]; restore(): void } {
-  const original = vscode.window.showInputBox;
-  const received: vscode.InputBoxOptions[] = [];
-  (vscode.window as any).showInputBox = async (options: vscode.InputBoxOptions) => {
-    received.push(options);
-    return answers[received.length - 1];
-  };
-  return { received, restore: () => { (vscode.window as any).showInputBox = original; } };
+type ReceivedPick = { items: (vscode.QuickPickItem & { value: string })[]; options: vscode.QuickPickOptions | undefined };
+interface ReceivedPrompts {
+  inputs: vscode.InputBoxOptions[];
+  picks: ReceivedPick[];
 }
 
-async function runPromptedCommand(command: string, answers: readonly (string | undefined)[]): Promise<vscode.InputBoxOptions[]> {
-  const stub = stubInputBox(answers);
+/** Stub showInputBox AND showQuickPick with one scripted answer per prompt, consumed in flow order
+ * (undefined = Esc; a pick answer selects the item whose `value` matches, failing loudly on a typo).
+ * Records what every box and pick received, so tests can assert prefills and item ordering. */
+function stubPrompts(answers: readonly (string | undefined)[]): { received: ReceivedPrompts; restore(): void } {
+  const originalInput = vscode.window.showInputBox;
+  const originalPick = vscode.window.showQuickPick;
+  const received: ReceivedPrompts = { inputs: [], picks: [] };
+  let cursor = 0;
+  (vscode.window as any).showInputBox = async (options: vscode.InputBoxOptions) => {
+    received.inputs.push(options);
+    return answers[cursor++];
+  };
+  (vscode.window as any).showQuickPick = async (items: any, options: vscode.QuickPickOptions) => {
+    const resolved = await items;
+    received.picks.push({ items: resolved, options });
+    const answer = answers[cursor++];
+    if (answer === undefined) { return undefined; }
+    const picked = resolved.find((item: any) => item.value === answer);
+    if (!picked) { throw new Error(`no pick option with value '${answer}' among: ${resolved.map((i: any) => i.value).join(', ')}`); }
+    return picked;
+  };
+  return {
+    received,
+    restore: () => {
+      (vscode.window as any).showInputBox = originalInput;
+      (vscode.window as any).showQuickPick = originalPick;
+    },
+  };
+}
+
+async function runPromptedCommand(command: string, answers: readonly (string | undefined)[]): Promise<ReceivedPrompts> {
+  const stub = stubPrompts(answers);
   try {
     await vscode.commands.executeCommand(command);
   } finally {
@@ -144,6 +172,36 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     for (const line of lines) { assert.ok(line.length > 0, 'paragraphs must be non-empty'); }
   });
 
+  it('UUID (Format…) renders the picked format — braced', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(UUID_FORMAT, [ 'braced' ]);
+    assert.match(editor.document.getText(), /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/);
+  });
+
+  it('UUID (Format…) renders UPPERCASE with no dashes', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(UUID_FORMAT, [ 'uppercaseNoDashes' ]);
+    assert.match(editor.document.getText(), /^[0-9A-F]{32}$/);
+  });
+
+  it('Password (Options…) inserts exactly N characters from the letters-and-digits pool', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(PASSWORD_OPTIONS, [ '12', 'no' ]);
+    assert.match(editor.document.getText(), /^[A-Za-z0-9]{12}$/);
+  });
+
+  it('Password (Options…) with symbols draws from the symbol-extended pool', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(PASSWORD_OPTIONS, [ '32', 'yes' ]);
+    assert.match(editor.document.getText(), /^[A-Za-z0-9!@#$%^&*]{32}$/);
+  });
+
+  it('Phone (Format…) renders the picked style — international', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(PHONE_FORMAT, [ 'international' ]);
+    assert.match(editor.document.getText(), /^\+\d{8,15}$/);
+  });
+
   it('Esc at the first box cancels cleanly — nothing inserted, no error', async () => {
     const editor = await openDoc('');
     await assert.doesNotReject(async () => { await runPromptedCommand(NUMBER_RANGE, [ undefined ]); });
@@ -168,6 +226,18 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     assert.strictEqual(editor.document.getText(), '', 'a cancelled count prompt must insert nothing');
   });
 
+  it('Esc at a pick step cancels cleanly — nothing inserted, no error', async () => {
+    const editor = await openDoc('');
+    await assert.doesNotReject(async () => { await runPromptedCommand(UUID_FORMAT, [ undefined ]); });
+    assert.strictEqual(editor.document.getText(), '', 'a cancelled pick must insert nothing');
+  });
+
+  it('Esc at the symbols pick cancels cleanly (length already accepted)', async () => {
+    const editor = await openDoc('');
+    await assert.doesNotReject(async () => { await runPromptedCommand(PASSWORD_OPTIONS, [ '12', undefined ]); });
+    assert.strictEqual(editor.document.getText(), '', 'a mid-flow pick cancel must insert nothing');
+  });
+
   it('fills every cursor with a fresh value (multi-cursor)', async () => {
     const editor = await openDoc('\n'); // two empty lines.
     editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 0) ];
@@ -184,6 +254,16 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     const [ line0, line1 ] = editor.document.getText().split('\n');
     assert.strictEqual(line0.split(' ').length, 3, 'first cursor gets 3 words');
     assert.strictEqual(line1.split(' ').length, 3, 'second cursor gets 3 words');
+    assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct values per cursor');
+  });
+
+  it('fills every cursor with a fresh value (multi-cursor through a pick step)', async () => {
+    const editor = await openDoc('\n'); // two empty lines.
+    editor.selections = [ new vscode.Selection(0, 0, 0, 0), new vscode.Selection(1, 0, 1, 0) ];
+    await runPromptedCommand(UUID_FORMAT, [ 'noDashes' ]);
+    const [ line0, line1 ] = editor.document.getText().split('\n');
+    assert.match(line0, /^[0-9a-f]{32}$/, 'first cursor gets a dash-less uuid');
+    assert.match(line1, /^[0-9a-f]{32}$/, 'second cursor gets a dash-less uuid');
     assert.notStrictEqual(line0, line1, 'uniquePerCursor (default) → distinct values per cursor');
   });
 
@@ -204,8 +284,31 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await openDoc('');
     const received = await runPromptedCommand(NUMBER_RANGE, [ '7', '9' ]);
-    assert.strictEqual(received[0].value, '7', 'min box should prefill the last accepted min, trimmed');
-    assert.strictEqual(received[1].value, '9', 'max box should prefill the last accepted max');
+    assert.strictEqual(received.inputs[0].value, '7', 'min box should prefill the last accepted min, trimmed');
+    assert.strictEqual(received.inputs[1].value, '9', 'max box should prefill the last accepted max');
+  });
+
+  it('is reproducible under the pinned seed through a pick-parameterized flow', async () => {
+    const first = await openDoc('');
+    await runPromptedCommand(PASSWORD_OPTIONS, [ '16', 'yes' ]);
+    const a = first.document.getText();
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    const second = await openDoc('');
+    await runPromptedCommand(PASSWORD_OPTIONS, [ '16', 'yes' ]);
+    const b = second.document.getText();
+    assert.strictEqual(a, b, 'same seed + same picks → same inserted value');
+  });
+
+  it('remembers the last pick and floats it to the top, marked', async () => {
+    await openDoc('');
+    await runPromptedCommand(UUID_FORMAT, [ 'braced' ]);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await openDoc('');
+    const received = await runPromptedCommand(UUID_FORMAT, [ 'braced' ]);
+    const [ pick ] = received.picks;
+    assert.strictEqual(pick.items.length, 5, 'all five formats stay offered');
+    assert.strictEqual(pick.items[0].value, 'braced', 'the remembered format floats to the top');
+    assert.match(pick.items[0].description ?? '', /Last used/, 'the remembered format is marked');
   });
 
   it('honors the quote policy — a String (Length…) in a JSON file arrives double-quoted', async () => {

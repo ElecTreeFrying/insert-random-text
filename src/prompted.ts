@@ -3,20 +3,23 @@ import { faker } from './engine';
 
 /**
  * Parameterized ("prompted") insert commands — types that ask for parameters in
- * input boxes before inserting: Number (Range…), Float (Range…), String
- * (Length…), Date (Between…), Words/Sentences/Paragraphs (Count…).
+ * input boxes or Quick Picks before inserting: Number (Range…), Float (Range…),
+ * String (Length…), Date (Between…), Words/Sentences/Paragraphs (Count…),
+ * UUID (Format…), Password (Options…), Phone (Format…).
  *
  * These are deliberately NOT catalog entries: the registry stays a list of
- * zero-argument generators, while each prompted command declares its input steps
+ * zero-argument generators, while each prompted command declares its steps
  * here and is wrapped as a one-off {@link Generator} (via {@link toGenerator})
  * that rides the exact same insert pipeline — settings, quoting, bulk,
  * multi-cursor, and seed all apply. Pure by design: no `vscode` import — the
- * input-box walk lives in `extension.ts` (`runPrompted`), so validation and
- * rendering are checkable headless.
+ * box/pick walk lives in `extension.ts` (`runPrompted`), so validation, pick
+ * options, and rendering are checkable headless.
  */
 
 /** One input box in a prompted command's flow. */
-export interface PromptStep {
+export interface InputStep {
+  /** Step-kind discriminant; the input box is the default kind and may omit it. */
+  readonly kind?: 'input';
   /** Params key; also the suffix of the last-used-value memory key. */
   readonly key: string;
   /** Input-box prompt text. */
@@ -32,6 +35,33 @@ export interface PromptStep {
    */
   validate(input: string, prior: Readonly<Record<string, string>>): string | undefined;
 }
+
+/** One selectable option in a {@link PickStep}. */
+export interface PickOption {
+  /** Params value stored under the step's key (also what gets remembered). */
+  readonly value: string;
+  /** Quick Pick row label. */
+  readonly label: string;
+  /** Explanatory line under the label — an example rendering where possible. */
+  readonly detail: string;
+}
+
+/** One Quick Pick in a prompted command's flow. A closed set of choices needs no
+ * validation; options are declared fallback-first, so a virgin pick leads with it. */
+export interface PickStep {
+  readonly kind: 'pick';
+  /** Params key; also the suffix of the last-pick memory key. */
+  readonly key: string;
+  /** Quick Pick placeholder text (the question). */
+  readonly prompt: string;
+  /** The choices, in display order. */
+  readonly options: readonly PickOption[];
+  /** Option value that acts as the default when no last pick is remembered. */
+  readonly fallback: string;
+}
+
+/** One step in a prompted command's flow: an input box (the default) or a Quick Pick. */
+export type PromptStep = InputStep | PickStep;
 
 /** A palette command that prompts for parameters, then inserts one data type. */
 export interface PromptedCommand {
@@ -91,7 +121,7 @@ function maxAtLeastMin(min: string): string {
 const COUNT_ERROR = 'Enter a whole number between 1 and 100.';
 
 /** The single count box shared by the lorem trio (words/sentences/paragraphs). */
-function countStep(prompt: string): PromptStep {
+function countStep(prompt: string): InputStep {
   return {
     key: 'count',
     prompt,
@@ -105,9 +135,24 @@ function countStep(prompt: string): PromptStep {
 }
 
 /**
+ * UUID post-transform for the uuidFormat command: a pure re-rendering of faker's
+ * lowercase-dashed uuid string. Unknown formats fall through unchanged.
+ */
+export function formatUuid(uuid: string, format: string): string {
+  switch (format) {
+    case 'uppercase': return uuid.toUpperCase();
+    case 'braced': return `{${uuid}}`;
+    case 'noDashes': return uuid.replace(/-/g, '');
+    case 'uppercaseNoDashes': return uuid.replace(/-/g, '').toUpperCase();
+    default: return uuid; // 'lowercase' — faker's native rendering.
+  }
+}
+
+/**
  * The prompted-command registry. Fallbacks reproduce the matching zero-argument
  * catalog types (Number: 0–1000, Float: 0–1000 at 2 decimals, String: 15
- * alphanumeric chars), so accepting the prefills behaves like the plain command.
+ * alphanumeric chars, Password: 15 chars, and the lowercase / no-symbols / human
+ * pick defaults), so accepting the prefills behaves like the plain command.
  * The lorem counts prefill 3 — faker's own words/paragraphs default.
  */
 export const promptedCommands: readonly PromptedCommand[] = [
@@ -243,6 +288,80 @@ export const promptedCommands: readonly PromptedCommand[] = [
     group: 'Text',
     steps: [ countStep('Paragraphs — how many lorem paragraphs to insert (1–100).') ],
     render: ({ count }) => faker().lorem.paragraphs(Number(count)),
+  },
+  {
+    id: 'uuidFormat',
+    label: 'UUID (Format…)',
+    group: 'IDs',
+    steps: [
+      {
+        kind: 'pick',
+        key: 'format',
+        prompt: 'UUID format — how the drawn UUID is rendered.',
+        options: [
+          { value: 'lowercase', label: 'Lowercase', detail: 'e.g. 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d' },
+          { value: 'uppercase', label: 'UPPERCASE', detail: 'e.g. 9B1DEB4D-3B7D-4BAD-9BDD-2B0D7B3DCB6D' },
+          { value: 'braced', label: 'Braced', detail: 'e.g. {9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}' },
+          { value: 'noDashes', label: 'No dashes', detail: 'e.g. 9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d' },
+          { value: 'uppercaseNoDashes', label: 'UPPERCASE, no dashes', detail: 'e.g. 9B1DEB4D3B7D4BAD9BDD2B0D7B3DCB6D' },
+        ],
+        fallback: 'lowercase',
+      },
+    ],
+    render: ({ format }) => formatUuid(faker().string.uuid(), format),
+  },
+  {
+    id: 'passwordOptions',
+    label: 'Password (Options…)',
+    group: 'Security',
+    steps: [
+      {
+        key: 'length',
+        prompt: 'Password length — how many characters (8–128).',
+        placeholder: 'e.g. 15',
+        fallback: '15',
+        validate: (input) => {
+          const value = parseInteger(input);
+          return value !== undefined && value >= 8 && value <= 128
+            ? undefined
+            : 'Enter a whole number between 8 and 128.';
+        },
+      },
+      {
+        kind: 'pick',
+        key: 'symbols',
+        prompt: 'Password characters — include symbols?',
+        options: [
+          { value: 'no', label: 'No symbols', detail: 'Letters and digits only.' },
+          { value: 'yes', label: 'Include symbols', detail: 'Letters, digits, and !@#$%^&*.' },
+        ],
+        fallback: 'no',
+      },
+    ],
+    render: ({ length, symbols }) =>
+      faker().internet.password({
+        length: Number(length),
+        pattern: symbols === 'yes' ? /[A-Za-z0-9!@#$%^&*]/ : /[A-Za-z0-9]/,
+      }),
+  },
+  {
+    id: 'phoneFormat',
+    label: 'Phone (Format…)',
+    group: 'Identity',
+    steps: [
+      {
+        kind: 'pick',
+        key: 'style',
+        prompt: 'Phone format — which style to insert.',
+        options: [
+          { value: 'human', label: 'Human', detail: 'As people write them, e.g. 555.770.2411 x1234.' },
+          { value: 'national', label: 'National', detail: 'Standardized national format, e.g. (555) 770-2411.' },
+          { value: 'international', label: 'International', detail: 'E.164 format, e.g. +15557702411.' },
+        ],
+        fallback: 'human',
+      },
+    ],
+    render: ({ style }) => faker().phone.number({ style: style as 'human' | 'national' | 'international' }),
   },
 ];
 

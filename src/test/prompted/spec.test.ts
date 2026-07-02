@@ -1,18 +1,33 @@
 import * as assert from 'assert';
 
-import { getPromptedCommand, promptedCommands, toGenerator } from '../../prompted';
+import { formatUuid, getPromptedCommand, InputStep, PickStep, promptedCommands, toGenerator } from '../../prompted';
 import { load, seed } from '../../engine';
 
-// The prompted-command registry is pure (no vscode import): each entry declares its input-box steps
-// (prompt/placeholder/fallback + a validateInput-shaped validator) and a render(params) that draws one
-// fresh value. The vscode glue in extension.ts just walks the steps — so everything that can be wrong
-// about a prompted command (validation rules, rendering, the Generator contract) is checkable here.
+// The prompted-command registry is pure (no vscode import): each entry declares its steps — input boxes
+// (prompt/placeholder/fallback + a validateInput-shaped validator) and Quick Picks (options + fallback) —
+// and a render(params) that draws one fresh value. The vscode glue in extension.ts just walks the steps —
+// so everything that can be wrong about a prompted command (validation rules, pick options, rendering,
+// the Generator contract) is checkable here.
+
+/** The input-box steps of a command, typed; pick steps filtered out. */
+function inputSteps(id: string): readonly InputStep[] {
+  return (getPromptedCommand(id)?.steps ?? []).filter((step): step is InputStep => step.kind !== 'pick');
+}
+
+/** The Quick Pick steps of a command, typed; input-box steps filtered out. */
+function pickSteps(id: string): readonly PickStep[] {
+  return (getPromptedCommand(id)?.steps ?? []).filter((step): step is PickStep => step.kind === 'pick');
+}
 
 describe('prompted — registry', () => {
   it('exposes the parameterized commands, id-addressable', () => {
     assert.deepStrictEqual(
       promptedCommands.map((command) => command.id),
-      [ 'numberRange', 'floatRange', 'stringLength', 'dateBetween', 'wordsCount', 'sentencesCount', 'paragraphsCount' ],
+      [
+        'numberRange', 'floatRange', 'stringLength', 'dateBetween',
+        'wordsCount', 'sentencesCount', 'paragraphsCount',
+        'uuidFormat', 'passwordOptions', 'phoneFormat',
+      ],
     );
     for (const command of promptedCommands) {
       assert.strictEqual(getPromptedCommand(command.id), command);
@@ -23,32 +38,43 @@ describe('prompted — registry', () => {
     assert.strictEqual(getPromptedCommand('nope'), undefined);
   });
 
-  it('every step carries the input-box texts and a prefill fallback', () => {
+  it('every step carries its prompt texts and a valid prefill fallback', () => {
     for (const command of promptedCommands) {
       for (const step of command.steps) {
         assert.ok(step.key.length > 0, `${command.id} step needs a key`);
         assert.ok(step.prompt.length > 0, `${command.id}.${step.key} needs a prompt`);
-        assert.ok(step.placeholder.length > 0, `${command.id}.${step.key} needs a placeholder`);
-        assert.strictEqual(step.validate(step.fallback, {}), undefined,
-          `${command.id}.${step.key} fallback '${step.fallback}' must pass its own validation`);
+        if (step.kind === 'pick') {
+          assert.ok(step.options.length >= 2, `${command.id}.${step.key} needs at least two options`);
+          const values = step.options.map((option) => option.value);
+          assert.strictEqual(new Set(values).size, values.length, `${command.id}.${step.key} option values must be unique`);
+          assert.ok(values.includes(step.fallback), `${command.id}.${step.key} fallback '${step.fallback}' must be one of its options`);
+          for (const option of step.options) {
+            assert.ok(option.label.length > 0 && option.detail.length > 0,
+              `${command.id}.${step.key} option '${option.value}' needs a label and a detail`);
+          }
+        } else {
+          assert.ok(step.placeholder.length > 0, `${command.id}.${step.key} needs a placeholder`);
+          assert.strictEqual(step.validate(step.fallback, {}), undefined,
+            `${command.id}.${step.key} fallback '${step.fallback}' must pass its own validation`);
+        }
       }
     }
   });
 
   it('range commands validate their fallbacks as a pair (max fallback vs min fallback)', () => {
     for (const id of [ 'numberRange', 'floatRange' ]) {
-      const [ min, max ] = getPromptedCommand(id)!.steps;
+      const [ min, max ] = inputSteps(id);
       assert.strictEqual(max.validate(max.fallback, { min: min.fallback }), undefined,
         `${id} fallbacks must form a valid range`);
     }
-    const [ from, to ] = getPromptedCommand('dateBetween')!.steps;
+    const [ from, to ] = inputSteps('dateBetween');
     assert.strictEqual(to.validate(to.fallback, { from: from.fallback }), undefined,
       'dateBetween fallbacks must form a valid range');
   });
 });
 
 describe('prompted — numberRange validation', () => {
-  const [ min, max ] = getPromptedCommand('numberRange')?.steps ?? [];
+  const [ min, max ] = inputSteps('numberRange');
 
   it('min accepts integers (negative and padded included)', () => {
     for (const input of [ '0', '42', '-5', ' 7 ' ]) {
@@ -70,7 +96,7 @@ describe('prompted — numberRange validation', () => {
 });
 
 describe('prompted — floatRange validation', () => {
-  const [ min, max ] = getPromptedCommand('floatRange')?.steps ?? [];
+  const [ min, max ] = inputSteps('floatRange');
 
   it('min accepts any finite number', () => {
     for (const input of [ '0', '0.5', '-1.25', '3', ' 2.5 ' ]) {
@@ -99,7 +125,7 @@ describe('prompted — floatRange validation', () => {
 });
 
 describe('prompted — stringLength validation', () => {
-  const [ length ] = getPromptedCommand('stringLength')?.steps ?? [];
+  const [ length ] = inputSteps('stringLength');
 
   it('accepts 1 through 1000', () => {
     for (const input of [ '1', '15', '1000' ]) {
@@ -115,7 +141,7 @@ describe('prompted — stringLength validation', () => {
 });
 
 describe('prompted — dateBetween validation', () => {
-  const [ from, to ] = getPromptedCommand('dateBetween')?.steps ?? [];
+  const [ from, to ] = inputSteps('dateBetween');
 
   it('from accepts YYYY-MM-DD and full ISO 8601 (padding tolerated)', () => {
     for (const input of [ '2020-01-01', ' 2020-01-01 ', '2026-07-02T12:00:00Z', '2026-07-02T12:00', '2026-07-02T12:00:00.500+02:00' ]) {
@@ -139,7 +165,7 @@ describe('prompted — dateBetween validation', () => {
 describe('prompted — count validation (wordsCount / sentencesCount / paragraphsCount)', () => {
   for (const id of [ 'wordsCount', 'sentencesCount', 'paragraphsCount' ]) {
     describe(id, () => {
-      const [ count ] = getPromptedCommand(id)?.steps ?? [];
+      const [ count ] = inputSteps(id);
 
       it('accepts 1 through 100 (padding tolerated)', () => {
         for (const input of [ '1', '3', '100', ' 42 ' ]) {
@@ -154,6 +180,84 @@ describe('prompted — count validation (wordsCount / sentencesCount / paragraph
       });
     });
   }
+});
+
+describe('prompted — pick steps (uuidFormat / passwordOptions / phoneFormat)', () => {
+  it('carries the S5 format variants with their catalog groups', () => {
+    assert.deepStrictEqual(
+      [ 'uuidFormat', 'passwordOptions', 'phoneFormat' ].map((id) => {
+        const { label, group } = getPromptedCommand(id)!;
+        return { id, label, group };
+      }),
+      [
+        { id: 'uuidFormat', label: 'UUID (Format…)', group: 'IDs' },
+        { id: 'passwordOptions', label: 'Password (Options…)', group: 'Security' },
+        { id: 'phoneFormat', label: 'Phone (Format…)', group: 'Identity' },
+      ],
+    );
+  });
+
+  it('uuidFormat asks for one of the five formats, defaulting to lowercase', () => {
+    assert.strictEqual(getPromptedCommand('uuidFormat')!.steps.length, 1);
+    const [ format ] = pickSteps('uuidFormat');
+    assert.strictEqual(format.key, 'format');
+    assert.deepStrictEqual(
+      format.options.map((option) => option.value),
+      [ 'lowercase', 'uppercase', 'braced', 'noDashes', 'uppercaseNoDashes' ],
+    );
+    assert.strictEqual(format.fallback, 'lowercase');
+  });
+
+  it('passwordOptions asks for a length box, then a symbols yes/no pick', () => {
+    const steps = getPromptedCommand('passwordOptions')!.steps;
+    assert.deepStrictEqual(
+      steps.map((step) => [ step.key, step.kind === 'pick' ? 'pick' : 'input' ]),
+      [ [ 'length', 'input' ], [ 'symbols', 'pick' ] ],
+    );
+    const [ symbols ] = pickSteps('passwordOptions');
+    assert.deepStrictEqual(symbols.options.map((option) => option.value), [ 'no', 'yes' ]);
+    assert.strictEqual(symbols.fallback, 'no');
+  });
+
+  it('phoneFormat asks for one of the three faker phone styles, defaulting to human', () => {
+    assert.strictEqual(getPromptedCommand('phoneFormat')!.steps.length, 1);
+    const [ style ] = pickSteps('phoneFormat');
+    assert.strictEqual(style.key, 'style');
+    assert.deepStrictEqual(style.options.map((option) => option.value), [ 'human', 'national', 'international' ]);
+    assert.strictEqual(style.fallback, 'human');
+  });
+});
+
+describe('prompted — passwordOptions length validation', () => {
+  const [ length ] = inputSteps('passwordOptions');
+
+  it('accepts 8 through 128 (padding tolerated)', () => {
+    for (const input of [ '8', '15', '128', ' 64 ' ]) {
+      assert.strictEqual(length.validate(input, {}), undefined, `'${input}' should be a valid length`);
+    }
+  });
+
+  it('rejects out-of-range and non-integer input', () => {
+    for (const input of [ '7', '129', '0', '-8', '2.5', 'abc', '' ]) {
+      assert.ok(length.validate(input, {}), `'${input}' should be rejected with a message`);
+    }
+  });
+});
+
+describe('prompted — formatUuid (the pure uuid post-transform)', () => {
+  const SAMPLE = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+
+  it('renders each of the five formats exactly', () => {
+    assert.strictEqual(formatUuid(SAMPLE, 'lowercase'), SAMPLE);
+    assert.strictEqual(formatUuid(SAMPLE, 'uppercase'), '9B1DEB4D-3B7D-4BAD-9BDD-2B0D7B3DCB6D');
+    assert.strictEqual(formatUuid(SAMPLE, 'braced'), '{9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}');
+    assert.strictEqual(formatUuid(SAMPLE, 'noDashes'), '9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d');
+    assert.strictEqual(formatUuid(SAMPLE, 'uppercaseNoDashes'), '9B1DEB4D3B7D4BAD9BDD2B0D7B3DCB6D');
+  });
+
+  it('leaves the uuid untouched for an unknown format (defensive default)', () => {
+    assert.strictEqual(formatUuid(SAMPLE, 'nope'), SAMPLE);
+  });
 });
 
 describe('prompted — rendering (one-off Generator through toGenerator)', function () {
@@ -255,6 +359,37 @@ describe('prompted — rendering (one-off Generator through toGenerator)', funct
       assert.strictEqual(paragraphs.length, count, `${count} paragraphs expected`);
       for (const paragraph of paragraphs) { assert.match(paragraph, /\./, 'each paragraph holds sentences'); }
     }
+  });
+
+  it('uuidFormat draws a fresh uuid and renders the picked format', () => {
+    seed(20260702);
+    const braced = toGenerator(getPromptedCommand('uuidFormat')!, { format: 'braced' });
+    assert.match(braced.generate(), /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/);
+    const compactUpper = toGenerator(getPromptedCommand('uuidFormat')!, { format: 'uppercaseNoDashes' });
+    assert.match(compactUpper.generate(), /^[0-9A-F]{32}$/);
+    const plain = toGenerator(getPromptedCommand('uuidFormat')!, { format: 'lowercase' });
+    assert.match(plain.generate(), /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    assert.notStrictEqual(plain.generate(), plain.generate(), 'each generate() draws a fresh uuid');
+  });
+
+  it('passwordOptions draws exactly N characters from the picked pool', () => {
+    seed(20260702);
+    const plain = toGenerator(getPromptedCommand('passwordOptions')!, { length: '12', symbols: 'no' });
+    for (let i = 0; i < 10; i++) { assert.match(plain.generate(), /^[A-Za-z0-9]{12}$/); }
+    const symbolic = toGenerator(getPromptedCommand('passwordOptions')!, { length: '64', symbols: 'yes' });
+    const drawn = Array.from({ length: 3 }, () => symbolic.generate());
+    for (const value of drawn) { assert.match(value, /^[A-Za-z0-9!@#$%^&*]{64}$/); }
+    assert.match(drawn.join(''), /[!@#$%^&*]/, 'the symbol pool must actually be drawn from');
+  });
+
+  it('phoneFormat renders the picked faker style', () => {
+    seed(20260702);
+    const human = toGenerator(getPromptedCommand('phoneFormat')!, { style: 'human' });
+    assert.match(human.generate(), /^[0-9\s().x-]+$/, 'human style: digits with human punctuation');
+    const national = toGenerator(getPromptedCommand('phoneFormat')!, { style: 'national' });
+    assert.match(national.generate(), /^\(\d{3}\) \d{3}-\d{4}$/);
+    const international = toGenerator(getPromptedCommand('phoneFormat')!, { style: 'international' });
+    assert.match(international.generate(), /^\+\d{8,15}$/);
   });
 
   it('draws a fresh value on each generate() call — no memoization', () => {
