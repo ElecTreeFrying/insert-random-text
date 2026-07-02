@@ -34,8 +34,8 @@ function readCommandMap(source: string): Record<string, string> {
 
 const commandMap = readCommandMap(extensionSrc);
 // The commands that are NOT generator-backed: the Quick Pick, the multi-field Record command, and every
-// settings command (set/toggle/reset).
-const META = /^insertRandomText\.(pick|record|set|toggle|reset)/;
+// settings command (set/toggle/manage/reset).
+const META = /^insertRandomText\.(pick|record|set|toggle|reset|manage)/;
 // Prompted (parameterized) commands are registered from `promptedCommands`, not COMMAND_TO_GENERATOR.
 const PROMPTED = new Set(promptedCommands.map((command) => `insertRandomText.${command.id}`));
 

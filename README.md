@@ -104,6 +104,8 @@ Change any of these from the [Commands](#commands) below, or in VS Code Settings
 | `insertRandomText.dateFormat` | `iso` · `isoDate` · `isoTime` · `unixSeconds` · `unixMillis` | `iso` | How the timestamp Time types render — full ISO 8601, date only, time only, or Unix seconds/milliseconds. |
 | `insertRandomText.recordFormat` | `json` · `sql` · `csv` | `json` | Shape for **Insert Random: Record…** — a JSON object, a SQL INSERT row, or a CSV line. |
 | `insertRandomText.recordSqlTable` | any string | `table` | Table name used by the SQL record shape (when `recordFormat` is `sql`). |
+| `insertRandomText.templates` | object: name → template | `{}` | Your saved faker templates — shown in a **Templates** group at the top of **Insert Random: Pick…**. See [Your own data](#your-own-data). |
+| `insertRandomText.customLists` | object: name → string array | `{}` | Your own value lists — shown in a **Custom Lists** group at the top of **Pick…**, and available as **Record…** fields. See [Your own data](#your-own-data). |
 | `insertRandomText.seed` | any number, or empty | _(empty)_ | Reproducible output — the same seed yields the same values every run; empty = random. |
 | `withQuote` | `true` · `false` | `true` | Wrap each inserted value in quotes. |
 | `withNewLine` | `true` · `false` | `true` | Append a newline after each value. |
@@ -167,15 +169,16 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 
 | Command | What it does |
 |---|---|
-| **Insert Random: Pick…** | Choose any type from a grouped, searchable menu, then insert at every cursor. |
-| **Insert Random: Record…** | Multi-select fields and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
+| **Insert Random: Pick…** | Choose any type — led by your saved templates and custom lists, when you've defined some — from a grouped, searchable menu, then insert at every cursor. |
+| **Insert Random: Record…** | Multi-select fields (catalog types and your custom lists) and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
 | **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
 | **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
 | **Insert Random: Set Insert Type / Output Format / Date Format / Record Format** | Pick the value from a Quick Pick. |
 | **Insert Random: Set Bulk Count / Set Seed / Set Record SQL Table** | Enter the value in an input box. |
 | **Insert Random: Toggle Wrap With Quotes / Trailing New Line / Unique Value Per Cursor / Editor Context Menu** | Flip a setting on or off. |
-| **Insert Random: Reset Settings to Defaults** | Restore every setting to its default. |
+| **Insert Random: Manage Templates / Manage Custom Lists** | Jump to the setting where your saved templates / custom lists live. See [Your own data](#your-own-data). |
+| **Insert Random: Reset Settings to Defaults** | Restore every setting to its default — your saved templates and custom lists are kept. |
 
 See [SPEC — §Commands][SPEC-commands] for the two command namespaces and back-compat notes, [§Insert Targets][SPEC-targets] for exactly how Cursor / Top / Clipboard behave, and [§Multi-Field Records][SPEC-records] for the record composer.
 
@@ -193,6 +196,27 @@ When no built-in type fits, write your own — one input box exposes faker's ent
   `[A-Z]{3}-[0-9]{4}` → `WUZ-7314`
 
 Input is validated as you type by test-rendering it — a typo shows faker's error plus a working example right in the box, and nothing is inserted until it renders. Your last template and pattern are remembered and prefilled.
+
+### Your own data
+
+Save the templates you reuse, and the values only your project knows, straight into Settings — they appear at the **top** of **Insert Random: Pick…**, ahead of the catalog:
+
+```jsonc
+"insertRandomText.templates": {
+  "invoice": "INV-{{string.numeric(4)}}",
+  "contact": "{{person.fullName}} <{{internet.email}}>"
+},
+"insertRandomText.customLists": {
+  "environment": [ "dev", "staging", "production" ],
+  "plan": [ "free", "pro", "enterprise" ]
+}
+```
+
+- **Templates** render through faker on every insert — same syntax as [From Template…](#templates--patterns), so every cursor and bulk item gets fresh values.
+- **Custom lists** draw one random item per insert, and also show up as **Record…** fields — the name becomes the field key, so picking `environment` next to `Email` yields `{ "environment": "staging", "email": "…" }`.
+- **Insert Random: Manage Templates / Manage Custom Lists** jump straight to these settings. Both survive **Reset Settings to Defaults** — they're your data, not tuning.
+
+Everything rides the normal pipeline: multi-cursor, bulk count, quoting, and seed all apply.
 
 ### Keyboard shortcuts
 

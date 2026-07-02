@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ConfigKey, Configuration, Settings } from './configuration';
 import { Generator, generators, getGenerator } from './catalog';
+import { CUSTOM_LISTS_GROUP, customListGenerators, TEMPLATES_GROUP, templateGenerators } from './custom';
 import { load, seed } from './engine';
 import { buildBlocks, InsertOptions, OutputFormat } from './formatter';
 import { PromptedCommand, promptedCommands, toGenerator } from './prompted';
@@ -348,10 +349,53 @@ async function runPrompted(context: vscode.ExtensionContext, command: PromptedCo
   await insertWith(toGenerator(command, params));
 }
 
-type GeneratorPick = vscode.QuickPickItem & { generatorId?: string };
+type GeneratorPick = vscode.QuickPickItem & { generatorId?: string; generator?: Generator };
+
+/**
+ * The user-defined groups that lead a picker: saved templates (Pick… only —
+ * `includeTemplates`) and custom lists, each item carrying its wrapped generator.
+ * The description is the template text / the list values, so `matchOnDescription`
+ * finds an entry by its content. Empty settings contribute nothing.
+ */
+function customPickItems(includeTemplates: boolean): GeneratorPick[] {
+  const items: GeneratorPick[] = [];
+  if (includeTemplates) {
+    const templates = templateGenerators(settings.templates);
+    if (templates.length > 0) {
+      items.push({ label: TEMPLATES_GROUP, kind: vscode.QuickPickItemKind.Separator });
+      for (const generator of templates) {
+        items.push({ label: generator.label, description: settings.templates[generator.id], generator });
+      }
+    }
+  }
+  const customLists = customListGenerators(settings.customLists);
+  if (customLists.length > 0) {
+    items.push({ label: CUSTOM_LISTS_GROUP, kind: vscode.QuickPickItemKind.Separator });
+    for (const generator of customLists) {
+      items.push({ label: generator.label, description: settings.customLists[generator.id].join(' · '), generator });
+    }
+  }
+  return items;
+}
+
+/**
+ * Insert a settings-defined generator, surfacing a render failure as a friendly
+ * error: a saved template is only shape-checked when read (rendering needs the
+ * engine), so a typo'd placeholder throws here — before any edit is applied.
+ */
+async function insertCustom(generator: Generator): Promise<void> {
+  try {
+    await insertWith(generator);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const manage = generator.group === TEMPLATES_GROUP ? 'Manage Templates' : 'Manage Custom Lists';
+    void vscode.window.showErrorMessage(`"${generator.label}" failed to render: ${message} — fix it via Insert Random: ${manage}.`);
+  }
+}
 
 /** "Insert Random: Pick…" — one entry point over the whole catalog, grouped by
- * category. The chosen generator runs through the same insert path. */
+ * category, led by the user's saved templates and custom lists when defined.
+ * The chosen generator runs through the same insert path. */
 async function pickAndInsert(): Promise<void> {
   await load();
 
@@ -363,7 +407,7 @@ async function pickAndInsert(): Promise<void> {
     byGroup.set(generator.group, members);
   }
 
-  const items: GeneratorPick[] = [];
+  const items: GeneratorPick[] = customPickItems(true);
   for (const [ group, members ] of byGroup) {
     items.push({ label: group, kind: vscode.QuickPickItemKind.Separator });
     for (const generator of members) {
@@ -375,14 +419,17 @@ async function pickAndInsert(): Promise<void> {
     placeHolder: 'Insert Random — pick a type to insert at every cursor…',
     matchOnDescription: true,
   });
-  if (choice?.generatorId) {
+  if (choice?.generator) {
+    await insertCustom(choice.generator);
+  } else if (choice?.generatorId) {
     await insertGenerated(choice.generatorId);
   }
 }
 
 /**
- * "Insert Random: Record…" — multi-select fields from the catalog, then deliver
- * one composed record (JSON object / SQL row / CSV line per `recordFormat`) to
+ * "Insert Random: Record…" — multi-select fields from the catalog (plus the
+ * user's custom lists, whose name becomes the field key), then deliver one
+ * composed record (JSON object / SQL row / CSV line per `recordFormat`) to
  * the configured insert target: every cursor, the top of the file, or the
  * clipboard. Honors `bulkCount`, `uniquePerCursor`, and `seed`. An empty or
  * cancelled pick inserts nothing; Cursor/Top with no active editor is a no-op.
@@ -397,7 +444,10 @@ async function pickAndInsertRecord(): Promise<void> {
     members.push(generator);
     byGroup.set(generator.group, members);
   }
-  const items: GeneratorPick[] = [];
+  // Custom lists lead the field picker; templates stay Pick…-only (a record field
+  // wants one atomic value, which a list draw is and a free-form template may not be).
+  const items: GeneratorPick[] = customPickItems(false);
+  const customLists = items.filter((item) => item.generator).map((item) => item.generator!);
   for (const [ group, members ] of byGroup) {
     items.push({ label: group, kind: vscode.QuickPickItemKind.Separator });
     for (const generator of members) {
@@ -412,9 +462,14 @@ async function pickAndInsertRecord(): Promise<void> {
   });
   if (!picks || picks.length === 0) { return; }
 
-  // Preserve catalog order regardless of the order fields were ticked.
+  // Preserve picker display order regardless of the order fields were ticked:
+  // picked custom lists first (they lead the picker), then catalog order.
   const pickedIds = new Set(picks.map((pick) => pick.generatorId));
-  const fields = generators.filter((generator) => !generator.hidden && pickedIds.has(generator.id));
+  const pickedCustom = new Set(picks.filter((pick) => pick.generator).map((pick) => pick.generator!.id));
+  const fields = [
+    ...customLists.filter((generator) => pickedCustom.has(generator.id)),
+    ...generators.filter((generator) => !generator.hidden && pickedIds.has(generator.id)),
+  ];
 
   applySeed();
   const shape = settings.recordFormat as RecordShape;

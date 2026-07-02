@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) (single-locale `en`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **169 contributed commands**, **no default keybindings**, **eleven configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **171 contributed commands**, **no default keybindings**, **thirteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,7 +10,7 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **169 commands**, in five families:
+The extension contributes **171 commands**, in five families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
@@ -18,7 +18,7 @@ The extension contributes **169 commands**, in five families:
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
 | Prompted commands | 12 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
-| Settings commands | 12 | `insertRandomText.set*` / `toggle*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
+| Settings commands | 14 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
 Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
 
@@ -31,11 +31,11 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 
 ### Insert Random: Pick…
 
-`insertRandomText.pick` opens a Quick Pick listing every **visible** generator (hidden back-compat variants are excluded), grouped under category separator headings in registry order. The picker placeholder reads *"Insert Random — pick a type to insert at every cursor…"*, and `matchOnDescription` is on, so typing filters against each entry's registry id as well as its label. Selecting an entry routes through the same `insertGenerated` path as a direct command — so the active [Insert Target](#insert-targets), [output format](#output-formats), and [quote policy](#quote-wrapping--language-aware-quoting) all apply. Pressing Escape dismisses the picker with no insertion.
+`insertRandomText.pick` opens a Quick Pick listing every **visible** generator (hidden back-compat variants are excluded), grouped under category separator headings in registry order. When the user has [saved templates or custom lists](#user-defined-data-saved-templates--custom-lists), those lead the picker as **Templates** and **Custom Lists** groups, ahead of the catalog. The picker placeholder reads *"Insert Random — pick a type to insert at every cursor…"*, and `matchOnDescription` is on, so typing filters against each entry's registry id as well as its label (user entries expose their template text / list values as the description instead). Selecting an entry routes through the same `insertGenerated` path as a direct command — so the active [Insert Target](#insert-targets), [output format](#output-formats), and [quote policy](#quote-wrapping--language-aware-quoting) all apply. Pressing Escape dismisses the picker with no insertion.
 
 ### Insert Random: Record…
 
-`insertRandomText.record` opens the same catalog picker in **multi-select** mode: tick any number of fields and one composed record — a JSON object, SQL `INSERT` row, or CSV line, per the `recordFormat` setting — is inserted at every cursor. Fully specified in [Multi-Field Records](#multi-field-records).
+`insertRandomText.record` opens the same catalog picker in **multi-select** mode — led by the user's [custom lists](#user-defined-data-saved-templates--custom-lists) when defined: tick any number of fields and one composed record — a JSON object, SQL `INSERT` row, or CSV line, per the `recordFormat` setting — is inserted at every cursor. Fully specified in [Multi-Field Records](#multi-field-records).
 
 ### Parameterized commands (prompted)
 
@@ -63,6 +63,17 @@ Behaviors:
 - **Esc at any box or pick cancels cleanly** — nothing is inserted, no error, and nothing new is remembered (values accepted *before* the cancel are remembered).
 - The seed is applied **after** the prompts, immediately before generation, so a pinned seed reproduces the same output regardless of typing time.
 - These are **not** registry entries: they don't appear in the Pick… menu or the Record… field list. Each is a one-off generator built from the entered parameters and fed into the shared insert path (`insertWith`).
+
+### User-defined data (saved templates & custom lists)
+
+Two settings let the user grow the picker with their own types — no commands of their own; both surface through [Pick…](#insert-random-pick) (and Record…, for lists):
+
+- **`insertRandomText.templates`** — an object of *name → faker template string* (the same `{{module.method}}` syntax as [From Template…](#parameterized-commands-prompted)). Each named template becomes a **Templates**-group entry at the top of Pick…; selecting it re-renders the template per value (fresh placeholder draws per cursor and bulk item).
+- **`insertRandomText.customLists`** — an object of *name → string array*. Each named list becomes a **Custom Lists**-group entry (after Templates, before the catalog) that draws one random item per value, and is also offered — first — in the [Record…](#multi-field-records) field picker, where **the list name becomes the field key**. Templates stay Pick…-only: a record field wants one atomic value, which a list draw is and a free-form template may not be.
+
+Both are validated on read (`configuration.ts`): an entry whose value is not a non-empty string (templates) / not an array with at least one string (lists) is **dropped, never thrown on**, and each drop is logged to the extension host console; non-string items inside a list are filtered out the same way. Empty settings contribute no groups — the picker opens on the catalog as before. Template *content* is only shape-checked at read time (rendering needs the engine): a template that fails to render — e.g. `{{nope.nothing}}` — shows an error message naming the template and pointing at **Manage Templates**, and inserts nothing.
+
+Selections ride the normal pipeline (`insertWith`): insert target, quote policy, output format, bulk, multi-cursor, and seed all apply. The wrapped generators never enter the catalog registry, so a name that matches a registry id shadows nothing. Editing happens in Settings — **Insert Random: Manage Templates** / **Manage Custom Lists** jump straight to the key (`workbench.action.openSettings`); there is no bespoke editor UI. Both settings are deliberately **excluded from Reset Settings to Defaults** (see [Reset](#reset)).
 
 ---
 
@@ -193,8 +204,8 @@ Because the seed is re-applied at the **start of each command**, faker is reset 
 
 ### Flow
 
-1. A **multi-select** Quick Pick (`canPickMany`) lists every visible generator under the same category separators as [Pick…](#insert-random-pick) — placeholder *"Pick fields for the record…"*, `matchOnDescription` on. Tick any number of fields.
-2. Field order in the record follows **catalog order**, regardless of the order the fields were ticked in.
+1. A **multi-select** Quick Pick (`canPickMany`) lists every visible generator under the same category separators as [Pick…](#insert-random-pick) — led by a **Custom Lists** group when the user has [saved lists](#user-defined-data-saved-templates--custom-lists) — placeholder *"Pick fields for the record…"*, `matchOnDescription` on. Tick any number of fields.
+2. Field order in the record follows **picker display order**, regardless of the order the fields were ticked in: picked custom lists first (keyed by their name), then catalog fields in catalog order.
 3. The [seed](#seeding--reproducibility) is applied, then the record is delivered per the [insert target](#insert-targets): a block at **every** selection (replacing selected text) in Cursor mode, a single block at `0,0` in Top mode, or a verbatim copy in Clipboard mode.
 4. An empty or cancelled pick inserts nothing. With **no active editor**, Cursor and Top are silent no-ops; Clipboard still copies (no editor needed).
 
@@ -481,7 +492,7 @@ These carry `hidden: true` — they never appear in the Quick Pick and exist onl
 
 ## Configuration Reference
 
-Eleven settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
+Thirteen settings. Three **legacy** keys stay flat and non-namespaced (`insertType`, `withQuote`, `withNewLine`) for back-compat with existing user settings; every newer key is namespaced under `insertRandomText.*`. All are read into a typed `Settings` snapshot by `configuration.ts` (the `insertType` enum is normalized to a target there, and the two object settings are validated — junk entries dropped with a console warning). One further key — `insertRandomText.contextMenu.enabled` — is consumed by a `package.json` `when` clause rather than read in code (see [Context Menu](#context-menu)).
 
 | Setting | Type | Default | Values | Notes |
 |---|---|---|---|---|
@@ -495,13 +506,15 @@ Eleven settings. Three **legacy** keys stay flat and non-namespaced (`insertType
 | `insertRandomText.seed` | string | `""` | any number, or blank | Reproducible output; blank or non-numeric = random. See [Seeding](#seeding--reproducibility). |
 | `insertRandomText.recordFormat` | string (enum) | `json` | `json` · `sql` · `csv` | Structured shape for [Record](#multi-field-records) inserts: JSON object, SQL row, or CSV line. |
 | `insertRandomText.recordSqlTable` | string | `table` | any non-empty name | Table name used by the `sql` record shape. |
+| `insertRandomText.templates` | object | `{}` | name → template string | Saved faker templates — a **Templates** group atop [Pick…](#insert-random-pick). Non-string / empty entries are dropped (console-warned). See [User-defined data](#user-defined-data-saved-templates--custom-lists). |
+| `insertRandomText.customLists` | object | `{}` | name → string array | Custom value lists — a **Custom Lists** group atop Pick…, and [Record…](#multi-field-records) fields keyed by the name. Non-string items are dropped (console-warned). |
 | `insertRandomText.contextMenu.enabled` | boolean | `false` | `true` / `false` | Show the "Insert Random" editor right-click submenu. Read by a `when` clause, not by code. |
 
 ---
 
 ## Settings Commands
 
-`settingsCommands.ts` contributes 12 palette commands that **write** settings — so every setting is changeable without opening the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
+`settingsCommands.ts` contributes 14 palette commands that **write or open** settings — so every setting is changeable without hunting through the Settings UI. Each is registered in `extension.ts` from a `SETTING_COMMANDS` map.
 
 | Command | Title | Mechanism |
 |---|---|---|
@@ -516,7 +529,9 @@ Eleven settings. Three **legacy** keys stay flat and non-namespaced (`insertType
 | `insertRandomText.toggleNewLine` | Toggle Trailing New Line | Flip `withNewLine`. |
 | `insertRandomText.toggleUniquePerCursor` | Toggle Unique Value Per Cursor | Flip `insertRandomText.uniquePerCursor`. |
 | `insertRandomText.toggleContextMenu` | Toggle Editor Context Menu | Flip `insertRandomText.contextMenu.enabled`. |
-| `insertRandomText.resetSettings` | Reset Settings to Defaults | Modal-confirmed reset of every key. |
+| `insertRandomText.manageTemplates` | Manage Templates | Open the Settings UI filtered to `insertRandomText.templates`. |
+| `insertRandomText.manageCustomLists` | Manage Custom Lists | Open the Settings UI filtered to `insertRandomText.customLists`. |
+| `insertRandomText.resetSettings` | Reset Settings to Defaults | Modal-confirmed reset of every key except the two data pools. |
 
 ### Write target
 
@@ -528,7 +543,7 @@ The enum pickers (`setInsertType` / `setOutputFormat` / `setDateFormat` / `setRe
 
 ### Reset
 
-`resetSettings` shows a **modal** warning — *"Reset all Insert Random settings to their defaults?"* — with a single **Reset** button. Only on confirm does it clear every key (all ten `ConfigKey` entries **plus** `insertRandomText.contextMenu.enabled`) by writing `undefined`, which restores each to its package.json default, then confirms via the status bar. Dismissing the dialog changes nothing.
+`resetSettings` shows a **modal** warning — *"Reset all Insert Random settings to their defaults? Saved templates and custom lists are kept."* — with a single **Reset** button. Only on confirm does it clear every tuning key (the `ConfigKey` entries **plus** `insertRandomText.contextMenu.enabled`) by writing `undefined`, which restores each to its package.json default, then confirms via the status bar. `insertRandomText.templates` and `insertRandomText.customLists` are **deliberately excluded** — they are user-authored content, not tuning, and a reset never deletes them (the modal says so). Dismissing the dialog changes nothing.
 
 ---
 
@@ -546,20 +561,21 @@ The extension is deliberately quiet. It uses **status-bar messages** (not modal/
 | `setBulkCount` invalid input | Inline input-box validation: *"Enter a whole number between 1 and 1000."* |
 | `setSeed` invalid input | Inline input-box validation: *"Enter a number, or leave blank for random."* |
 | `setRecordSqlTable` invalid input | Inline input-box validation: *"Enter a table name."* |
+| A saved template fails to render | Error message: *"‹name›" failed to render: ‹faker's error› — fix it via Insert Random: Manage Templates.* Nothing is inserted. |
 | No active editor (Cursor / Top / Record…) | **Silent no-op** — nothing is inserted and no message is shown. |
 | Record… pick cancelled or empty | **Silent no-op** — nothing is inserted. |
 
 ### Quick Pick behaviors
 
-- **Insert Random: Pick…** — entries grouped under category separator headings (visible generators only), placeholder *"Insert Random — pick a type to insert at every cursor…"*, `matchOnDescription` on (search by label **or** registry id). Selecting inserts; Escape cancels.
-- **Insert Random: Record…** — the same grouped listing in **multi-select** mode (`canPickMany`), placeholder *"Pick fields for the record…"*; ticked fields compose one record in catalog order. Escape, or confirming with nothing ticked, cancels.
+- **Insert Random: Pick…** — entries grouped under category separator headings (visible generators only), led by the user's **Templates** and **Custom Lists** groups when defined (their descriptions are the template text / list values, so content is searchable), placeholder *"Insert Random — pick a type to insert at every cursor…"*, `matchOnDescription` on (search by label **or** registry id). Selecting inserts; Escape cancels.
+- **Insert Random: Record…** — the same grouped listing in **multi-select** mode (`canPickMany`), led by the **Custom Lists** group when defined, placeholder *"Pick fields for the record…"*; ticked fields compose one record in picker display order (custom lists first, then catalog order). Escape, or confirming with nothing ticked, cancels.
 - **Enum settings pickers** — current value marked `$(check) Current` and floated to the top; `matchOnDetail` on.
 
 ---
 
 ## Configuration Flow
 
-`extension.ts` holds a **single module-level `settings` snapshot**. On activation, `watchConfiguration()` reads it once via `Configuration.read()`, then subscribes to `workspace.onDidChangeConfiguration`; when an event affects any key in `CONFIG_KEYS` (the nine `ConfigKey` values), the whole snapshot is re-read and replaced wholesale. Commands read this **cached** snapshot at invocation — they never re-read individual settings — so anything that bypasses `watchConfiguration` would see stale config.
+`extension.ts` holds a **single module-level `settings` snapshot**. On activation, `watchConfiguration()` reads it once via `Configuration.read()`, then subscribes to `workspace.onDidChangeConfiguration`; when an event affects any key in `CONFIG_KEYS` (the twelve `ConfigKey` values), the whole snapshot is re-read and replaced wholesale. Commands read this **cached** snapshot at invocation — they never re-read individual settings — so anything that bypasses `watchConfiguration` would see stale config.
 
 `insertRandomText.contextMenu.enabled` is intentionally **not** in `CONFIG_KEYS`: it never influences generation, only the menu's `when` clause, which VS Code re-evaluates natively when the value changes.
 
@@ -583,7 +599,7 @@ An optional editor right-click entry, **off by default**.
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 153 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 171 commands activates the extension from a cold start. `extensionKind` is `workspace`.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load()`, a dynamic `import('@faker-js/faker/locale/en')` that is idempotent (guarded by a module-level `instance`). Only the single-locale `/locale/en` entry is imported — never the package root — so the other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to `faker().seed(value)`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.

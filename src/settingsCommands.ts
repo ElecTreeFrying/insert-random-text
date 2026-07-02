@@ -130,14 +130,24 @@ async function setRecordSqlTable(): Promise<void> {
   confirm(`Record SQL table → ${input.trim()}`);
 }
 
+/** Open the Settings UI filtered to one key — the whole "manage" surface for the
+ * settings-defined templates and custom lists (no bespoke editor UI). */
+async function openSettingsAt(key: string): Promise<void> {
+  await vscode.commands.executeCommand('workbench.action.openSettings', key);
+}
+
+// Saved templates and custom lists are user-authored content, not behavior tuning —
+// a reset must never delete them (they stay editable via the Manage commands).
+const RESET_KEEPS: readonly string[] = [ ConfigKey.TEMPLATES, ConfigKey.CUSTOM_LISTS ];
+
 async function resetSettings(): Promise<void> {
   const choice = await vscode.window.showWarningMessage(
-    'Reset all Insert Random settings to their defaults?',
+    'Reset all Insert Random settings to their defaults? Saved templates and custom lists are kept.',
     { modal: true },
     'Reset',
   );
   if (choice !== 'Reset') { return; }
-  for (const key of [ ...Object.values(ConfigKey), CONTEXT_MENU_KEY ]) {
+  for (const key of [ ...Object.values(ConfigKey), CONTEXT_MENU_KEY ].filter((key) => !RESET_KEEPS.includes(key))) {
     await write(key, undefined);
   }
   confirm('Insert Random settings reset to defaults');
@@ -156,5 +166,7 @@ export const SETTING_COMMANDS: Readonly<Record<string, () => Promise<void>>> = {
   'insertRandomText.toggleNewLine': () => toggleBoolean(ConfigKey.WITH_NEW_LINE, 'Trailing new line', true),
   'insertRandomText.toggleUniquePerCursor': () => toggleBoolean(ConfigKey.UNIQUE_PER_CURSOR, 'Unique value per cursor', true),
   'insertRandomText.toggleContextMenu': () => toggleBoolean(CONTEXT_MENU_KEY, 'Editor context menu', false),
+  'insertRandomText.manageTemplates': () => openSettingsAt(ConfigKey.TEMPLATES),
+  'insertRandomText.manageCustomLists': () => openSettingsAt(ConfigKey.CUSTOM_LISTS),
   'insertRandomText.resetSettings': resetSettings,
 };

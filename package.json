@@ -767,6 +767,14 @@
         "title": "Insert Random: Toggle Editor Context Menu"
       },
       {
+        "command": "insertRandomText.manageTemplates",
+        "title": "Insert Random: Manage Templates"
+      },
+      {
+        "command": "insertRandomText.manageCustomLists",
+        "title": "Insert Random: Manage Custom Lists"
+      },
+      {
         "command": "insertRandomText.resetSettings",
         "title": "Insert Random: Reset Settings to Defaults"
       }
@@ -904,6 +912,27 @@
             "description": "Table name used by the SQL record shape.",
             "type": "string",
             "default": "table"
+          },
+          "insertRandomText.templates": {
+            "title": "Saved templates",
+            "description": "Named faker templates, shown in a Templates group at the top of Insert Random: Pick…. Each value is a template with {{module.method}} placeholders, e.g. { \"invoice\": \"INV-{{string.numeric(4)}}\", \"contact\": \"{{person.fullName}} <{{internet.email}}>\" }. Entries that are not non-empty strings are ignored (logged to the console).",
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "insertRandomText.customLists": {
+            "title": "Custom lists",
+            "description": "Named lists of your own values, shown in a Custom Lists group at the top of Insert Random: Pick… and offered as Record… fields (the name becomes the field key). Each insert draws one random item, e.g. { \"environment\": [ \"dev\", \"staging\", \"production\" ] }. Non-string values are ignored (logged to the console).",
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           },
           "insertRandomText.contextMenu.enabled": {
             "title": "Show in editor context menu",

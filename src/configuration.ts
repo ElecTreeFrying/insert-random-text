@@ -35,6 +35,10 @@ export interface Settings {
   recordFormat: string;
   /** Table name used by the `sql` record shape. */
   recordSqlTable: string;
+  /** Saved faker templates (name → template string), validated — junk entries dropped. */
+  templates: Readonly<Record<string, string>>;
+  /** Custom value lists (name → string[]), validated — junk entries dropped. */
+  customLists: Readonly<Record<string, readonly string[]>>;
 }
 
 /** Configuration keys, exactly as declared in `package.json` `contributes.configuration`. */
@@ -49,7 +53,21 @@ export const ConfigKey = {
   DATE_FORMAT: 'insertRandomText.dateFormat',
   RECORD_FORMAT: 'insertRandomText.recordFormat',
   RECORD_SQL_TABLE: 'insertRandomText.recordSqlTable',
+  TEMPLATES: 'insertRandomText.templates',
+  CUSTOM_LISTS: 'insertRandomText.customLists',
 } as const;
+
+/** True for a plain JSON-style object — the only shape the two data-pool settings accept. */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Console prefix for the dropped-entry warnings, so they are findable in the extension host log. */
+const WARN_PREFIX = '[insert-random-text]';
+
+/** Where a dropped-entry warning goes. Injectable (like {@link WorkspaceLike}) because the extension
+ * host's patched `console` can't be monkey-swapped from a test; the default is the real console. */
+export type WarnSink = (message: string) => void;
 
 /**
  * Reads the extension's settings from the workspace. Each getter resolves one
@@ -58,7 +76,10 @@ export const ConfigKey = {
  * never deals with display strings.
  */
 export class Configuration {
-  constructor(private readonly workspace: WorkspaceLike) {}
+  constructor(
+    private readonly workspace: WorkspaceLike,
+    private readonly warn: WarnSink = (message) => console.warn(message),
+  ) {}
 
   /** Snapshot every setting into a plain {@link Settings} object. */
   read(): Settings {
@@ -73,6 +94,8 @@ export class Configuration {
       dateFormat: this.dateFormat,
       recordFormat: this.recordFormat,
       recordSqlTable: this.recordSqlTable,
+      templates: this.templates,
+      customLists: this.customLists,
     };
   }
 
@@ -90,4 +113,58 @@ export class Configuration {
   get dateFormat(): DateFormat { const value = this.value<DateFormat>(ConfigKey.DATE_FORMAT) ?? 'iso'; return DATE_FORMATS.includes(value) ? value : 'iso'; }
   get recordFormat(): string { return this.value<string>(ConfigKey.RECORD_FORMAT) ?? 'json'; }
   get recordSqlTable(): string { return this.value<string>(ConfigKey.RECORD_SQL_TABLE) ?? 'table'; }
+
+  /**
+   * Saved templates: name → faker template string. The object is user-edited JSON,
+   * so every entry is shape-checked — a junk entry (non-string or empty value,
+   * empty name) is dropped with a console warning, never thrown on. Template
+   * *content* is not validated here (rendering needs the engine); a template that
+   * fails to render surfaces a friendly error at insert time instead.
+   */
+  get templates(): Record<string, string> {
+    const raw = this.value<unknown>(ConfigKey.TEMPLATES) ?? {};
+    if (!isPlainObject(raw)) {
+      this.warn(`${WARN_PREFIX} Ignoring ${ConfigKey.TEMPLATES}: expected an object of name → template string.`);
+      return {};
+    }
+    const templates: Record<string, string> = {};
+    for (const [ name, template ] of Object.entries(raw)) {
+      if (name.trim() === '' || typeof template !== 'string' || template.trim() === '') {
+        this.warn(`${WARN_PREFIX} Ignoring template "${name}": the value must be a non-empty string.`);
+        continue;
+      }
+      templates[name] = template;
+    }
+    return templates;
+  }
+
+  /**
+   * Custom lists: name → array of strings. Same tolerance as {@link templates}:
+   * non-string items are filtered out (warned), and an entry that is not an array,
+   * is left empty, or has an empty name is dropped (warned).
+   */
+  get customLists(): Record<string, readonly string[]> {
+    const raw = this.value<unknown>(ConfigKey.CUSTOM_LISTS) ?? {};
+    if (!isPlainObject(raw)) {
+      this.warn(`${WARN_PREFIX} Ignoring ${ConfigKey.CUSTOM_LISTS}: expected an object of name → string array.`);
+      return {};
+    }
+    const lists: Record<string, readonly string[]> = {};
+    for (const [ name, list ] of Object.entries(raw)) {
+      if (name.trim() === '' || !Array.isArray(list)) {
+        this.warn(`${WARN_PREFIX} Ignoring custom list "${name}": the value must be an array of strings.`);
+        continue;
+      }
+      const values = list.filter((item): item is string => typeof item === 'string');
+      if (values.length < list.length) {
+        this.warn(`${WARN_PREFIX} Custom list "${name}": dropped ${list.length - values.length} non-string value(s).`);
+      }
+      if (values.length === 0) {
+        this.warn(`${WARN_PREFIX} Ignoring custom list "${name}": it holds no string values.`);
+        continue;
+      }
+      lists[name] = values;
+    }
+    return lists;
+  }
 }
