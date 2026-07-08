@@ -41,7 +41,7 @@ The first stable release — a ground-up relaunch as **Random, Fake & Mock Data 
 - Removed the unused `loremSize`, `hashSize`, and `disableNotifs` settings.
 - Existing `extension.insertRandom*` commands continue to work unchanged.
 - Modernized the build (esbuild bundle; now requires VS Code 1.97+).
-- Refreshed the marketplace listing: new description, added the **Testing** category, finalized the keyword set, and added a **Sponsor** button linking to the README's Support section.
+- Refreshed the marketplace listing: new icon, new description, added the **Testing** category, finalized the keyword set, a **Sponsor** button linking to the README's Support section, and a gallery banner tuned to the icon.
 
 ## v0.1.3 (2020-7-25)
 
