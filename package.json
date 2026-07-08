@@ -1,7 +1,7 @@
 {
   "name": "insert-random-text",
   "displayName": "Random, Fake & Mock Data Generator",
-  "description": "Insert 130+ types of random & fake data — names, emails, addresses, finance, git, UUIDs, lorem ipsum & more — at every cursor, or generate whole JSON, CSV & SQL datasets. Multi-cursor, bulk, seeded, fully offline.",
+  "description": "Insert 130+ types of random, fake & mock data at every cursor — names, emails, UUIDs, lorem ipsum, JSON/SQL/CSV records & whole datasets, templates, locales, anonymize in place. Bulk, seeded, fully offline. The only data faker you'll need.",
   "publisher": "ElecTreeFrying",
   "version": "0.1.4",
   "author": {
@@ -25,6 +25,7 @@
   "license": "MIT",
   "categories": [
     "Snippets",
+    "Testing",
     "Other"
   ],
   "keywords": [
@@ -37,9 +38,12 @@
     "faker",
     "lorem ipsum",
     "uuid",
+    "guid",
+    "insert random",
     "sample data",
-    "placeholder",
     "json",
+    "csv",
+    "sql",
     "fixtures",
     "name generator",
     "address",
@@ -47,23 +51,23 @@
     "credit card",
     "iban",
     "seed",
-    "csv",
+    "git",
     "ulid",
     "multi-cursor",
-    "guid",
     "jwt",
     "mongodb",
     "locale",
     "i18n",
-    "anonymize",
-    "sanitize",
-    "redact"
+    "anonymize"
   ],
   "galleryBanner": {
     "color": "#494949",
     "theme": "dark"
   },
   "pricing": "Free",
+  "sponsor": {
+    "url": "https://github.com/ElecTreeFrying/insert-random-text#support"
+  },
   "badges": [
     {
       "url": "https://vsmarketplacebadges.dev/version-short/ElecTreeFrying.insert-random-text.png",

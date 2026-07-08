@@ -16,6 +16,8 @@
 [package]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text
 [repo]: https://github.com/ElecTreeFrying/insert-random-text
 
+**Random, Fake & Mock Data Generator** is a free, offline VS Code extension that inserts 130+ types of random, fake & mock data — names, emails, addresses, UUIDs, lorem ipsum, JSON/SQL/CSV records and whole datasets — at every cursor, in six locales, seeded and reproducible when you need it.
+
 > **Fill every cursor with realistic fake data — a _different_ value in each, in one step.**
 
 **Names** · **Emails** · **Addresses** · **Finance** · **Git** · **Dates** · **UUIDs** · **Lorem ipsum** · **Mock JSON**
@@ -29,6 +31,12 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 [**See the full specification**][SPEC]
 
 [SPEC]: SPEC.md
+
+---
+
+## One extension instead of five
+
+Fake names & emails, UUIDs in any format, lorem ipsum with exact counts, numbers & dates with ranges, JSON/SQL/CSV records and whole datasets, your own templates & lists, six locales, and in-place anonymization — replace your UUID inserter, your lorem ipsum generator, your dummy-text filler, your CSV mocker, and your faker wrapper with one actively-maintained extension. Offline, uncapped, seeded.
 
 ---
 
