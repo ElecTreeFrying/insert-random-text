@@ -1,0 +1,55 @@
+name: Bug report
+description: Something inserted wrong, errored, or didn't behave as documented
+labels: [ "bug" ]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+      placeholder: e.g. "Insert Random: Record…" with a CSV shape inserted an unescaped comma inside a quoted field…
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command used
+      placeholder: e.g. Insert Random: UUID · Pick… · Record… · Generate Dataset… · Randomize Selection
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a .sql file
+        2. Add 3 cursors
+        3. Run "Insert Random: Full Name"
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Relevant settings
+      description: Any non-default settings — insertType, withQuote, bulkCount, outputFormat, seed, locale, strictUnique, dateFormat, recordFormat…
+      placeholder: |
+        insertType: Cursor
+        insertRandomText.bulkCount: 10
+        insertRandomText.seed: 42
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where does it happen?
+      options:
+        - VS Code desktop
+        - vscode.dev / github.dev (browser)
+        - VSCodium / Cursor / Windsurf (Open VSX build)
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: VS Code version · extension version
+      placeholder: e.g. 1.102.0 · 1.0.0
+    validations:
+      required: true
