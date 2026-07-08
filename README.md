@@ -39,11 +39,12 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 - **Six locales** — names, addresses & text in English, German, French, Spanish, Brazilian Portuguese, or Japanese. One setting, no reload.
 - **Whole records in one shot** — multi-select fields and drop a `{ name, email, phone }` object, a SQL `INSERT` row, or a CSV line at every cursor. Scales with bulk count.
 - **Whole datasets in one command** — **Generate Dataset…** builds up to 100,000 rows of JSON, CSV (with a header), or SQL `INSERT`s and opens them as a new file. No signup, no export button, and none of the row caps web generators make you pay to lift — instant, offline, free.
-- **Anonymize in place** — select real data and **Randomize Selection** re-rolls every letter and digit where it stands: `3.14` → `8.77`, `Bob@x.io` → `Kqe@v.zt`. Shapes intact, secrets gone.
+- **Anonymize in place** — select real data and **Randomize Selection** re-rolls every letter and digit where it stands (`3.14` → `8.77`) — and a selection that *is* an email, UUID, or ISO date becomes a fresh realistic one of the same type instead. Shapes intact, secrets gone.
 - **Reproducible when you need it** — set a seed and every run replays the identical values — something AI generators can't promise, even with a seed parameter. Stable tests, snapshots, and demos.
 - **Drops straight into code** — optional language-aware quoting and a trailing newline, so values land as valid syntax in arrays, JSON, SQL, and configs.
 - **Stays in your editor** — fully offline: no account, no telemetry, no model calls. Your code never leaves your machine to get mock data back.
 - **Or skip the editor entirely** — Clipboard mode copies a value straight to your clipboard (filenames, terminals, anywhere).
+- **Runs everywhere VS Code does** — including [vscode.dev](https://vscode.dev) and github.dev in the browser; the extension ships a web build.
 - **Configure from the Command Palette** — insert type, quotes, bulk count, output format, seed, and locale, without ever opening Settings.
 - **Powered by [Faker][faker]** — the actively maintained, community-governed faker library, bundled into the extension (nothing fetched at runtime). Coherent, realistic data, not random noise.
 
@@ -190,7 +191,7 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 | **Insert Random: Pick…** | Choose any type — led by your saved templates and custom lists, when you've defined some — from a grouped, searchable menu, then insert at every cursor. |
 | **Insert Random: Record…** | Multi-select fields (catalog types and your custom lists) and insert them together as one record — a JSON object, SQL row, or CSV line — at every cursor (or the top / clipboard, per your insert type). |
 | **Insert Random: Generate Dataset…** | Pick fields, a format, and a row count — up to 100,000 rows of JSON, CSV (with a header row), or SQL `INSERT`s open as a new file. See [Generate whole datasets](#generate-whole-datasets). |
-| **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…)** | Parameterized types — enter a min & max, a length, a from/to date, or a lorem count in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). Your last inputs and picks are remembered; Esc cancels cleanly. |
+| **Insert Random: Number (Range…) / Float (Range…) / String (Length…) / Date (Between…) / Words (Count…) / Sentences (Count…) / Paragraphs (Count…) / UUID (Format…) / Password (Options…) / Phone (Format…) / Sequence (Start/Step…)** | Parameterized types — enter a min & max, a length, a from/to date, a lorem count, or a sequence start & step in input boxes, or pick a format from a Quick Pick (UUID casing / braces / dashes, password length & symbols, phone style), and the value is generated to your spec, through the same pipeline (multi-cursor, bulk, quoting, seed). **Sequence** isn't random at all: 1, 2, 3… lands down your cursors, one increment per cursor and bulk item. Your last inputs and picks are remembered; Esc cancels cleanly. |
 | **Insert Random: From Template… / From Pattern…** | Free-form types — write your own faker template or regex-like pattern and every cursor gets a fresh rendering. See [Templates & patterns](#templates--patterns). |
 | **Insert Random: Randomize Selection** | Anonymize in place — every selected letter and digit is re-rolled in kind (digits stay digits, letters keep their case, punctuation doesn't move), each selection replaced where it stands. See [Anonymize in place](#anonymize-in-place). |
 | **Insert Random: _‹Type›_** | A direct command for every type — e.g. *Insert Random: Email*, *Insert Random: UUID*, *Insert Random: Credit Card Number*. |
@@ -250,13 +251,19 @@ Up to **100,000 rows**, generated locally in an instant — no signup, no paywal
 
 ### Anonymize in place
 
-Pasted real data into a fixture, log, or bug report? Select it and run **Insert Random: Randomize Selection** — each selection is replaced by a same-shape randomization: digits stay digits, letters keep their case, punctuation and layout don't move.
+Pasted real data into a fixture, log, or bug report? Select it and run **Insert Random: Randomize Selection** — each selection is replaced where it stands, in two tiers:
 
-```
-jane.doe+prod@acme.com  →  wqzt.kfa+xjvn@ublr.pce
-```
+- **Type-aware:** a selection that *is* an email, UUID, or ISO date/timestamp becomes a **fresh realistic fake of the same type** — a UUID stays a *valid* UUID (case and braces preserved), a date stays a real calendar date:
+  ```
+  jane.doe+prod@acme.com  →  Elta.Kuhlman@hotmail.com
+  ```
+- **Same-shape for everything else:** digits stay digits, letters keep their case, punctuation and layout don't move:
+  ```
+  +63 (917) 555-0142  →  +81 (269) 344-9518
+  ```
 
 - Works on every non-empty selection at once — multi-select a column of secrets and scrub them in one step.
+- Detection is deliberately strict — the selection must be exactly the value (no padding, no surrounding text); anything else falls back to the safe same-shape scramble.
 - It's a replacement, not an insertion: quoting, bulk count, and the insert type don't apply. The [seed](#settings) does, so a seeded run scrubs reproducibly.
 - Also in the editor right-click menu, when the context-menu submenu is enabled.
 
@@ -286,6 +293,7 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 
 - **VS Code** 1.97.0 or later.
 - **Compatible hosts:** Cursor, VSCodium, Code Server, and other forks that implement the VS Code API at the same engine version.
+- **Web:** runs on [vscode.dev](https://vscode.dev) and github.dev — a browser build ships in the extension.
 - **Platforms:** macOS, Windows, Linux.
 - **Privacy:** No network calls, no telemetry, no model calls — every value is generated locally by the bundled library.
 

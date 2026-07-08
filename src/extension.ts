@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { ConfigKey, Configuration, Settings } from './configuration';
-import { Generator, generators, getGenerator } from './catalog';
+import { formatTimestamp, Generator, generators, getGenerator } from './catalog';
 import { CUSTOM_LISTS_GROUP, customListGenerators, TEMPLATES_GROUP, templateGenerators } from './custom';
 import { faker, load, seed } from './engine';
 import { buildBlocks, InsertOptions, OutputFormat } from './formatter';
 import { PromptedCommand, promptedCommands, toGenerator } from './prompted';
-import { randomize } from './randomize';
+import { detect, randomize, shapeTimestamp, shapeUuid } from './randomize';
 import { resolveQuotePolicy } from './quotePolicy';
 import { buildRecords, RecordShape } from './record';
 import { SETTING_COMMANDS } from './settingsCommands';
@@ -594,13 +594,32 @@ async function generateDataset(): Promise<void> {
 }
 
 /**
- * "Insert Random: Randomize Selection" — anonymize in place: replace each
- * non-empty selection with a format-preserving randomization of its own text
- * (digits → digits, letters → letters matching case, everything else kept).
- * A replacement, not an insertion — insert type, quoting, newline, bulk and
- * output format never apply; locale and seed do, because every character draw
- * rides the shared faker RNG. Empty selections are left untouched, so a mixed
- * multi-selection randomizes only what is actually selected.
+ * The typed redraw behind type-aware replace: a selection that IS an unambiguous
+ * email / uuid / ISO date / ISO timestamp gets a fresh REALISTIC value of the
+ * same type, dressed like the original (uuid case + braces, timestamp precision)
+ * — a scrambled uuid isn't valid hex and a scrambled date isn't a date.
+ * `undefined` means "not typed": the caller falls back to the scramble.
+ */
+function typedReplacement(text: string): string | undefined {
+  switch (detect(text)) {
+    case 'email': return faker().internet.email();
+    case 'uuid': return shapeUuid(faker().string.uuid(), text);
+    case 'isoDate': return formatTimestamp(faker().date.anytime(), 'isoDate');
+    case 'isoTimestamp': return shapeTimestamp(faker().date.anytime().toISOString(), text);
+    default: return undefined;
+  }
+}
+
+/**
+ * "Insert Random: Randomize Selection" — anonymize in place, in two tiers:
+ * a selection that IS a typed value (email / uuid / ISO date / ISO timestamp)
+ * is replaced by a fresh realistic fake of the same type; everything else gets
+ * a format-preserving randomization of its own text (digits → digits, letters →
+ * letters matching case, everything else kept). A replacement, not an insertion
+ * — insert type, quoting, newline, bulk and output format never apply; locale
+ * and seed do, because every draw rides the shared faker RNG. Empty selections
+ * are left untouched, so a mixed multi-selection randomizes only what is
+ * actually selected.
  */
 async function randomizeSelections(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
@@ -611,8 +630,11 @@ async function randomizeSelections(): Promise<void> {
   await load(settings.locale);
   applySeed();
   const rng = (bound: number) => faker().number.int({ max: bound - 1 });
-  const blocks = editor.selections.map((selection) =>
-    (selection.isEmpty ? '' : randomize(editor.document.getText(selection), rng)));
+  const blocks = editor.selections.map((selection) => {
+    if (selection.isEmpty) { return ''; }
+    const text = editor.document.getText(selection);
+    return typedReplacement(text) ?? randomize(text, rng);
+  });
   await fillSelections(editor, (index) => blocks[index]);
 }
 

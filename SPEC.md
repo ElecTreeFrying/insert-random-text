@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line — and a [Generate Dataset command](#dataset-generation) turns the same records into a whole new file, up to 100,000 rows. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **175 contributed commands**, **no default keybindings**, **fifteen configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **176 contributed commands**, **no default keybindings**, **fifteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,7 +10,7 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **175 commands**, in seven families:
+The extension contributes **176 commands**, in seven families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
@@ -18,8 +18,8 @@ The extension contributes **175 commands**, in seven families:
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
 | Generate Dataset | 1 | `insertRandomText.generateDataset` | "Insert Random: Generate Dataset…" — build up to 100,000 records and open them as a new file (see [Dataset Generation](#dataset-generation)). |
-| Randomize Selection | 1 | `insertRandomText.randomizeSelection` | "Insert Random: Randomize Selection" — anonymize in place: replace each selection with a same-shape randomization of its text (see [Randomize Selection](#insert-random-randomize-selection)). |
-| Prompted commands | 12 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
+| Randomize Selection | 1 | `insertRandomText.randomizeSelection` | "Insert Random: Randomize Selection" — anonymize in place: a selection that IS an email / UUID / ISO date gets a fresh fake of the same type; everything else a same-shape randomization (see [Randomize Selection](#insert-random-randomize-selection)). |
+| Prompted commands | 13 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` / `sequence` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
 | Settings commands | 15 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
 Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
@@ -45,16 +45,29 @@ Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entrie
 
 ### Insert Random: Randomize Selection
 
-`insertRandomText.randomizeSelection` anonymizes **in place**: every **non-empty** selection is replaced with a format-preserving randomization of its own text, per character — a digit becomes a random digit, `a–z` a random lowercase letter, `A–Z` a random uppercase letter, and everything else (punctuation, whitespace, non-ASCII) stays exactly where it was. `3.14` stays number-shaped, `Bob@x.io` stays email-shaped. The mapping lives in the pure `src/randomize.ts` (`randomize(text, rng)`); surrogate pairs are iterated as whole code points, so emoji pass through unsplit.
+`insertRandomText.randomizeSelection` anonymizes **in place**, replacing every **non-empty** selection in two tiers:
+
+1. **Type-aware replace** — a selection that IS an unambiguous typed value becomes a **fresh realistic fake of the same type**, drawn through faker and dressed like the original. Detection (`detect` in the pure `src/randomize.ts`) is whole-string, anchored, and unpadded — deliberately conservative, because a false positive would replace the wrong kind of value while the tier-2 scramble is always safe:
+
+| Detected | Accepted shape | Replacement |
+|---|---|---|
+| Email | `local@domain.tld` — a TLD is required | A fresh `internet.email()` |
+| UUID | 8-4-4-4-12 hex with dashes, either case, optionally `{braced}` | A fresh `string.uuid()`, re-dressed by `shapeUuid` — uppercase iff the original's hex letters were uniformly uppercase; braces kept |
+| ISO date | `YYYY-MM-DD`, calendar-valid (the explicit check V8's rollover parsing would skip) | A fresh `date.anytime()` rendered as `YYYY-MM-DD` |
+| ISO timestamp | `YYYY-MM-DDTHH:mm:ss[.mmm]Z` — UTC `Z` only, time fields valid | A fresh `date.anytime().toISOString()`, milliseconds stripped by `shapeTimestamp` when the original carried none |
+
+   Numbers are deliberately **not** detected — tier 2 already yields a fresh same-shape number. A 32-hex hash, an offset timestamp (`…+02:00`), or any padded/embedded value falls through to tier 2.
+
+2. **Format-preserving randomization** — everything else is replaced per character: a digit becomes a random digit, `a–z` a random lowercase letter, `A–Z` a random uppercase letter, and everything else (punctuation, whitespace, non-ASCII) stays exactly where it was. `3.14` stays number-shaped. The mapping lives in the pure `src/randomize.ts` (`randomize(text, rng)`); surrogate pairs are iterated as whole code points, so emoji pass through unsplit.
 
 - **A replacement, not an insertion.** The insert pipeline is bypassed: [`insertType`](#insert-targets), quote wrapping, trailing newline, `bulkCount`, `outputFormat`, and `uniquePerCursor` never apply. After the edit each cursor collapses to sit right after its replacement — same no-stays-selected contract as a Cursor-mode insert.
-- **Seed and locale apply.** Each character draw goes through the shared faker RNG (`number.int`), so a pinned [`seed`](#seeding--reproducibility) reproduces the same scrub, in draw order across selections.
+- **Seed and locale apply.** Every draw — the tier-1 typed redraws and each tier-2 character draw (`number.int`) — goes through the shared faker RNG, so a pinned [`seed`](#seeding--reproducibility) reproduces the same scrub, in draw order across selections.
 - **Empty selections are skipped**: a mixed multi-selection randomizes only the non-empty ones, and bare carets receive nothing. With no non-empty selection anywhere (or no editor at all), one info message is shown and nothing is edited (see [UX & Notifications](#ux--notifications)).
 - Contributed to the [context-menu submenu](#context-menu) in its own trailing group.
 
 ### Parameterized commands (prompted)
 
-Twelve commands ask for parameters — in input boxes, Quick Picks, or a mix — then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
+Thirteen commands ask for parameters — in input boxes, Quick Picks, or a mix — then insert through the **same pipeline** as every other command — the [insert target](#insert-targets), [output format](#output-formats), [quote policy](#quote-wrapping--language-aware-quoting), [`bulkCount`, `uniquePerCursor`](#multi-cursor-fill--bulk-generation), and [`seed`](#seeding--reproducibility) all apply:
 
 | Command | Id | Prompts | Draw |
 |---|---|---|---|
@@ -70,13 +83,15 @@ Twelve commands ask for parameters — in input boxes, Quick Picks, or a mix —
 | Insert Random: Phone (Format…) | `insertRandomText.phoneFormat` | style — a Quick Pick: Human (default) / National / International | A fresh phone number in the picked faker style (`human` / `national` / `international`) |
 | Insert Random: From Template… | `insertRandomText.fromTemplate` | template — free text with `{{module.method}}` mustache placeholders, call arguments included (e.g. `{{string.numeric(3)}}`) | The template re-rendered per value — every placeholder drawn fresh (faker `helpers.fake`) |
 | Insert Random: From Pattern… | `insertRandomText.fromPattern` | pattern — a regex-like string; faker supports a limited subset (character classes, ranges, quantifiers — unsupported syntax passes through as literal text) | A fresh string matching the pattern per value (faker `helpers.fromRegExp`) |
+| Insert Random: Sequence (Start/Step…) | `insertRandomText.sequence` | start, then step — whole numbers; step may be negative (counts down) or zero (repeats) | **Not random:** an incrementing counter — the first value is `start`, each next value adds `step`, advancing per cursor and bulk item within one insert; the next insert restarts at `start` |
 
 Behaviors:
 
 - **Validation is live** (`validateInput`): invalid text shows an inline error and blocks accept — empty, non-numeric, fractional-where-integer, out-of-range, and `max < min` inputs never reach the generator; dates additionally reject non-`YYYY-MM-DD`/ISO shapes, impossible calendar dates, and `to < from`. Quick Pick steps are closed sets and need no validation. The free-form **template/pattern boxes prove their input by test-rendering it** — a failing render (unresolvable `{{expression}}`, out-of-order range, bad quantifier) shows faker's error plus a working example; empty input is rejected outright (faker would render it to an empty string).
-- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15, Password: 15, lorem counts: 3), a wide decade (Date: 2020-01-01 – 2030-12-31), or the documented examples (Template: `{{person.firstName}} <{{internet.email}}>`, Pattern: `[A-Z]{3}-[0-9]{4}`). The **last pick is remembered too** — on the next run it floats to the top of its Quick Pick, marked *Last used*; before first use the options appear in declared order, default first (UUID: Lowercase, Password: No symbols, Phone: Human).
+- **Last-used values are remembered** (`globalState`, trimmed) and prefilled on the next run; before first use the prefills reproduce the matching zero-argument type (Number: 0–1000, Float: 0–1000, String: 15, Password: 15, lorem counts: 3, Sequence: start 1 / step 1), a wide decade (Date: 2020-01-01 – 2030-12-31), or the documented examples (Template: `{{person.firstName}} <{{internet.email}}>`, Pattern: `[A-Z]{3}-[0-9]{4}`). The **last pick is remembered too** — on the next run it floats to the top of its Quick Pick, marked *Last used*; before first use the options appear in declared order, default first (UUID: Lowercase, Password: No symbols, Phone: Human).
 - **Esc at any box or pick cancels cleanly** — nothing is inserted, no error, and nothing new is remembered (values accepted *before* the cancel are remembered).
 - The seed is applied **after** the prompts, immediately before generation, so a pinned seed reproduces the same output regardless of typing time.
+- **Sequence is stateful per insert** — the one prompted command whose values must *relate*: its counter is created once per insert operation, spans that insert's cursors and bulk items in draw order, and is discarded afterwards (the next insert restarts at `start`). With `uniquePerCursor` off the cursors share one block, so the sequence runs inside the block and repeats per cursor. It draws nothing from the RNG — seed on or off, the output is identical.
 - These are **not** registry entries: they don't appear in the Pick… menu or the Record… field list. Each is a one-off generator built from the entered parameters and fed into the shared insert path (`insertWith`).
 
 ### User-defined data (saved templates & custom lists)
@@ -692,7 +707,8 @@ An optional editor right-click entry, **off by default**.
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 175 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 176 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Web extension** — the manifest declares both `main` (`dist/extension.js`, esbuild platform `node`) and `browser` (`dist/web/extension.js`, esbuild platform `browser`) bundles built from the same source in one `esbuild.js` run. The browser bundle contains no Node built-ins — esbuild's browser platform rejects them at build time, which doubles as the web-cleanliness gate — so the extension runs in the **web extension host** on vscode.dev and github.dev.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.

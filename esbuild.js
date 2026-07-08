@@ -23,30 +23,38 @@ const esbuildProblemMatcherPlugin = {
 	},
 };
 
+/** Shared bundle options; each target only picks its platform + outfile.
+ * The web bundle (package.json "browser") runs in the web extension host's
+ * worker on vscode.dev/github.dev — same CJS format, but platform 'browser'
+ * makes esbuild REJECT any Node built-in at build time, which is the
+ * web-cleanliness gate. */
+const common = {
+	entryPoints: [
+		'src/extension.ts'
+	],
+	bundle: true,
+	format: 'cjs',
+	minify: production,
+	sourcemap: !production,
+	sourcesContent: false,
+	external: ['vscode'],
+	logLevel: 'silent',
+	plugins: [
+		/* add to the end of plugins array */
+		esbuildProblemMatcherPlugin,
+	],
+};
+
 async function main() {
-	const ctx = await esbuild.context({
-		entryPoints: [
-			'src/extension.ts'
-		],
-		bundle: true,
-		format: 'cjs',
-		minify: production,
-		sourcemap: !production,
-		sourcesContent: false,
-		platform: 'node',
-		outfile: 'dist/extension.js',
-		external: ['vscode'],
-		logLevel: 'silent',
-		plugins: [
-			/* add to the end of plugins array */
-			esbuildProblemMatcherPlugin,
-		],
-	});
+	const contexts = await Promise.all([
+		esbuild.context({ ...common, platform: 'node', outfile: 'dist/extension.js' }),
+		esbuild.context({ ...common, platform: 'browser', outfile: 'dist/web/extension.js' }),
+	]);
 	if (watch) {
-		await ctx.watch();
+		await Promise.all(contexts.map((ctx) => ctx.watch()));
 	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
+		await Promise.all(contexts.map((ctx) => ctx.rebuild()));
+		await Promise.all(contexts.map((ctx) => ctx.dispose()));
 	}
 }
 

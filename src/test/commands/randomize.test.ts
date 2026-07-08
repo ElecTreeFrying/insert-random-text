@@ -3,11 +3,13 @@ import * as vscode from 'vscode';
 
 import { ConfigKey } from '../../configuration';
 
-// insertRandomText.randomizeSelection anonymizes IN PLACE: each non-empty selection is replaced with a
-// format-preserving randomization of its own text (digits→digits, letters→letters matching case, all
-// else untouched). It is a replacement, not an insertion — insert type, quoting, newline and bulk never
-// apply — but seed does: the per-character draws ride the shared faker RNG. The pure character contract
-// is pinned headless in test/randomize/; this suite pins the editor semantics end to end.
+// insertRandomText.randomizeSelection anonymizes IN PLACE, in two tiers: a selection that IS an
+// unambiguous email / uuid / ISO date / ISO timestamp is upgraded to a fresh REALISTIC fake of the same
+// type (type-aware replace); everything else gets a format-preserving randomization of its own text
+// (digits→digits, letters→letters matching case, all else untouched). It is a replacement, not an
+// insertion — insert type, quoting, newline and bulk never apply — but seed does: every draw rides the
+// shared faker RNG. The pure contracts (detection + character classes) are pinned headless in
+// test/randomize/; this suite pins the editor semantics end to end.
 const EXTENSION_ID = 'ElecTreeFrying.insert-random-text';
 const CMD = 'insertRandomText.randomizeSelection';
 const SEED = 424242;
@@ -54,7 +56,7 @@ describe('randomizeSelection — anonymize in place', function () {
     ];
     await vscode.commands.executeCommand(CMD);
     assert.match(editor.document.lineAt(0).text, /^[A-Z][a-z]{4} [A-Z][a-z]{4} 42$/, 'case pattern, space and the unselected 42 must survive');
-    assert.match(editor.document.lineAt(1).text, /^contact: [A-Z][a-z]{2}@[a-z]\.[a-z]{2}$/, 'the email keeps its shape and the unselected prefix stays');
+    assert.match(editor.document.lineAt(1).text, /^contact: [^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/, 'the selected email upgrades to a fresh realistic email (type-aware) and the unselected prefix stays');
     assert.notStrictEqual(editor.document.lineAt(0).text, 'Alice Smith 42', 'the selected text was actually re-rolled');
   });
 
@@ -119,6 +121,68 @@ describe('randomizeSelection — anonymize in place', function () {
     second.selection = new vscode.Selection(0, 0, 0, 'Secret Value 123'.length);
     await vscode.commands.executeCommand(CMD);
     assert.strictEqual(second.document.getText(), a, 'same seed + same selection → same randomization');
+  });
+
+  it('a selected email upgrades to a fresh realistic email, not a scramble', async () => {
+    const original = 'jane.doe+prod@acme.com';
+    const editor = await openDoc(original);
+    editor.selection = new vscode.Selection(0, 0, 0, original.length);
+    await vscode.commands.executeCommand(CMD);
+    const result = editor.document.getText();
+    assert.match(result, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/, 'still an email');
+    assert.notStrictEqual(result, original, 'freshly drawn');
+    // A scramble preserves length and punctuation positions; a typed redraw almost
+    // never does — deterministic under the pinned suite seed.
+    assert.notStrictEqual(result.length, original.length, 'not a character-for-character scramble');
+  });
+
+  it('a selected uppercase uuid upgrades to a fresh VALID uuid, case preserved', async () => {
+    const upper = '9B1DEB4D-3B7D-4BAD-9BDD-2B0D7B3DCB6D';
+    const editor = await openDoc(upper);
+    editor.selection = new vscode.Selection(0, 0, 0, upper.length);
+    await vscode.commands.executeCommand(CMD);
+    const result = editor.document.getText();
+    assert.match(result, /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/,
+      'valid uppercase hex — a scramble would spill into G–Z');
+    assert.notStrictEqual(result, upper);
+  });
+
+  it('a braced lowercase uuid keeps its braces', async () => {
+    const braced = '{9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}';
+    const editor = await openDoc(braced);
+    editor.selection = new vscode.Selection(0, 0, 0, braced.length);
+    await vscode.commands.executeCommand(CMD);
+    assert.match(editor.document.getText(), /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/);
+  });
+
+  it('a selected ISO date upgrades to a real calendar date in the same format', async () => {
+    const editor = await openDoc('2024-02-29');
+    editor.selection = new vscode.Selection(0, 0, 0, '2024-02-29'.length);
+    await vscode.commands.executeCommand(CMD);
+    const result = editor.document.getText();
+    assert.match(result, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(new Date(result).toISOString().startsWith(result), `'${result}' must be a real date — a digit scramble almost never is`);
+  });
+
+  it('a selected ISO timestamp stays a valid timestamp at its own precision', async () => {
+    const stamp = '2026-07-02T12:34:56Z';
+    const editor = await openDoc(stamp);
+    editor.selection = new vscode.Selection(0, 0, 0, stamp.length);
+    await vscode.commands.executeCommand(CMD);
+    const result = editor.document.getText();
+    assert.match(result, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/, 'no milliseconds — the original carried none');
+    assert.ok(!Number.isNaN(Date.parse(result)), 'parses as a real instant');
+  });
+
+  it('mixed selections: typed values upgrade, plain text still scrambles in shape', async () => {
+    const editor = await openDoc('a@b.co\nAlice42');
+    editor.selections = [
+      new vscode.Selection(0, 0, 0, 'a@b.co'.length),
+      new vscode.Selection(1, 0, 1, 'Alice42'.length),
+    ];
+    await vscode.commands.executeCommand(CMD);
+    assert.match(editor.document.lineAt(0).text, /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/);
+    assert.match(editor.document.lineAt(1).text, /^[A-Z][a-z]{4}\d{2}$/, 'non-typed text keeps the format-preserving contract');
   });
 
   it('ignores quote/newline settings — a replacement, not an insertion', async () => {

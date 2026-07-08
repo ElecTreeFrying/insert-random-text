@@ -36,7 +36,7 @@ describe('prompted — registry', function () {
         'numberRange', 'floatRange', 'stringLength', 'dateBetween',
         'wordsCount', 'sentencesCount', 'paragraphsCount',
         'uuidFormat', 'passwordOptions', 'phoneFormat',
-        'fromTemplate', 'fromPattern',
+        'fromTemplate', 'fromPattern', 'sequence',
       ],
     );
     for (const command of promptedCommands) {
@@ -68,6 +68,13 @@ describe('prompted — registry', function () {
             `${command.id}.${step.key} fallback '${step.fallback}' must pass its own validation`);
         }
       }
+    }
+  });
+
+  it('every command defines exactly one rendering surface — render or createRender', () => {
+    for (const command of promptedCommands) {
+      const surfaces = [ command.render, command.createRender ].filter(Boolean).length;
+      assert.strictEqual(surfaces, 1, `'${command.id}' must define exactly one of render/createRender`);
     }
   });
 
@@ -511,5 +518,66 @@ describe('prompted — rendering (one-off Generator through toGenerator)', funct
     seed(7);
     const second = [ generator.generate(), generator.generate() ];
     assert.deepStrictEqual(first, second);
+  });
+});
+
+describe('prompted — sequence validation', () => {
+  const [ start, step ] = inputSteps('sequence');
+
+  it('start and step accept whole numbers (negative, zero, padded included)', () => {
+    for (const box of [ start, step ]) {
+      for (const input of [ '1', '0', '-3', ' 7 ', '100000' ]) {
+        assert.strictEqual(box.validate(input, {}), undefined, `'${input}' should be a valid whole number`);
+      }
+    }
+  });
+
+  it('start and step reject empty, non-numeric, fractional, and unsafe-magnitude input', () => {
+    for (const box of [ start, step ]) {
+      for (const input of [ '', '   ', 'abc', '1.5', '9007199254740993' ]) {
+        assert.ok(box.validate(input, {}), `'${input}' should be rejected with a message`);
+      }
+    }
+  });
+});
+
+describe('prompted — sequence rendering (a stateful counter per insert)', () => {
+  it('carries the command with its group, one box per parameter', () => {
+    const command = getPromptedCommand('sequence')!;
+    assert.strictEqual(command.label, 'Sequence (Start/Step…)');
+    assert.strictEqual(command.group, 'Numbers');
+    assert.deepStrictEqual(command.steps.map((step) => step.key), [ 'start', 'step' ]);
+  });
+
+  it('counts up from start by step across generate() calls — one insert, one running counter', () => {
+    const generator = toGenerator(getPromptedCommand('sequence')!, { start: '10', step: '5' });
+    assert.deepStrictEqual([ generator.generate(), generator.generate(), generator.generate() ], [ '10', '15', '20' ]);
+  });
+
+  it('supports negative and zero steps', () => {
+    const down = toGenerator(getPromptedCommand('sequence')!, { start: '5', step: '-2' });
+    assert.deepStrictEqual([ down.generate(), down.generate(), down.generate() ], [ '5', '3', '1' ]);
+    const flat = toGenerator(getPromptedCommand('sequence')!, { start: '4', step: '0' });
+    assert.deepStrictEqual([ flat.generate(), flat.generate() ], [ '4', '4' ]);
+  });
+
+  it('every toGenerator() wrap restarts at start — each insert operation counts fresh', () => {
+    const first = toGenerator(getPromptedCommand('sequence')!, { start: '10', step: '5' });
+    assert.deepStrictEqual([ first.generate(), first.generate() ], [ '10', '15' ]);
+    const second = toGenerator(getPromptedCommand('sequence')!, { start: '10', step: '5' });
+    assert.strictEqual(second.generate(), '10', 'a fresh wrap must not continue the previous counter');
+  });
+
+  it('ignores GenerateOptions — a sequence value has no date to format', () => {
+    const generator = toGenerator(getPromptedCommand('sequence')!, { start: '1', step: '1' });
+    assert.strictEqual(generator.generate({ dateFormat: 'unixSeconds' }), '1');
+  });
+
+  it('needs no randomness — the sequence is identical with or without a seed', () => {
+    seed(1);
+    const seeded = toGenerator(getPromptedCommand('sequence')!, { start: '3', step: '3' });
+    const first = [ seeded.generate(), seeded.generate() ];
+    const unseeded = toGenerator(getPromptedCommand('sequence')!, { start: '3', step: '3' });
+    assert.deepStrictEqual([ unseeded.generate(), unseeded.generate() ], first);
   });
 });

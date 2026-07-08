@@ -6,7 +6,7 @@ import { faker } from './engine';
  * input boxes or Quick Picks before inserting: Number (Range…), Float (Range…),
  * String (Length…), Date (Between…), Words/Sentences/Paragraphs (Count…),
  * UUID (Format…), Password (Options…), Phone (Format…), From Template…,
- * From Pattern….
+ * From Pattern…, Sequence (Start/Step…).
  *
  * These are deliberately NOT catalog entries: the registry stays a list of
  * zero-argument generators, while each prompted command declares its steps
@@ -75,8 +75,14 @@ export interface PromptedCommand {
   /** The input boxes, in order. Cancelling any one aborts the whole command. */
   readonly steps: readonly PromptStep[];
   /** Draw one fresh value from validated params. Called once per generate();
-   * `opts` carries the per-call settings the pipeline threads in (dateFormat). */
-  render(params: Readonly<Record<string, string>>, opts?: GenerateOptions): string;
+   * `opts` carries the per-call settings the pipeline threads in (dateFormat).
+   * Exactly one of render/createRender is defined (a spec test enforces it). */
+  render?(params: Readonly<Record<string, string>>, opts?: GenerateOptions): string;
+  /** Stateful alternative to {@link render}: called once per insert operation
+   * (inside {@link toGenerator}) to build the drawing closure, so consecutive
+   * generate() calls can share state within that one insert — Sequence advances
+   * its counter per cursor/bulk item — while every new insert starts fresh. */
+  createRender?(params: Readonly<Record<string, string>>): (opts?: GenerateOptions) => string;
 }
 
 /** Parse a safe integer out of raw input-box text; `undefined` when it isn't one. */
@@ -433,6 +439,39 @@ export const promptedCommands: readonly PromptedCommand[] = [
     ],
     render: ({ pattern }) => renderPattern(pattern),
   },
+  {
+    id: 'sequence',
+    label: 'Sequence (Start/Step…)',
+    group: 'Numbers',
+    steps: [
+      {
+        key: 'start',
+        prompt: 'Sequence — the first value (whole number).',
+        placeholder: 'e.g. 1',
+        fallback: '1',
+        validate: (input) => (parseInteger(input) === undefined ? INTEGER_ERROR : undefined),
+      },
+      {
+        key: 'step',
+        prompt: 'Sequence — how much each next value adds (whole number; negative counts down).',
+        placeholder: 'e.g. 1',
+        fallback: '1',
+        validate: (input) => (parseInteger(input) === undefined ? INTEGER_ERROR : undefined),
+      },
+    ],
+    // Not random at all — the one prompted command whose values must RELATE
+    // across the cursors/bulk items of an insert: createRender builds one
+    // counter per insert operation (1, 2, 3… down a column), and the next
+    // insert restarts at start.
+    createRender: ({ start, step }) => {
+      let next = Number(start);
+      return () => {
+        const value = next;
+        next += Number(step);
+        return String(value);
+      };
+    },
+  },
 ];
 
 /** Look a prompted command up by id; undefined when the id is unknown. */
@@ -447,10 +486,16 @@ export function getPromptedCommand(id: string): PromptedCommand | undefined {
  * per bulk item, seeded through the shared faker accessor.
  */
 export function toGenerator(command: PromptedCommand, params: Readonly<Record<string, string>>): Generator {
+  // A createRender command builds its closure HERE — once per insert operation —
+  // so state (Sequence's counter) spans the cursors/bulk items of one insert
+  // and resets on the next.
+  const draw = command.createRender
+    ? command.createRender(params)
+    : (opts?: GenerateOptions) => command.render!(params, opts);
   return {
     id: command.id,
     label: command.label,
     group: command.group,
-    generate: (opts) => command.render(params, opts),
+    generate: (opts) => draw(opts),
   };
 }

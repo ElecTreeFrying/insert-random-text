@@ -19,6 +19,7 @@ const PASSWORD_OPTIONS = 'insertRandomText.passwordOptions';
 const PHONE_FORMAT = 'insertRandomText.phoneFormat';
 const FROM_TEMPLATE = 'insertRandomText.fromTemplate';
 const FROM_PATTERN = 'insertRandomText.fromPattern';
+const SEQUENCE = 'insertRandomText.sequence';
 
 async function setConfig(key: string, value: unknown): Promise<void> {
   const changed = new Promise<void>((resolve) => {
@@ -403,5 +404,48 @@ describe('prompted commands — input boxes → normal pipeline', function () {
     await runPromptedCommand(NUMBER_RANGE, [ '5', '5' ]);
     assert.strictEqual(editor.document.getText(), 'untouched', 'Clipboard mode must not modify the document');
     assert.strictEqual(await vscode.env.clipboard.readText(), '5');
+  });
+
+  it('Sequence (Start/Step…) counts across cursors — one running counter per insert', async () => {
+    const editor = await openDoc('\n\n');
+    editor.selections = [ 0, 1, 2 ].map((line) => new vscode.Selection(line, 0, line, 0));
+    await runPromptedCommand(SEQUENCE, [ '10', '5' ]);
+    assert.strictEqual(editor.document.getText(), '10\n15\n20');
+  });
+
+  it('Sequence restarts at start on the next insert — the counter is per-operation', async () => {
+    const first = await openDoc('\n');
+    first.selections = [ 0, 1 ].map((line) => new vscode.Selection(line, 0, line, 0));
+    await runPromptedCommand(SEQUENCE, [ '10', '5' ]);
+    assert.strictEqual(first.document.getText(), '10\n15');
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    const second = await openDoc('\n');
+    second.selections = [ 0, 1 ].map((line) => new vscode.Selection(line, 0, line, 0));
+    await runPromptedCommand(SEQUENCE, [ '10', '5' ]);
+    assert.strictEqual(second.document.getText(), '10\n15', 'a new insert must not continue 20, 25');
+  });
+
+  it('Sequence advances through bulk items within one cursor (negative step included)', async () => {
+    await setConfig(ConfigKey.BULK_COUNT, 3);
+    const editor = await openDoc('');
+    await runPromptedCommand(SEQUENCE, [ '7', '-2' ]);
+    await setConfig(ConfigKey.BULK_COUNT, undefined);
+    assert.strictEqual(editor.document.getText(), '7\n5\n3');
+  });
+
+  it('Sequence Esc at the step box cancels cleanly', async () => {
+    const editor = await openDoc('');
+    await runPromptedCommand(SEQUENCE, [ '10', undefined ]);
+    assert.strictEqual(editor.document.getText(), '');
+  });
+
+  it('Sequence remembers the last start/step and prefills the next run', async () => {
+    await openDoc('');
+    await runPromptedCommand(SEQUENCE, [ '100', '25' ]);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await openDoc('');
+    const received = await runPromptedCommand(SEQUENCE, [ '100', '25' ]);
+    assert.strictEqual(received.inputs[0].value, '100', 'start box should prefill the last accepted start');
+    assert.strictEqual(received.inputs[1].value, '25', 'step box should prefill the last accepted step');
   });
 });

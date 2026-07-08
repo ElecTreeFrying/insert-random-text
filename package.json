@@ -87,6 +87,7 @@
     }
   ],
   "main": "./dist/extension.js",
+  "browser": "./dist/web/extension.js",
   "extensionKind": [
     "workspace"
   ],
@@ -217,6 +218,10 @@
       {
         "command": "insertRandomText.fromPattern",
         "title": "Insert Random: From Pattern…"
+      },
+      {
+        "command": "insertRandomText.sequence",
+        "title": "Insert Random: Sequence (Start/Step…)"
       },
       {
         "command": "insertRandomText.uuid",
