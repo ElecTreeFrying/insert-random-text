@@ -36,7 +36,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 
 ## One extension instead of five
 
-Fake names & emails, UUIDs in any format, lorem ipsum with exact counts, numbers & dates with ranges, JSON/SQL/CSV records and whole datasets, your own templates & lists, six locales, and in-place anonymization — replace your UUID inserter, your lorem ipsum generator, your dummy-text filler, your CSV mocker, and your faker wrapper with one actively-maintained extension. Offline, uncapped, seeded.
+Fake names & emails, UUIDs in any format, lorem ipsum with exact counts, numbers & dates with ranges, JSON/SQL/CSV records and whole datasets, your own templates & lists, six locales, and in-place anonymization — replace your UUID inserter, your lorem ipsum generator, your dummy-text filler, your CSV mocker, and your faker wrapper with one actively maintained extension. Offline, uncapped, seeded.
 
 ---
 
@@ -341,7 +341,7 @@ If a command doesn't insert, or a value looks wrong, please open an issue on [Gi
 <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Insert Random: UUID**. Need a specific rendering? **UUID (Format…)** picks uppercase, braces, or no dashes. Every cursor gets its own value.
 
 **How do I generate fake names, emails, and addresses in VS Code?**
-Run **Insert Random: Full Name / Email / Street Address** directly, or browse all 130+ types with **Insert Random: Pick…**.
+Run **Insert Random: Person / Email / Street Address** directly (Person inserts a full name), or browse all 130+ types with **Insert Random: Pick…**.
 
 **How do I generate mock JSON, CSV, or SQL test data?**
 **Insert Random: Record…** drops a composed object, `INSERT` row, or CSV line at every cursor; **Generate Dataset…** pours up to 100,000 rows into a new file.
