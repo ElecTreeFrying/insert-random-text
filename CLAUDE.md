@@ -24,7 +24,7 @@ VS Code extension (display name **"Random, Fake & Mock Data Generator"**, id `in
 ### Verification
 Tests live in **`src/test/<area>/*.test.ts`** (mocha `describe`/`it`; `compile-tests` transpiles them to `out/`). Two tiers:
 - **Pure areas, headless** — `npm run compile-tests && npx mocha "out/test/{quote,config,catalog,engine,format,record,prompted,custom,randomize}/*.test.js"`. Don't widen the glob to `**`: `extension.test.ts` and `commands/` import `vscode` and fail under plain node.
-- **Full suite (Extension Host)** — `npm test` (`pretest` runs compile-tests + compile + lint first). Required for `commands/` and `extension.test.ts`.
+- **Full suite (Extension Host)** — `npm test` (`pretest` runs compile-tests + compile first; compile itself lints). Required for `commands/` and `extension.test.ts`.
 
 Gotcha: `out/` keeps orphaned compiled tests after a `.test.ts` is deleted/renamed — `rm -rf out` before a headless run when results look stale. Release gate on top of tests: `check-types` + `lint` + `node esbuild.js --production` + `npx @vscode/vsce package`.
 
@@ -62,6 +62,7 @@ Eleven single-responsibility modules. Generation is `vscode`-free and lives apar
 2. `package.json` → `contributes.commands` — add `{ "command": "insertRandomText.<id>", "title": "Insert Random: <Label>" }` (direct command + search visibility).
 3. `src/extension.ts` — add `'insertRandomText.<id>': '<id>'` to `COMMAND_TO_GENERATOR`.
 4. `README.md` → the **What it generates** table — add the type to its category row and bump that category's `(N)` count (and the "20 categories" figure if it's a new group). The headline total is deliberately soft ("130+"), so it never needs a per-type edit.
+5. `SPEC.md` → the **Data Catalog** — add the type's row under its category heading (label / registry id / command id / faker source) and bump that heading's `(N)`, plus every literal total: the front-matter summary, the Commands section, and the catalog intro state the visible / registry / modern-command / contributed-command counts **exactly** (SPEC.md has no soft numbers — grep the old totals).
 
 (activationEvents are auto-generated from `contributes.commands` since VS Code 1.74 — nothing to update there.)
 
@@ -77,5 +78,5 @@ Eleven single-responsibility modules. Generation is `vscode`-free and lives apar
 - **Line endings are LF**, enforced by `.gitattributes` (`* text=auto eol=lf`).
 
 ## Scope & toolchain
-- **Core work lives in `src/**`, `package.json`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`.** Out of scope (later waves): icon assets under `images/`, CI, Open VSX, `tsconfig.json` / `esbuild.js`.
+- **Core work lives in `src/**`, `package.json`, `README.md`, `SPEC.md`, `CLAUDE.md`, `CHANGELOG.md`.** `SPEC.md` is the tracked user-facing functionality contract (every command, setting, and catalog row — README links into it; vsix-excluded like CLAUDE.md): any behavior change lands there too. Out of scope (later waves): icon assets under `images/`, CI, Open VSX, `tsconfig.json` / `esbuild.js`.
 - TypeScript 5.9 (target `ES2022`, module `Node16`, `strict: false`), ESLint 9 flat config (rules are warnings), esbuild bundling, engine `vscode ^1.97.0`. **Runtime dependency: `@faker-js/faker`** (bundled into `dist/`). Mirrors the sibling `auto-import-relative-path` extension.
