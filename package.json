@@ -3,7 +3,7 @@
   "displayName": "Random, Fake & Mock Data Generator",
   "description": "Insert 130+ types of random, fake & mock data at every cursor — names, emails, UUIDs, lorem ipsum, JSON/SQL/CSV records & whole datasets, templates, locales, anonymize in place. Bulk, seeded, fully offline. The only data faker you'll need.",
   "publisher": "ElecTreeFrying",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "author": {
     "name": "John James Ermitaño",
     "email": "jjgermitano@gmail.com"
@@ -823,14 +823,38 @@
         }
       ],
       "insertRandomText.contextSubmenu": [
-        { "command": "insertRandomText.pick", "group": "1_pick" },
-        { "command": "insertRandomText.uuid", "group": "2_common" },
-        { "command": "extension.insertRandomPerson", "group": "2_common" },
-        { "command": "insertRandomText.email", "group": "2_common" },
-        { "command": "extension.insertRandomNumber", "group": "2_common" },
-        { "command": "extension.insertRandomDate", "group": "2_common" },
-        { "command": "extension.insertLorem", "group": "3_text" },
-        { "command": "insertRandomText.randomizeSelection", "group": "4_anonymize" }
+        {
+          "command": "insertRandomText.pick",
+          "group": "1_pick"
+        },
+        {
+          "command": "insertRandomText.uuid",
+          "group": "2_common"
+        },
+        {
+          "command": "extension.insertRandomPerson",
+          "group": "2_common"
+        },
+        {
+          "command": "insertRandomText.email",
+          "group": "2_common"
+        },
+        {
+          "command": "extension.insertRandomNumber",
+          "group": "2_common"
+        },
+        {
+          "command": "extension.insertRandomDate",
+          "group": "2_common"
+        },
+        {
+          "command": "extension.insertLorem",
+          "group": "3_text"
+        },
+        {
+          "command": "insertRandomText.randomizeSelection",
+          "group": "4_anonymize"
+        }
       ]
     },
     "configuration": [
