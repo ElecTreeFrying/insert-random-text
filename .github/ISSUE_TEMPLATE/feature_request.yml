@@ -1,0 +1,22 @@
+name: Feature request
+description: A new data type, format option, or capability you're missing
+labels: [ "enhancement" ]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What do you want to generate or do?
+      placeholder: e.g. IPv6 CIDR ranges · a "no weekends" option on Date (Between…) · Markdown table output format
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example of the output you'd expect
+      placeholder: |
+        2001:db8:3c4d::/48
+  - type: textarea
+    id: workaround
+    attributes:
+      label: How do you handle it today?
+      description: A template/pattern workaround, another tool, by hand… (helps us judge urgency, and sometimes there's already a way — happy to point it out)

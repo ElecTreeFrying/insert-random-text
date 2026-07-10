@@ -1,4 +1,26 @@
+# Build output
 out
+dist
+*.tsbuildinfo
+
+# Dependencies
 node_modules
+
+# VS Code extension testing & packaging
 .vscode-test/
 *.vsix
+
+# Local-only working files — not tracked, not shipped, excluded from release & audits
+/docs/
+/qa/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage output
+coverage/
+.nyc_output/
