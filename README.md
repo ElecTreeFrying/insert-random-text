@@ -26,7 +26,7 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 
 **Perfect for** test fixtures & database seeds · mock API responses · whole CSV / JSON / SQL datasets · UI placeholder & Storybook props · throwaway IDs, addresses & credentials.
 
-![Random, Fake & Mock Data Generator demo](images/playback.gif "Insert random data at the cursor")
+![Multi-cursor fill demo — a different value at every cursor](images/multi-cursor.gif "One command fills every cursor with a different value")
 
 [**See the full specification**][SPEC]
 
@@ -69,6 +69,26 @@ Need a page of plausible narrative prose? That's a job for your AI assistant —
 3. It drops in at every cursor. Multi-select a column first to fill every row at once.
 
 No setup required — tweak quotes, bulk count, output format, seed, and locale whenever you want them.
+
+---
+
+## Records & datasets
+
+![Records and datasets demo — one object, three SQL rows, then a 1,000-row CSV file](images/records.gif "Records to rows to a whole dataset")
+
+Records to rows to a whole dataset — compose a `{ person, username, email }` object at the cursor, switch the shape to SQL from the palette, then pour up to **100,000 rows** of JSON, CSV, or SQL into a new file with [**Generate Dataset…**][records-spec]. Offline, free, seeded-reproducible.
+
+[records-spec]: SPEC.md#multi-field-records
+
+---
+
+## Why it's smart
+
+![Smart features demo — language-aware quotes, six locales, anonymize in place](images/cerebral.gif "Quotes follow the language · six locales · anonymize in place")
+
+- **Quotes follow the language, nothing configured** — the same command lands `"…"` in JavaScript and `'…'` in SQL.
+- **Six locales, one setting, no reload** — and seeded runs stay reproducible per locale.
+- **Anonymize in place** — real data in, safe data out; nothing ever leaves your editor.
 
 ---
 
@@ -312,6 +332,28 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 If a command doesn't insert, or a value looks wrong, please open an issue on [GitHub Issues][issues].
 
 [issues]: https://github.com/ElecTreeFrying/insert-random-text/issues
+
+---
+
+## FAQ
+
+**How do I insert a random UUID in VS Code?**
+<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Insert Random: UUID**. Need a specific rendering? **UUID (Format…)** picks uppercase, braces, or no dashes. Every cursor gets its own value.
+
+**How do I generate fake names, emails, and addresses in VS Code?**
+Run **Insert Random: Full Name / Email / Street Address** directly, or browse all 130+ types with **Insert Random: Pick…**.
+
+**How do I generate mock JSON, CSV, or SQL test data?**
+**Insert Random: Record…** drops a composed object, `INSERT` row, or CSV line at every cursor; **Generate Dataset…** pours up to 100,000 rows into a new file.
+
+**Can I get the same values every run (seeded / reproducible data)?**
+Yes — set `insertRandomText.seed` and every run replays the identical sequence, per locale, datasets included.
+
+**Does it work offline — does my data stay private?**
+Fully offline: the faker library ships inside the extension, and there are no network calls, no telemetry, no model calls. It runs in the browser on vscode.dev the same way.
+
+**How do I fill multiple cursors with a different value in each?**
+Stack cursors (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Option</kbd>/<kbd>Alt</kbd>+<kbd>↓</kbd>), then run any Insert Random command — each cursor draws its own value (`insertRandomText.uniquePerCursor`, on by default).
 
 ---
 

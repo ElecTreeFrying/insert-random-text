@@ -42,29 +42,34 @@ The first stable release — a ground-up relaunch as **Random, Fake & Mock Data 
 - Existing `extension.insertRandom*` commands continue to work unchanged.
 - Modernized the build (esbuild bundle; now requires VS Code 1.97+).
 - Refreshed the marketplace listing: new icon, new description, added the **Testing** category, finalized the keyword set, a **Sponsor** button linking to the README's Support section, and a gallery banner tuned to the icon.
+- New demo GIFs — the multi-cursor hero, records → whole datasets, and the smart trio (language-aware quotes, locales, anonymize in place) — replacing the 2020-era demo.
 
-## v0.1.3 (2020-7-25)
-
-### Changes
-
-- updated readme
-
-## v0.1.2 (2020-3-21)
+## v0.1.3 (2020-07-25)
 
 ### Changes
 
-- updated readme
+- Expanded the README — clearer step-by-step installation instructions, contributing notes, and a new **Support** section with donation options.
 
-## v0.1.1 (2020-3-16)
-
-### Feature
-
-- toggle new line
+## v0.1.2 (2020-03-21)
 
 ### Changes
 
-- added new configuration `withNewLine`
+- Polished the README — tidied the installation steps and links.
 
-## v0.1.0 (2020-3-15)
+## v0.1.1 (2020-03-16)
 
-- initial release
+### Features
+
+- **Trailing new line** — new `withNewLine` setting appends a newline after the inserted value, so back-to-back inserts land on their own lines.
+
+## v0.1.0 (2020-03-15)
+
+The first release, as **Insert Random Text** — insert random text on the fly, powered by [Chance](https://chancejs.com).
+
+### Features
+
+- **14 insert commands** — *Insert Random: Animal / Person / Date / Country / Number / String*, plus *Lorem* and *Hash* in four sizes each (base, Small, Medium, Large).
+- **Insert type** — the `insertType` setting places the value at the cursor (`Cursor`) or on line 1 of the file (`Top`).
+- **Quote wrapping** — `withQuote` wraps inserted values in quotes; `quoteStyle` chooses single or double.
+- **Length controls** — `loremSize` and `hashSize` set the generated length for the base Lorem and Hash commands.
+- **Notifications toggle** — `disableNotifs` silences the insert confirmation notifications.
