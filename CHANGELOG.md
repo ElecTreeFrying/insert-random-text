@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0 (2026-07-12)
+## v1.0.0 (2026-07-10)
 
 The first stable release — a ground-up relaunch as **Random, Fake & Mock Data Generator**.
 
