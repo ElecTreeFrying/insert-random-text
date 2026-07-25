@@ -1,26 +1,26 @@
 # Random, Fake & Mock Data Generator
 
-[![version][version svg]][package]
-[![installs][installs svg]][package]
-[![downloads][downloads svg]][package]
-[![ratings][ratings svg]][package]
-[![license][license svg]][repo]
-[![vscode][vscode svg]][package]
+[![version][version-badge]][package]
+[![installs][installs-badge]][package]
+[![downloads][downloads-badge]][package]
+[![rating][rating-badge]][package]
+[![license][license-badge]][repo]
+[![vscode][vscode-badge]][package]
 
-[version svg]: https://vsmarketplacebadges.dev/version-short/electreefrying.insert-random-text.png
-[installs svg]: https://vsmarketplacebadges.dev/installs/electreefrying.insert-random-text.png
-[downloads svg]: https://vsmarketplacebadges.dev/downloads/electreefrying.insert-random-text.png
-[ratings svg]: https://vsmarketplacebadges.dev/rating-short/ElecTreeFrying.insert-random-text.png
-[license svg]: https://img.shields.io/github/license/ElecTreeFrying/insert-random-text
-[vscode svg]: https://img.shields.io/badge/vscode-%3E%3D1.97.0-blue
+[version-badge]: https://vsmarketplacebadges.dev/version-short/ElecTreeFrying.insert-random-text.png
+[installs-badge]: https://vsmarketplacebadges.dev/installs-short/ElecTreeFrying.insert-random-text.png
+[downloads-badge]: https://vsmarketplacebadges.dev/downloads-short/ElecTreeFrying.insert-random-text.png
+[rating-badge]: https://vsmarketplacebadges.dev/rating-short/ElecTreeFrying.insert-random-text.png
+[license-badge]: https://img.shields.io/github/license/ElecTreeFrying/insert-random-text
+[vscode-badge]: https://img.shields.io/badge/vscode-%3E%3D1.97.0-blue
 [package]: https://marketplace.visualstudio.com/items?itemName=ElecTreeFrying.insert-random-text
 [repo]: https://github.com/ElecTreeFrying/insert-random-text
-
-**Random, Fake & Mock Data Generator** is a free, offline VS Code extension that inserts 130+ types of random, fake & mock data — names, emails, addresses, UUIDs, lorem ipsum, JSON/SQL/CSV records and whole datasets — at every cursor, in six locales, seeded and reproducible when you need it.
 
 > **Fill every cursor with realistic fake data — a _different_ value in each, in one step.**
 
 **Names** · **Emails** · **Addresses** · **Finance** · **Git** · **Dates** · **UUIDs** · **Lorem ipsum** · **Mock JSON**
+
+**Random, Fake & Mock Data Generator** is a free, offline VS Code extension that inserts 130+ types of random, fake & mock data — names, emails, addresses, UUIDs, lorem ipsum, JSON/SQL/CSV records and whole datasets — at every cursor, in six locales, seeded and reproducible when you need it.
 
 Drop a multi-cursor selection down a column and fill every row with a _different_ realistic value in one step — names, emails, IDs, dates, prices, whatever the column needs. All generated right where you're typing: no website, no signup, no waiting on a model — instant, offline, and reproducible when you seed it.
 
@@ -37,6 +37,17 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 ## One extension instead of five
 
 Fake names & emails, UUIDs in any format, lorem ipsum with exact counts, numbers & dates with ranges, JSON/SQL/CSV records and whole datasets, your own templates & lists, six locales, and in-place anonymization — replace your UUID inserter, your lorem ipsum generator, your dummy-text filler, your CSV mocker, and your faker wrapper with one actively maintained extension. Offline, uncapped, seeded.
+
+---
+
+## Quick Start
+
+1. **Install** the extension ([see below](#installation)).
+2. **Open** the Command Palette — <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>.
+3. **Type** *Insert Random*, then pick a type — or run *Insert Random: Pick…* to browse all 130+.
+4. It drops in at every cursor. Multi-select a column first to fill every row at once.
+
+> **No setup required:** tweak quotes, bulk count, output format, seed, and locale whenever you want them.
 
 ---
 
@@ -62,23 +73,11 @@ Need a page of plausible narrative prose? That's a job for your AI assistant —
 
 ---
 
-## Quick start
-
-1. Open the Command Palette — <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>
-2. Type **Insert Random**, then pick a type — or run **Insert Random: Pick…** to browse all 130+.
-3. It drops in at every cursor. Multi-select a column first to fill every row at once.
-
-No setup required — tweak quotes, bulk count, output format, seed, and locale whenever you want them.
-
----
-
 ## Records & datasets
 
 ![Records and datasets demo — one object, three SQL rows, then a 1,000-row CSV file](https://raw.githubusercontent.com/ElecTreeFrying/insert-random-text/main/images/records.gif "Records to rows to a whole dataset")
 
-Records to rows to a whole dataset — compose a `{ person, username, email }` object at the cursor, switch the shape to SQL from the palette, then pour up to **100,000 rows** of JSON, CSV, or SQL into a new file with [**Generate Dataset…**][records-spec]. Offline, free, seeded-reproducible.
-
-[records-spec]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#multi-field-records
+Records to rows to a whole dataset — compose a `{ person, username, email }` object at the cursor, switch the shape to SQL from the palette, then pour up to **100,000 rows** of JSON, CSV, or SQL into a new file with [**Generate Dataset…**][SPEC-records]. Offline, free, seeded-reproducible.
 
 ---
 
@@ -311,19 +310,24 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 
 **Requires VS Code 1.97.0 or later.**
 
-- **Marketplace:** Extensions view (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>) → search **Random, Fake & Mock Data Generator** by _ElecTreeFrying_ → **Install**.
+- **Marketplace:** Extensions view (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>) → search **Random, Fake & Mock Data Generator** by *ElecTreeFrying* → **Install**.
 - **CLI:** `code --install-extension ElecTreeFrying.insert-random-text`
 - **Direct:** [VS Code Marketplace listing][package]
+- **Cursor / Windsurf / VSCodium / Gitpod:** Search **Random, Fake & Mock Data Generator** in the Extensions panel — served via [Open VSX][open-vsx].
+
+[open-vsx]: https://open-vsx.org/extension/ElecTreeFrying/insert-random-text
 
 ---
 
 ## Compatibility
 
-- **VS Code** 1.97.0 or later.
-- **Compatible hosts:** Cursor, VSCodium, Code Server, and other forks that implement the VS Code API at the same engine version.
-- **Web:** runs on [vscode.dev](https://vscode.dev) and github.dev — a browser build ships in the extension.
+- **VS Code:** 1.97.0 or later.
+- **Registries:** Available on both the [VS Code Marketplace][package] and [Open VSX][open-vsx].
+- **Compatible hosts:** Cursor, Windsurf, VSCodium, Gitpod, Code Server, and other forks that implement the VS Code API at the same engine version — installable directly from their Extensions panel via Open VSX.
+- **Web:** Runs on [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev) — a browser build ships in the extension.
 - **Platforms:** macOS, Windows, Linux.
-- **Privacy:** No network calls, no telemetry, no model calls — every value is generated locally by the bundled library.
+- **Footprint:** Bundles `@faker-js/faker` (six locales) — nothing is fetched at runtime.
+- **Telemetry:** None. No network calls, no telemetry, no model calls — every value is generated locally by the bundled library.
 
 ---
 
@@ -362,15 +366,17 @@ Stack cursors (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Option</kbd>/<kbd>Alt</kbd>+<
 
 ## Changelog
 
-See [CHANGELOG.md][changelog] for full release notes.
+See [CHANGELOG.md][CHANGELOG] for full release notes.
 
-[changelog]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/changelog
+[CHANGELOG]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/changelog
 
 ---
 
 ## Contributing
 
 Contributions, bug reports, and feature requests are welcome in [GitHub Issues][issues]. See [SUPPORT.md][SUPPORT-CONTRIB] for build/test commands and the architecture overview.
+
+See [SPEC.md][SPEC] for the full behavior contract — behavior changes belong there too.
 
 [SUPPORT-CONTRIB]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SUPPORT.md#contributing
 
@@ -405,6 +411,6 @@ Contributions, bug reports, and feature requests are welcome in [GitHub Issues][
 
 ## License
 
-[MIT][license]
+[MIT][MIT]
 
-[license]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/license
+[MIT]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/license
