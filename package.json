@@ -3,7 +3,7 @@
   "displayName": "Random, Fake & Mock Data Generator",
   "description": "Insert 130+ types of random, fake & mock data at every cursor — names, emails, UUIDs, lorem ipsum, JSON/SQL/CSV records & whole datasets, templates, locales, anonymize in place. Bulk, seeded, fully offline. The only data faker you'll need.",
   "publisher": "ElecTreeFrying",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "John James Ermitaño",
     "email": "jjgermitano@gmail.com"
