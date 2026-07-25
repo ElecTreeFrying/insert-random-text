@@ -97,7 +97,7 @@ Records are the deliberate exception — they escape by **shape** (JSON / SQL / 
 
 ### Why are there no default keyboard shortcuts?
 
-With 130+ types — and 170+ contributed commands all told — any preset binding would collide with something you already use. Bind the few types you reach for instead: **Keyboard Shortcuts** (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd>) → search **Insert Random** → click the ✎ pencil. Binding **Insert Random: Pick…** to one shortcut gives keyboard-fast access to every type through its searchable menu.
+With 130+ types — and 190 contributed commands all told — any preset binding would collide with something you already use. Bind the few types you reach for instead: **Keyboard Shortcuts** (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>S</kbd>) → search **Insert Random** → click the ✎ pencil. Binding **Insert Random: Pick…** to one shortcut gives keyboard-fast access to every type through its searchable menu.
 
 ### Do my old keybindings still work?
 
