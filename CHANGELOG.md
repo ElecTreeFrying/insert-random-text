@@ -41,7 +41,7 @@ The first stable release — a ground-up relaunch as **Random, Fake & Mock Data 
 
 - Removed the `loremSize`, `hashSize`, and `disableNotifs` settings — the base Lorem and Hash commands no longer take a configurable length (the Small / Medium / Large variants still cover the sizes), and inserts no longer show notifications, so there is nothing left to disable.
 - Removed the `quoteStyle` setting — quoting is now automatic and language-aware (see **Automatic quoting**): SQL keeps single quotes, every other language now gets double quotes where the old default wrapped in single, and a saved `quoteStyle` value is no longer read.
-- Existing `extension.insertRandom*` commands continue to work unchanged.
+- Existing `extension.insertRandom*` and `extension.insertLorem*` commands continue to work unchanged.
 - Modernized the build (esbuild bundle; now requires VS Code 1.97+).
 - Refreshed the marketplace listing: new icon, new description, added the **Testing** category, finalized the keyword set, a **Sponsor** button linking to the README's Support section, and a gallery banner tuned to the icon.
 - New demo GIFs — the multi-cursor hero, records → whole datasets, and the smart trio (language-aware quotes, locales, anonymize in place) — replacing the 2020-era demo.
