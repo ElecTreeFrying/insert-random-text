@@ -53,9 +53,24 @@ function stubPrompts(answers: readonly (string | undefined)[]): { received: Rece
   const originalPick = vscode.window.showQuickPick;
   const received: ReceivedPrompts = { inputs: [], picks: [] };
   let cursor = 0;
+  /* Running off the end of the script is a TEST bug, not an Esc. Both are `undefined` to the caller,
+     and `runPrompted` treats undefined as a cancel and returns early — so an extra, unscripted prompt
+     silently swallows a scripted answer, every later box reads as Esc, and the command abandons its
+     remaining `globalState` writes. The visible symptom lands much later, as a prefill assertion
+     failing against a value some earlier test left behind. Scripted `undefined` entries are still a
+     legitimate Esc: those are in-bounds, and only exhaustion throws. */
+  const nextAnswer = (kind: 'input box' | 'quick pick'): string | undefined => {
+    if (cursor >= answers.length) {
+      throw new Error(
+        `unscripted ${kind}: the flow opened ${cursor + 1} prompt(s) but only ${answers.length} answer(s) were scripted. ` +
+        'An extra prompt consumed a scripted answer, so every later box read as Esc.',
+      );
+    }
+    return answers[cursor++];
+  };
   (vscode.window as any).showInputBox = async (options: vscode.InputBoxOptions) => {
     received.inputs.push(options);
-    const answer = answers[cursor++];
+    const answer = nextAnswer('input box');
     if (answer !== undefined && options.validateInput) {
       const error = await options.validateInput(answer);
       if (error) { throw new Error(`scripted answer '${answer}' failed the box's validation: ${error}`); }
@@ -65,7 +80,7 @@ function stubPrompts(answers: readonly (string | undefined)[]): { received: Rece
   (vscode.window as any).showQuickPick = async (items: any, options: vscode.QuickPickOptions) => {
     const resolved = await items;
     received.picks.push({ items: resolved, options });
-    const answer = answers[cursor++];
+    const answer = nextAnswer('quick pick');
     if (answer === undefined) { return undefined; }
     const picked = resolved.find((item: any) => item.value === answer);
     if (!picked) { throw new Error(`no pick option with value '${answer}' among: ${resolved.map((i: any) => i.value).join(', ')}`); }
