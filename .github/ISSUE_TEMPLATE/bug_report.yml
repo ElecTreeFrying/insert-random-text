@@ -2,25 +2,45 @@ name: Bug report
 description: Something inserted wrong, errored, or didn't behave as documented
 labels: [ "bug" ]
 body:
+  - type: checkboxes
+    id: prior
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched [existing issues](https://github.com/ElecTreeFrying/insert-random-text/issues?q=is%3Aissue) and this isn't a duplicate
+          required: true
+        - label: I checked [SUPPORT.md](https://github.com/ElecTreeFrying/insert-random-text/blob/main/SUPPORT.md) for a known cause and fix
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened
-      description: What did you see, and what did you expect instead?
-      placeholder: 'e.g. "Insert Random: Record…" with a CSV shape inserted an unescaped comma inside a quoted field…'
+      label: Summary
+      description: One or two sentences — what went wrong, and how much it affects your work.
+      placeholder: 'e.g. "Insert Random: Record…" with a CSV shape breaks the column layout whenever a generated value contains a comma'
     validations:
       required: true
   - type: input
     id: command
     attributes:
       label: Command used
+      description: The Command Palette entry you ran.
       placeholder: 'e.g. Insert Random: UUID · Pick… · Record… · Generate Dataset… · Randomize Selection'
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output inserted vs. expected
+      description: Paste both exactly as they appeared.
+      placeholder: |
+        Inserted:  "Smith, Jr.", 42, hello
+        Expected:  "Smith, Jr.", 42, hello   ← the comma inside the quoted field must not split the column
     validations:
       required: true
   - type: textarea
     id: repro
     attributes:
       label: Steps to reproduce
+      description: Numbered steps, starting from a fresh editor.
       placeholder: |
         1. Open a .sql file
         2. Add 3 cursors
@@ -31,9 +51,9 @@ body:
     id: settings
     attributes:
       label: Relevant settings
-      description: Any non-default settings — insertType, withQuote, bulkCount, outputFormat, seed, locale, strictUnique, dateFormat, recordFormat…
+      description: 'Cmd/Ctrl+Shift+P → **Preferences: Open User Settings (JSON)** — paste any non-default `insertRandomText.*` lines (insertType, withQuote, bulkCount, outputFormat, seed, locale, strictUnique, dateFormat, recordFormat…).'
       placeholder: |
-        insertType: Cursor
+        insertRandomText.insertType: Cursor
         insertRandomText.bulkCount: 10
         insertRandomText.seed: 42
   - type: dropdown
@@ -43,13 +63,15 @@ body:
       options:
         - VS Code desktop
         - vscode.dev / github.dev (browser)
-        - VSCodium / Cursor / Windsurf (Open VSX build)
+        - VSCodium / Cursor / Windsurf (VS Code-compatible build)
+        - Remote — SSH, WSL, Dev Container, or Codespaces
     validations:
       required: true
   - type: input
     id: versions
     attributes:
-      label: VS Code version · extension version
-      placeholder: e.g. 1.102.0 · 1.0.0
+      label: VS Code version · extension version · OS
+      description: 'VS Code → **Help / Code → About**. Extension version is on its entry in the Extensions pane.'
+      placeholder: 'e.g. 1.102.0 · 1.0.0 · macOS 15.5'
     validations:
       required: true

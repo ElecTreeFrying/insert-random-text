@@ -2,19 +2,39 @@ name: Feature request
 description: A new data type, format option, or capability you're missing
 labels: [ "enhancement" ]
 body:
+  - type: checkboxes
+    id: prior
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched [existing issues](https://github.com/ElecTreeFrying/insert-random-text/issues?q=is%3Aissue) and this isn't already requested
+          required: true
+        - label: I checked [SPEC.md — Data Catalog](https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#data-catalog) and it isn't already supported
   - type: textarea
     id: what
     attributes:
       label: What do you want to generate or do?
-      placeholder: e.g. IPv6 CIDR ranges · a "no weekends" option on Date (Between…) · Markdown table output format
+      description: The data type, format option, or command behavior you're after.
+      placeholder: 'e.g. IPv6 CIDR ranges · a "no weekends" option on Date (Between…) · Markdown table output format'
     validations:
       required: true
   - type: textarea
     id: example
     attributes:
       label: Example of the output you'd expect
+      description: Paste a sample of the value or format as you'd want it inserted.
       placeholder: |
         2001:db8:3c4d::/48
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Is there a faker source for it?
+      description: >
+        Most data types map onto a `@faker-js/faker` module. A link to the faker API entry makes a request
+        much easier to accept; if there's no faker source, say so and describe the generation rule instead.
+      placeholder: 'e.g. faker.internet.ipv6() exists but has no CIDR suffix option'
   - type: textarea
     id: workaround
     attributes:
