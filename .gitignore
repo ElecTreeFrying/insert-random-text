@@ -1,6 +1,8 @@
 # Build output
 out
 dist
+coverage/
+.nyc_output/
 *.tsbuildinfo
 
 # Dependencies
@@ -10,17 +12,26 @@ node_modules
 .vscode-test/
 *.vsix
 
-# Local-only working files — not tracked, not shipped, excluded from release & audits
-/docs/
-/qa/
-
 # Logs
 *.log
+npm-debug.log*
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Test coverage output
-coverage/
-.nyc_output/
+# Local-only working trees — kept on disk, never committed.
+# The `/`-anchored entries are anchored deliberately: an unanchored entry also matches nested
+# directories of the same name, which would silently swallow fixtures on a fresh clone.
+/docs/
+/qa/
+# Agent session state. Self-ignored by .remember/.gitignore too; named here so the tree stays
+# ignored even if that file is ever lost.
+.remember/
+.claude/
+
+# Local media — masters and cards that never enter the tree
+images/social-preview.png
+
+# Tooling artifacts
+.playwright-mcp/
