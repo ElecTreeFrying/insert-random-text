@@ -28,13 +28,14 @@ const DATASET_LANGUAGES: Readonly<Record<RecordShape, string>> = { json: 'json',
 let settings: Settings;
 
 /**
- * Every contributed command id → the generator it inserts. The original
- * `extension.insertRandom*` ids are kept for back-compat (existing keybindings);
- * new types use namespaced `insertRandomText.*` ids. The Lorem/Hash size variants
- * point at dedicated hidden generators.
+ * Every contributed command id → the generator it inserts. Every generator a user can *see* is
+ * reachable through a namespaced `insertRandomText.*` id. The original `extension.insert*` ids are
+ * kept registered forever so existing keybindings keep working, but `contributes.menus.commandPalette`
+ * hides them with `when: "false"` — otherwise the fourteen oldest generators would appear twice in the
+ * palette under identical titles. The Lorem/Hash size variants point at dedicated hidden generators.
  */
 const COMMAND_TO_GENERATOR: Readonly<Record<string, string>> = {
-  // Original commands — kept for back-compat.
+  // Original commands — registered for back-compat, hidden from the palette.
   'extension.insertRandomAnimal': 'animal',
   'extension.insertRandomPerson': 'person',
   'extension.insertRandomDate': 'date',
@@ -49,6 +50,21 @@ const COMMAND_TO_GENERATOR: Readonly<Record<string, string>> = {
   'extension.insertRandomHashSmall': 'hashSmall',
   'extension.insertRandomHashMedium': 'hashMedium',
   'extension.insertRandomHashLarge': 'hashLarge',
+  // The namespaced twins of those fourteen — these are the ones the palette shows.
+  'insertRandomText.animal': 'animal',
+  'insertRandomText.person': 'person',
+  'insertRandomText.date': 'date',
+  'insertRandomText.country': 'country',
+  'insertRandomText.number': 'number',
+  'insertRandomText.string': 'string',
+  'insertRandomText.lorem': 'lorem',
+  'insertRandomText.loremSmall': 'loremSmall',
+  'insertRandomText.loremMedium': 'loremMedium',
+  'insertRandomText.loremLarge': 'loremLarge',
+  'insertRandomText.hash': 'hash',
+  'insertRandomText.hashSmall': 'hashSmall',
+  'insertRandomText.hashMedium': 'hashMedium',
+  'insertRandomText.hashLarge': 'hashLarge',
   // Modern commands for the broader catalog.
   'insertRandomText.uuid': 'uuid',
   'insertRandomText.email': 'email',

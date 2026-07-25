@@ -12,7 +12,7 @@
   "engines": {
     "vscode": "^1.97.0"
   },
-  "homepage": "https://github.com/ElecTreeFrying/insert-random-text/blob/main/README.md",
+  "homepage": "https://github.com/ElecTreeFrying/insert-random-text",
   "repository": {
     "type": "git",
     "url": "https://github.com/ElecTreeFrying/insert-random-text.git"
@@ -61,7 +61,7 @@
     "anonymize"
   ],
   "galleryBanner": {
-    "color": "#212128",
+    "color": "#241F35",
     "theme": "dark"
   },
   "pricing": "Free",
@@ -157,6 +157,62 @@
       },
       {
         "command": "extension.insertRandomHashLarge",
+        "title": "Insert Random: Hash Large"
+      },
+      {
+        "command": "insertRandomText.animal",
+        "title": "Insert Random: Animal"
+      },
+      {
+        "command": "insertRandomText.person",
+        "title": "Insert Random: Person"
+      },
+      {
+        "command": "insertRandomText.date",
+        "title": "Insert Random: Date"
+      },
+      {
+        "command": "insertRandomText.country",
+        "title": "Insert Random: Country"
+      },
+      {
+        "command": "insertRandomText.number",
+        "title": "Insert Random: Number"
+      },
+      {
+        "command": "insertRandomText.string",
+        "title": "Insert Random: String"
+      },
+      {
+        "command": "insertRandomText.lorem",
+        "title": "Insert Random: Lorem"
+      },
+      {
+        "command": "insertRandomText.loremSmall",
+        "title": "Insert Random: Lorem Small"
+      },
+      {
+        "command": "insertRandomText.loremMedium",
+        "title": "Insert Random: Lorem Medium"
+      },
+      {
+        "command": "insertRandomText.loremLarge",
+        "title": "Insert Random: Lorem Large"
+      },
+      {
+        "command": "insertRandomText.hash",
+        "title": "Insert Random: Hash"
+      },
+      {
+        "command": "insertRandomText.hashSmall",
+        "title": "Insert Random: Hash Small"
+      },
+      {
+        "command": "insertRandomText.hashMedium",
+        "title": "Insert Random: Hash Medium"
+      },
+      {
+        "command": "insertRandomText.hashLarge",
         "title": "Insert Random: Hash Large"
       },
       {
@@ -815,6 +871,64 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "extension.insertRandomAnimal",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomPerson",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomDate",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomCountry",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomNumber",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomString",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertLorem",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertLoremSmall",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertLoremMedium",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertLoremLarge",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomHash",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomHashSmall",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomHashMedium",
+          "when": "false"
+        },
+        {
+          "command": "extension.insertRandomHashLarge",
+          "when": "false"
+        }
+      ],
       "editor/context": [
         {
           "submenu": "insertRandomText.contextSubmenu",

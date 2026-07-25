@@ -2,7 +2,7 @@
 
 A VS Code extension (id `insert-random-text`, publisher `ElecTreeFrying`) that inserts random, fake & mock data — names, emails, addresses, finance, git, UUIDs, lorem ipsum, mock JSON, and ~130 types in all — at **every cursor**, at the **top of the file**, or onto the **clipboard**. A [Record command](#multi-field-records) composes several types into one structured record — a JSON object, SQL row, or CSV line — and a [Generate Dataset command](#dataset-generation) turns the same records into a whole new file, up to 100,000 rows. Every value is generated locally by [`@faker-js/faker`](https://fakerjs.dev) — in any of six [locales](#locales) (`en` by default, plus `de` / `fr` / `es` / `pt_BR` / `ja`); there are no network calls and no telemetry.
 
-**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **176 contributed commands**, **no default keybindings**, **fifteen configuration settings**, and **one editor context-menu submenu**.
+**137 generator types across 20 categories** (plus 6 hidden back-compat variants — 143 registry entries in all), **190 contributed commands**, **no default keybindings**, **fifteen configuration settings**, and **one editor context-menu submenu**.
 
 The generation logic is `vscode`-free and decoupled from the editor glue: a generator produces a value, a formatter renders a block, a quote policy decides the wrapping, and a thin activation layer maps commands and cursors onto that pipeline. Each stage is documented below.
 
@@ -10,11 +10,11 @@ The generation logic is `vscode`-free and decoupled from the editor glue: a gene
 
 ## Commands
 
-The extension contributes **176 commands**, in seven families:
+The extension contributes **190 commands**, in seven families:
 
 | Family | Count | Id shape | Purpose |
 |---|---|---|---|
-| Generator commands | 143 | `extension.insertRandom*` (legacy, 14) · `insertRandomText.<id>` (modern, 129) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
+| Generator commands | 157 | `extension.insert*` (legacy, 14 — hidden from the palette) · `insertRandomText.<id>` (modern, 143) | Insert one data type. Each maps to exactly one registry entry (see [Data Catalog](#data-catalog)). |
 | Quick Pick | 1 | `insertRandomText.pick` | "Insert Random: Pick…" — a searchable menu over the whole catalog. |
 | Record | 1 | `insertRandomText.record` | "Insert Random: Record…" — compose several types into one structured record (see [Multi-Field Records](#multi-field-records)). |
 | Generate Dataset | 1 | `insertRandomText.generateDataset` | "Insert Random: Generate Dataset…" — build up to 100,000 records and open them as a new file (see [Dataset Generation](#dataset-generation)). |
@@ -22,14 +22,14 @@ The extension contributes **176 commands**, in seven families:
 | Prompted commands | 13 | `insertRandomText.numberRange` / `floatRange` / `stringLength` / `dateBetween` / `wordsCount` / `sentencesCount` / `paragraphsCount` / `uuidFormat` / `passwordOptions` / `phoneFormat` / `fromTemplate` / `fromPattern` / `sequence` | Ask for parameters in input boxes and Quick Picks, then insert through the normal pipeline (see [Parameterized commands](#parameterized-commands-prompted)). |
 | Settings commands | 16 | `insertRandomText.set*` / `toggle*` / `manage*` / `resetSettings` | Change any setting from the Command Palette (see [Settings Commands](#settings-commands)). |
 
-Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
+Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" in the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) surfaces all of them — all except the 14 legacy ids, which are registered but hidden from the palette (see [Two command namespaces](#two-command-namespaces)), so each generator is listed exactly once. **No keybindings are contributed** — the extension ships zero default key bindings, so nothing conflicts with the user's existing bindings out of the box; any command can be bound manually in *Keyboard Shortcuts* (search **Insert Random**). Binding `insertRandomText.pick` gives one-shortcut access to the whole catalog.
 
 ### Two command namespaces
 
-- **Legacy `extension.insertRandom*` (14 commands)** — the original ids, kept verbatim for **back-compat** so existing user keybindings keep working. They cover eight visible generators (`animal`, `person`, `date`, `country`, `number`, `string`, `lorem`, `hash`) and the six hidden Lorem/Hash size variants. These eight generators have **no** modern `insertRandomText.*` command — the legacy id is their only command.
-- **Modern `insertRandomText.<id>` (129 commands)** — every other generator. The command suffix is byte-identical to the generator's registry `id` (e.g. `insertRandomText.creditCard` → generator `creditCard`).
+- **Legacy `extension.insert*` (14 commands — `insertRandom*` and `insertLorem*`)** — the original ids, kept verbatim for **back-compat** so existing user keybindings keep working. They cover eight visible generators (`animal`, `person`, `date`, `country`, `number`, `string`, `lorem`, `hash`) and the six hidden Lorem/Hash size variants. Each of these fourteen also has a modern `insertRandomText.*` twin pointing at the same generator, so `contributes.menus.commandPalette` hides every legacy id with `when: "false"` — the two families share command titles, and without the hiding those fourteen generators would appear twice in the palette under identical names. The legacy ids stay registered permanently: VS Code has no command-alias mechanism, so removing one would silently break any keybinding a user already made.
+- **Modern `insertRandomText.<id>` (143 commands)** — every generator, including the fourteen with a legacy twin. The command suffix is byte-identical to the generator's registry `id` (e.g. `insertRandomText.creditCard` → generator `creditCard`).
 
-Both namespaces register through a single `COMMAND_TO_GENERATOR` map (143 entries) in `extension.ts`; each registered command calls one shared `insertGenerated(id)`. See the [Data Catalog](#data-catalog) for the exact command id of every type.
+Both namespaces register through a single `COMMAND_TO_GENERATOR` map (157 entries) in `extension.ts`; each registered command calls one shared `insertGenerated(id)`. See the [Data Catalog](#data-catalog) for the exact command id of every type.
 
 ### Insert Random: Pick…
 
@@ -338,7 +338,7 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Full Name | `person` | `extension.insertRandomPerson` | `person.fullName()` |
+| Full Name | `person` | `insertRandomText.person` | `person.fullName()` |
 | First Name | `firstName` | `insertRandomText.firstName` | `person.firstName()` |
 | Middle Name | `middleName` | `insertRandomText.middleName` | `person.middleName()` |
 | Last Name | `lastName` | `insertRandomText.lastName` | `person.lastName()` |
@@ -360,7 +360,7 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Number | `number` | `extension.insertRandomNumber` | `number.int({ min: 0, max: 1000 })` |
+| Number | `number` | `insertRandomText.number` | `number.int({ min: 0, max: 1000 })` |
 | Float | `float` | `insertRandomText.float` | `number.float({ min: 0, max: 1000, fractionDigits: 2 })` → `toFixed(2)` |
 | Boolean | `boolean` | `insertRandomText.boolean` | `datatype.boolean()` |
 | Hex Number | `hexNumber` | `insertRandomText.hexNumber` | `number.hex({ max: 0xffffff })` |
@@ -371,14 +371,14 @@ The generator registry (`catalog.ts`) is the single source of truth — it drive
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| String | `string` | `extension.insertRandomString` | `string.alphanumeric(15)` |
+| String | `string` | `insertRandomText.string` | `string.alphanumeric(15)` |
 | Alpha String | `alpha` | `insertRandomText.alpha` | `string.alpha(10)` |
 | Numeric String | `numeric` | `insertRandomText.numeric` | `string.numeric(10)` |
 | Word | `word` | `insertRandomText.word` | `lorem.word()` |
 | Words | `words` | `insertRandomText.words` | `lorem.words({ min: 3, max: 6 })` |
 | Sentence | `sentence` | `insertRandomText.sentence` | `lorem.sentence()` |
 | Slug | `slug` | `insertRandomText.slug` | `lorem.slug()` |
-| Lorem Paragraph | `lorem` | `extension.insertLorem` | `lorem.paragraph()` |
+| Lorem Paragraph | `lorem` | `insertRandomText.lorem` | `lorem.paragraph()` |
 | Hacker Phrase | `hackerPhrase` | `insertRandomText.hackerPhrase` | `hacker.phrase()` |
 | Emoji | `emoji` | `insertRandomText.emoji` | `internet.emoji()` |
 | Book Title | `bookTitle` | `insertRandomText.bookTitle` | `book.title()` |
@@ -390,7 +390,7 @@ The six timestamp types draw a `Date` and render it per the [`insertRandomText.d
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Date | `date` | `extension.insertRandomDate` | `date.anytime()`, rendered per `dateFormat` |
+| Date | `date` | `insertRandomText.date` | `date.anytime()`, rendered per `dateFormat` |
 | Past Date | `pastDate` | `insertRandomText.pastDate` | `date.past()`, rendered per `dateFormat` |
 | Future Date | `futureDate` | `insertRandomText.futureDate` | `date.future()`, rendered per `dateFormat` |
 | Recent Date | `recentDate` | `insertRandomText.recentDate` | `date.recent()`, rendered per `dateFormat` |
@@ -403,7 +403,7 @@ The six timestamp types draw a `Date` and render it per the [`insertRandomText.d
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Country | `country` | `extension.insertRandomCountry` | `location.country()` |
+| Country | `country` | `insertRandomText.country` | `location.country()` |
 | Country Code | `countryCode` | `insertRandomText.countryCode` | `location.countryCode()` |
 | State | `state` | `insertRandomText.state` | `location.state()` |
 | State Abbreviation | `stateAbbr` | `insertRandomText.stateAbbr` | `location.state({ abbreviated: true })` |
@@ -465,13 +465,13 @@ The six timestamp types draw a `Date` and render it per the [`insertRandomText.d
 | ULID | `ulid` | `insertRandomText.ulid` | `string.ulid()` |
 | Nano ID | `nanoid` | `insertRandomText.nanoid` | `string.nanoid()` |
 | MongoDB ObjectId | `mongodbObjectId` | `insertRandomText.mongodbObjectId` | `database.mongodbObjectId()` |
-| Hash | `hash` | `extension.insertRandomHash` | `string.hexadecimal({ length: 13, casing: 'lower', prefix: '' })` |
+| Hash | `hash` | `insertRandomText.hash` | `string.hexadecimal({ length: 13, casing: 'lower', prefix: '' })` |
 
 ### Nature (6)
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Animal | `animal` | `extension.insertRandomAnimal` | `animal.type()` |
+| Animal | `animal` | `insertRandomText.animal` | `animal.type()` |
 | Dog Breed | `dog` | `insertRandomText.dog` | `animal.dog()` |
 | Cat Breed | `cat` | `insertRandomText.cat` | `animal.cat()` |
 | Bird Species | `bird` | `insertRandomText.bird` | `animal.bird()` |
@@ -579,12 +579,12 @@ These carry `hidden: true` — they never appear in the Quick Pick and exist onl
 
 | Label | id | Command | faker source |
 |---|---|---|---|
-| Lorem (small) | `loremSmall` | `extension.insertLoremSmall` | `lorem.sentence()` |
-| Lorem (medium) | `loremMedium` | `extension.insertLoremMedium` | `lorem.paragraph()` |
-| Lorem (large) | `loremLarge` | `extension.insertLoremLarge` | `lorem.paragraphs(3)` |
-| Hash (7) | `hashSmall` | `extension.insertRandomHashSmall` | `string.hexadecimal({ length: 7, casing: 'lower', prefix: '' })` |
-| Hash (17) | `hashMedium` | `extension.insertRandomHashMedium` | `string.hexadecimal({ length: 17, casing: 'lower', prefix: '' })` |
-| Hash (27) | `hashLarge` | `extension.insertRandomHashLarge` | `string.hexadecimal({ length: 27, casing: 'lower', prefix: '' })` |
+| Lorem (small) | `loremSmall` | `insertRandomText.loremSmall` | `lorem.sentence()` |
+| Lorem (medium) | `loremMedium` | `insertRandomText.loremMedium` | `lorem.paragraph()` |
+| Lorem (large) | `loremLarge` | `insertRandomText.loremLarge` | `lorem.paragraphs(3)` |
+| Hash (7) | `hashSmall` | `insertRandomText.hashSmall` | `string.hexadecimal({ length: 7, casing: 'lower', prefix: '' })` |
+| Hash (17) | `hashMedium` | `insertRandomText.hashMedium` | `string.hexadecimal({ length: 17, casing: 'lower', prefix: '' })` |
+| Hash (27) | `hashLarge` | `insertRandomText.hashLarge` | `string.hexadecimal({ length: 27, casing: 'lower', prefix: '' })` |
 
 ---
 
@@ -707,7 +707,7 @@ An optional editor right-click entry, **off by default**.
 
 ## Activation & Engine
 
-- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 176 commands activates the extension from a cold start. `extensionKind` is `workspace`.
+- **Activation** — the extension contributes **no explicit `activationEvents`**; since VS Code 1.74 they are auto-generated from `contributes.commands`, so invoking any of the 190 commands activates the extension from a cold start. `extensionKind` is `workspace`.
 - **Web extension** — the manifest declares both `main` (`dist/extension.js`, esbuild platform `node`) and `browser` (`dist/web/extension.js`, esbuild platform `browser`) bundles built from the same source in one `esbuild.js` run. The browser bundle contains no Node built-ins — esbuild's browser platform rejects them at build time, which doubles as the web-cleanliness gate — so the extension runs in the **web extension host** on vscode.dev and github.dev.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
