@@ -26,11 +26,11 @@ Drop a multi-cursor selection down a column and fill every row with a _different
 
 **Perfect for** test fixtures & database seeds · mock API responses · whole CSV / JSON / SQL datasets · UI placeholder & Storybook props · throwaway IDs, addresses & credentials.
 
-![Multi-cursor fill demo — a different value at every cursor](images/multi-cursor.gif "One command fills every cursor with a different value")
+![Multi-cursor fill demo — a different value at every cursor](https://raw.githubusercontent.com/ElecTreeFrying/insert-random-text/main/images/multi-cursor.gif "One command fills every cursor with a different value")
 
 [**See the full specification**][SPEC]
 
-[SPEC]: SPEC.md
+[SPEC]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md
 
 ---
 
@@ -74,17 +74,17 @@ No setup required — tweak quotes, bulk count, output format, seed, and locale 
 
 ## Records & datasets
 
-![Records and datasets demo — one object, three SQL rows, then a 1,000-row CSV file](images/records.gif "Records to rows to a whole dataset")
+![Records and datasets demo — one object, three SQL rows, then a 1,000-row CSV file](https://raw.githubusercontent.com/ElecTreeFrying/insert-random-text/main/images/records.gif "Records to rows to a whole dataset")
 
 Records to rows to a whole dataset — compose a `{ person, username, email }` object at the cursor, switch the shape to SQL from the palette, then pour up to **100,000 rows** of JSON, CSV, or SQL into a new file with [**Generate Dataset…**][records-spec]. Offline, free, seeded-reproducible.
 
-[records-spec]: SPEC.md#multi-field-records
+[records-spec]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#multi-field-records
 
 ---
 
 ## Why it's smart
 
-![Smart features demo — language-aware quotes, six locales, anonymize in place](images/cerebral.gif "Quotes follow the language · six locales · anonymize in place")
+![Smart features demo — language-aware quotes, six locales, anonymize in place](https://raw.githubusercontent.com/ElecTreeFrying/insert-random-text/main/images/cerebral.gif "Quotes follow the language · six locales · anonymize in place")
 
 - **Quotes follow the language, nothing configured** — the same command lands `"…"` in JavaScript and `'…'` in SQL.
 - **Six locales, one setting, no reload** — and seeded runs stay reproducible per locale.
@@ -121,7 +121,7 @@ Records to rows to a whole dataset — compose a `{ person, username, email }` o
 
 See [SPEC — §Data Catalog][SPEC-catalog] for every type with its registry id, command id, and faker source.
 
-[SPEC-catalog]: SPEC.md#data-catalog
+[SPEC-catalog]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#data-catalog
 
 ---
 
@@ -149,8 +149,8 @@ Change any of these from the [Commands](#commands) below, or in VS Code Settings
 
 See [SPEC — §Configuration Reference][SPEC-config] for every setting with its exact type, default, and resolution rules, and [§Quote Wrapping & Language-Aware Quoting][SPEC-quotes] for the full language buckets.
 
-[SPEC-config]: SPEC.md#configuration-reference
-[SPEC-quotes]: SPEC.md#quote-wrapping--language-aware-quoting
+[SPEC-config]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#configuration-reference
+[SPEC-quotes]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#quote-wrapping--language-aware-quoting
 
 ### How the key settings behave
 
@@ -231,9 +231,9 @@ Open the Command Palette (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P
 
 See [SPEC — §Commands][SPEC-commands] for the two command namespaces and back-compat notes, [§Insert Targets][SPEC-targets] for exactly how Cursor / Top / Clipboard behave, and [§Multi-Field Records][SPEC-records] for the record composer.
 
-[SPEC-commands]: SPEC.md#commands
-[SPEC-targets]: SPEC.md#insert-targets
-[SPEC-records]: SPEC.md#multi-field-records
+[SPEC-commands]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#commands
+[SPEC-targets]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#insert-targets
+[SPEC-records]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SPEC.md#multi-field-records
 
 ### Templates & patterns
 
@@ -329,8 +329,11 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 
 ## Troubleshooting
 
-If a command doesn't insert, or a value looks wrong, please open an issue on [GitHub Issues][issues].
+If a command doesn't insert, a value looks wrong, or a setting doesn't seem to apply — see [SUPPORT.md][SUPPORT] for symptom → cause → fix.
 
+Still stuck? Please open an issue on [GitHub Issues][issues].
+
+[SUPPORT]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SUPPORT.md
 [issues]: https://github.com/ElecTreeFrying/insert-random-text/issues
 
 ---
@@ -361,13 +364,15 @@ Stack cursors (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Option</kbd>/<kbd>Alt</kbd>+<
 
 See [CHANGELOG.md][changelog] for full release notes.
 
-[changelog]: CHANGELOG.md
+[changelog]: https://marketplace.visualstudio.com/items/ElecTreeFrying.insert-random-text/changelog
 
 ---
 
 ## Contributing
 
-Contributions, bug reports, and feature requests are welcome in [GitHub Issues][issues].
+Contributions, bug reports, and feature requests are welcome in [GitHub Issues][issues]. See [SUPPORT.md][SUPPORT-CONTRIB] for build/test commands and the architecture overview.
+
+[SUPPORT-CONTRIB]: https://github.com/ElecTreeFrying/insert-random-text/blob/main/SUPPORT.md#contributing
 
 ---
 
