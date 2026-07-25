@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.0.1 (2026-07-25)
+
+### Features
+
+- **Now on Open VSX.** The extension is published to the [Open VSX registry](https://open-vsx.org/extension/ElecTreeFrying/insert-random-text), so it installs directly in VSCodium, Cursor, Windsurf, Gitpod, and other editors that don't use the Visual Studio Marketplace — and the README's Installation and Compatibility sections now cover those hosts.
+- **Namespaced command ids for the fourteen original generators.** Animal, Person, Date, Country, Number, String, Lorem and its size variants, and Hash and its size variants are now reachable as `insertRandomText.<name>` — so every generator carries a modern id, matching the rest of the catalog. The original `extension.insert*` ids stay registered permanently (existing keybindings and `tasks.json` references keep working untouched); they're hidden from the Command Palette so no generator is listed twice.
+- **A support guide.** New [SUPPORT.md](https://github.com/ElecTreeFrying/insert-random-text/blob/main/SUPPORT.md) walks the common symptoms — a command that inserts nothing, a value in an unexpected shape, a setting that doesn't seem to apply — from symptom to cause to fix, plus an FAQ and the build/contributing guide. The README's Troubleshooting and Contributing sections link into it.
+
+### Fixes
+
+- **Documentation links now work from the Marketplace listing.** The README's links into the specification — the data catalog, the configuration reference, the command list — resolved only when read on GitHub; on the extension's Marketplace page they led nowhere, and the demo GIFs didn't load. Both now resolve from either surface.
+
+### Changes
+
+- **Marketplace metadata.** The gallery banner was recolored to match the icon, and `homepage` now points at the repository root.
+- **README refresh.** A restructured Quick Start, a consistent badge set, and installation steps covering both registries.
+- New GitHub **issue forms** (bug report / feature request) with contact links, replacing free-form issues.
+
 ## v1.0.0 (2026-07-10)
 
 The first stable release — a ground-up relaunch as **Random, Fake & Mock Data Generator**.
