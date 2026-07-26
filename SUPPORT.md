@@ -391,6 +391,7 @@ Before opening a PR, the release gate is: `npm run check-types` + `npm run lint`
 
 If this extension saves you time, consider:
 
+- **Sponsoring** via [GitHub Sponsors](https://github.com/sponsors/ElecTreeFrying)
 - **Starring** the repo on [GitHub](https://github.com/ElecTreeFrying/insert-random-text)
 - **Leaving a review** on the [VS Code Marketplace][marketplace]
 - **Donating** — addresses are listed in the [README's Support section][donate]
