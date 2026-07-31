@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  # Extension dependencies. Dev dependencies are grouped into a single PR;
+  # @faker-js/faker is a RUNTIME dependency that esbuild inlines into the
+  # shipped bundle, so it stays ungrouped and arrives as its own PR — it
+  # reaches users directly and changes generated output.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    # Load-bearing here, not boilerplate: faker is bundled INTO the published
+    # VSIX. Without a wait, a compromised release could be proposed, merged,
+    # bundled and shipped before npm yanks it. A week is the window in which
+    # malicious npm releases are normally caught.
+    cooldown:
+      default-days: 7
+    groups:
+      dev-dependencies:
+        dependency-type: development
+
+  # The actions pinned in .github/workflows/
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+    cooldown:
+      default-days: 7

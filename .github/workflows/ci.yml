@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & headless tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # This repo's definition of green: check-types + lint + esbuild
+      # (both targets — the node bundle AND the browser bundle).
+      - name: Compile
+        run: npm run compile
+
+      # The vscode-free areas run under plain mocha, no Extension Host needed.
+      # The glob is deliberately NOT widened to `**`: extension.test.ts and
+      # commands/ import `vscode` and fail under plain node.
+      - name: Headless unit tests
+        run: |
+          npm run compile-tests
+          npx mocha "out/test/{quote,config,catalog,engine,format,record,prompted,custom,randomize}/*.test.js"
+
+      # Exactly what `vscode:prepublish` runs before every publish.
+      - name: Production bundle
+        run: npm run package
+
+      # The browser bundle is the web-cleanliness gate — esbuild hard-fails it
+      # on any Node built-in. Assert it actually landed rather than trusting it.
+      - name: Assert both bundles exist
+        run: test -f dist/extension.js && test -f dist/web/extension.js
+
+      # The full Extension Host suite (`npm test`) is deliberately not wired
+      # here — it needs a virtual display on Linux runners. Run it locally
+      # before cutting a release.
