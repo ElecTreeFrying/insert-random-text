@@ -26,7 +26,7 @@ Every command title is prefixed **`Insert Random:`**, so typing "Insert Random" 
 
 ### Two command namespaces
 
-- **Legacy `extension.insert*` (14 commands — `insertRandom*` and `insertLorem*`)** — the original ids, kept verbatim for **back-compat** so existing user keybindings keep working. They cover eight visible generators (`animal`, `person`, `date`, `country`, `number`, `string`, `lorem`, `hash`) and the six hidden Lorem/Hash size variants. Each of these fourteen also has a modern `insertRandomText.*` twin pointing at the same generator, so `contributes.menus.commandPalette` hides every legacy id with `when: "false"` — the two families share command titles, and without the hiding those fourteen generators would appear twice in the palette under identical names. The legacy ids stay registered permanently: VS Code has no command-alias mechanism, so removing one would silently break any keybinding a user already made.
+- **Legacy `extension.insert*` (14 commands — `insertRandom*` and `insertLorem*`)** — the original ids, kept verbatim for **back-compat** so existing user keybindings keep working. They cover eight visible generators (`animal`, `person`, `date`, `country`, `number`, `string`, `lorem`, `hash`) and the six hidden Lorem/Hash size variants. Each of these fourteen also has a modern `insertRandomText.*` twin pointing at the same generator, so `contributes.menus.commandPalette` hides every legacy id with `when: "false"` — the two families share command titles (and share single nls keys — see [Localization](#localization)), and without the hiding those fourteen generators would appear twice in the palette under identical names. The legacy ids stay registered permanently: VS Code has no command-alias mechanism, so removing one would silently break any keybinding a user already made.
 - **Modern `insertRandomText.<id>` (143 commands)** — every generator, including the fourteen with a legacy twin. The command suffix is byte-identical to the generator's registry `id` (e.g. `insertRandomText.creditCard` → generator `creditCard`).
 
 Both namespaces register through a single `COMMAND_TO_GENERATOR` map (157 entries) in `extension.ts`; each registered command calls one shared `insertGenerated(id)`. See the [Data Catalog](#data-catalog) for the exact command id of every type.
@@ -238,7 +238,7 @@ Sequences are **per locale**: under the same seed, `de` draws different (German)
 
 ## Locales
 
-`insertRandomText.locale` picks the language/region every generator draws from. Six faker locale data sets ship in the bundle:
+`insertRandomText.locale` picks the language/region every generator draws from. (It governs the **generated data**, not the extension's UI — command titles and settings prose follow VS Code's display language instead; see [Localization](#localization).) Six faker locale data sets ship in the bundle:
 
 | Value | Data set |
 |---|---|
@@ -712,3 +712,17 @@ An optional editor right-click entry, **off by default**.
 - **Trust & virtual workspaces** — `capabilities.untrustedWorkspaces.supported = true` and `virtualWorkspaces = true`: the extension runs in restricted/untrusted and virtual (no-filesystem) workspaces, because it neither reads project files nor makes network calls.
 - **faker lifecycle** — `engine.ts` loads faker **lazily** on the first command via `load(locale)`: one literal dynamic `import('@faker-js/faker/locale/<id>')` per shipped locale (`en` / `de` / `fr` / `es` / `pt_BR` / `ja`), cached in a promise map so each locale is imported once and concurrent loads share the import; `faker()` returns the **active** instance (the last locale loaded). Only those six locale entries are imported — never the package root — so faker's other 60+ locales never reach the esbuild bundle (which would blow the `.vsix` size gate). `seed(value)` forwards to the active instance's `seed`.
 - **Privacy** — every value is generated in-process. No network requests, no telemetry, fully offline.
+
+---
+
+## Localization
+
+The **manifest** is localized: `displayName`, `description`, all 190 command titles, the "Insert Random" submenu label, and every setting's title, description, and enum descriptions render in VS Code's display language when it is one of the eight shipped locales — Simplified Chinese (`zh-cn`), Spanish (`es`), French (`fr`), Brazilian Portuguese (`pt-br`), Russian (`ru`), German (`de`), Japanese (`ja`), or Turkish (`tr`). English is the base file (`package.nls.json`) and the per-key fallback for every other display language. The 14 legacy command ids resolve through the same nls keys as their modern twins, so both namespaces always carry identical titles in every language.
+
+Each language keeps the searchable category-prefix pattern — `Insert Random: First Name` appears as `Zufällig einfügen: Vorname` (de), `Insertion aléatoire : Prénom` (fr), `随机插入: 名字` (zh-cn), `ランダム挿入: 名` (ja) — and the [editor context-menu submenu](#context-menu) carries the same localized phrase, so palette search and the right-click menu stay consistent per language.
+
+Deliberately **not** localized:
+
+- **Setting values.** Enum ids and defaults (`Cursor` / `Top` / `Clipboard`, `plain` / `jsonArray` / `quotedList`, the faker locale ids `en` … `ja`, and every other value in the [Configuration Reference](#configuration-reference)) are runtime-matched strings and stay English in every display language — only their descriptions are translated.
+- **Runtime UI.** Quick Pick entries, prompts, input-box validation, and notifications emitted by the running extension are English.
+- **Generated data.** What the generators produce is governed by `insertRandomText.locale` (see [Locales](#locales)), independently of the display language.
