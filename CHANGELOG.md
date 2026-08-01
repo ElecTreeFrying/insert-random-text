@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.0.2 (2026-08-08)
+
+### Features
+
+- **Commands, settings, and the context menu now follow VS Code's display language.** Every command title, the *Insert Random* submenu label, the extension's own name and description, and every setting's title, description, and dropdown descriptions render in Simplified Chinese, Spanish, French, Brazilian Portuguese, Russian, German, Japanese, or Turkish. English is the fallback for every other display language.
+- **Palette search still works with a single term in any language.** Each locale translates the category prefix along with the command — `Insert Random: First Name` reads `Zufällig einfügen: Vorname` in German and `随机插入: 名字` in Simplified Chinese — and the right-click submenu carries the same phrase. Generators reachable under both their original `extension.insert*` id and the modern `insertRandomText.*` id share one translation, so the two ids can never show different titles.
+
+### Changes
+
+- **What stays English, on purpose.** Setting *values* — `Cursor` / `Top` / `Clipboard`, the output formats, the faker locale ids — are matched at runtime, so only their descriptions are translated. Prompts, Quick Picks, and notifications shown while the extension is running are English too.
+- **`insertRandomText.locale` is unrelated to the display language.** It picks the language the *generated data* is drawn from, and this release doesn't change it; the specification now says so explicitly.
+- **Open VSX is now linked directly from the README** — a version badge, an **Open VSX listing** line under Installation, and a link to the publisher's other extensions on the registry. Compatibility notes that the listing is published by **WinterNova5**, a verified Open VSX publisher.
+- **The publisher reads as WinterNova5** throughout the README. Install commands, URLs, and the extension id are unchanged.
+- **GitHub Sponsors** now sits alongside the existing donation options.
+
 ## v1.0.1 (2026-07-25)
 
 ### Features
