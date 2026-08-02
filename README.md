@@ -331,6 +331,7 @@ This extension ships **no default keyboard shortcuts** — with 130+ commands, p
 - **Registries:** Available on both the [VS Code Marketplace][package] and [Open VSX][open-vsx] — published by **WinterNova5**, a verified Open VSX publisher.
 - **Compatible hosts:** Cursor, Windsurf, VSCodium, Gitpod, Code Server, and other forks that implement the VS Code API at the same engine version — installable directly from their Extensions panel via Open VSX.
 - **Web:** Runs on [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev) — a browser build ships in the extension.
+- **Display language:** Command titles, the *Insert Random* submenu, and every setting follow VS Code's display language — Simplified Chinese, Spanish, French, Brazilian Portuguese, Russian, German, Japanese, and Turkish, with English as the fallback. Each locale translates the category prefix too, so one palette search still finds every generator. This is separate from `insertRandomText.locale`, which picks the language the *generated data* is drawn from.
 - **Platforms:** macOS, Windows, Linux.
 - **Footprint:** Bundles `@faker-js/faker` (six locales) — nothing is fetched at runtime.
 - **Telemetry:** None. No network calls, no telemetry, no model calls — every value is generated locally by the bundled library.

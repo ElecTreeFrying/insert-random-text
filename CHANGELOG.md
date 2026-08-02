@@ -11,7 +11,7 @@
 
 - **What stays English, on purpose.** Setting *values* — `Cursor` / `Top` / `Clipboard`, the output formats, the faker locale ids — are matched at runtime, so only their descriptions are translated. Prompts, Quick Picks, and notifications shown while the extension is running are English too.
 - **`insertRandomText.locale` is unrelated to the display language.** It picks the language the *generated data* is drawn from, and this release doesn't change it; the specification now says so explicitly.
-- **Open VSX is now linked directly from the README** — a version badge, an **Open VSX listing** line under Installation, and a link to the publisher's other extensions on the registry. Compatibility notes that the listing is published by **WinterNova5**, a verified Open VSX publisher.
+- **Open VSX is now linked directly from the README** — a version badge, an **Open VSX listing** line under Installation, and a link to the publisher's other extensions on the registry. Compatibility notes that the listing is published by **WinterNova5**, a verified Open VSX publisher, and now records which display languages the extension ships in — separately from `insertRandomText.locale`, which governs the generated data instead.
 - **The publisher reads as WinterNova5** throughout the README. Install commands, URLs, and the extension id are unchanged.
 - **GitHub Sponsors** now sits alongside the existing donation options.
 
