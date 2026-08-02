@@ -1,7 +1,7 @@
 {
   "name": "insert-random-text",
-  "displayName": "Random, Fake & Mock Data Generator",
-  "description": "Insert 130+ types of random, fake & mock data at every cursor — names, emails, UUIDs, lorem ipsum, JSON/SQL/CSV records & whole datasets, templates, locales, anonymize in place. Bulk, seeded, fully offline. The only data faker you'll need.",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "publisher": "ElecTreeFrying",
   "version": "1.0.1",
   "author": {
@@ -105,769 +105,769 @@
     "commands": [
       {
         "command": "extension.insertRandomAnimal",
-        "title": "Insert Random: Animal"
+        "title": "%command.animal.title%"
       },
       {
         "command": "extension.insertRandomPerson",
-        "title": "Insert Random: Person"
+        "title": "%command.person.title%"
       },
       {
         "command": "extension.insertRandomDate",
-        "title": "Insert Random: Date"
+        "title": "%command.date.title%"
       },
       {
         "command": "extension.insertRandomCountry",
-        "title": "Insert Random: Country"
+        "title": "%command.country.title%"
       },
       {
         "command": "extension.insertRandomNumber",
-        "title": "Insert Random: Number"
+        "title": "%command.number.title%"
       },
       {
         "command": "extension.insertRandomString",
-        "title": "Insert Random: String"
+        "title": "%command.string.title%"
       },
       {
         "command": "extension.insertLorem",
-        "title": "Insert Random: Lorem"
+        "title": "%command.lorem.title%"
       },
       {
         "command": "extension.insertLoremSmall",
-        "title": "Insert Random: Lorem Small"
+        "title": "%command.loremSmall.title%"
       },
       {
         "command": "extension.insertLoremMedium",
-        "title": "Insert Random: Lorem Medium"
+        "title": "%command.loremMedium.title%"
       },
       {
         "command": "extension.insertLoremLarge",
-        "title": "Insert Random: Lorem Large"
+        "title": "%command.loremLarge.title%"
       },
       {
         "command": "extension.insertRandomHash",
-        "title": "Insert Random: Hash"
+        "title": "%command.hash.title%"
       },
       {
         "command": "extension.insertRandomHashSmall",
-        "title": "Insert Random: Hash Small"
+        "title": "%command.hashSmall.title%"
       },
       {
         "command": "extension.insertRandomHashMedium",
-        "title": "Insert Random: Hash Medium"
+        "title": "%command.hashMedium.title%"
       },
       {
         "command": "extension.insertRandomHashLarge",
-        "title": "Insert Random: Hash Large"
+        "title": "%command.hashLarge.title%"
       },
       {
         "command": "insertRandomText.animal",
-        "title": "Insert Random: Animal"
+        "title": "%command.animal.title%"
       },
       {
         "command": "insertRandomText.person",
-        "title": "Insert Random: Person"
+        "title": "%command.person.title%"
       },
       {
         "command": "insertRandomText.date",
-        "title": "Insert Random: Date"
+        "title": "%command.date.title%"
       },
       {
         "command": "insertRandomText.country",
-        "title": "Insert Random: Country"
+        "title": "%command.country.title%"
       },
       {
         "command": "insertRandomText.number",
-        "title": "Insert Random: Number"
+        "title": "%command.number.title%"
       },
       {
         "command": "insertRandomText.string",
-        "title": "Insert Random: String"
+        "title": "%command.string.title%"
       },
       {
         "command": "insertRandomText.lorem",
-        "title": "Insert Random: Lorem"
+        "title": "%command.lorem.title%"
       },
       {
         "command": "insertRandomText.loremSmall",
-        "title": "Insert Random: Lorem Small"
+        "title": "%command.loremSmall.title%"
       },
       {
         "command": "insertRandomText.loremMedium",
-        "title": "Insert Random: Lorem Medium"
+        "title": "%command.loremMedium.title%"
       },
       {
         "command": "insertRandomText.loremLarge",
-        "title": "Insert Random: Lorem Large"
+        "title": "%command.loremLarge.title%"
       },
       {
         "command": "insertRandomText.hash",
-        "title": "Insert Random: Hash"
+        "title": "%command.hash.title%"
       },
       {
         "command": "insertRandomText.hashSmall",
-        "title": "Insert Random: Hash Small"
+        "title": "%command.hashSmall.title%"
       },
       {
         "command": "insertRandomText.hashMedium",
-        "title": "Insert Random: Hash Medium"
+        "title": "%command.hashMedium.title%"
       },
       {
         "command": "insertRandomText.hashLarge",
-        "title": "Insert Random: Hash Large"
+        "title": "%command.hashLarge.title%"
       },
       {
         "command": "insertRandomText.pick",
-        "title": "Insert Random: Pick…"
+        "title": "%command.pick.title%"
       },
       {
         "command": "insertRandomText.record",
-        "title": "Insert Random: Record…"
+        "title": "%command.record.title%"
       },
       {
         "command": "insertRandomText.generateDataset",
-        "title": "Insert Random: Generate Dataset…"
+        "title": "%command.generateDataset.title%"
       },
       {
         "command": "insertRandomText.randomizeSelection",
-        "title": "Insert Random: Randomize Selection"
+        "title": "%command.randomizeSelection.title%"
       },
       {
         "command": "insertRandomText.numberRange",
-        "title": "Insert Random: Number (Range…)"
+        "title": "%command.numberRange.title%"
       },
       {
         "command": "insertRandomText.floatRange",
-        "title": "Insert Random: Float (Range…)"
+        "title": "%command.floatRange.title%"
       },
       {
         "command": "insertRandomText.stringLength",
-        "title": "Insert Random: String (Length…)"
+        "title": "%command.stringLength.title%"
       },
       {
         "command": "insertRandomText.dateBetween",
-        "title": "Insert Random: Date (Between…)"
+        "title": "%command.dateBetween.title%"
       },
       {
         "command": "insertRandomText.wordsCount",
-        "title": "Insert Random: Words (Count…)"
+        "title": "%command.wordsCount.title%"
       },
       {
         "command": "insertRandomText.sentencesCount",
-        "title": "Insert Random: Sentences (Count…)"
+        "title": "%command.sentencesCount.title%"
       },
       {
         "command": "insertRandomText.paragraphsCount",
-        "title": "Insert Random: Paragraphs (Count…)"
+        "title": "%command.paragraphsCount.title%"
       },
       {
         "command": "insertRandomText.uuidFormat",
-        "title": "Insert Random: UUID (Format…)"
+        "title": "%command.uuidFormat.title%"
       },
       {
         "command": "insertRandomText.passwordOptions",
-        "title": "Insert Random: Password (Options…)"
+        "title": "%command.passwordOptions.title%"
       },
       {
         "command": "insertRandomText.phoneFormat",
-        "title": "Insert Random: Phone (Format…)"
+        "title": "%command.phoneFormat.title%"
       },
       {
         "command": "insertRandomText.fromTemplate",
-        "title": "Insert Random: From Template…"
+        "title": "%command.fromTemplate.title%"
       },
       {
         "command": "insertRandomText.fromPattern",
-        "title": "Insert Random: From Pattern…"
+        "title": "%command.fromPattern.title%"
       },
       {
         "command": "insertRandomText.sequence",
-        "title": "Insert Random: Sequence (Start/Step…)"
+        "title": "%command.sequence.title%"
       },
       {
         "command": "insertRandomText.uuid",
-        "title": "Insert Random: UUID"
+        "title": "%command.uuid.title%"
       },
       {
         "command": "insertRandomText.email",
-        "title": "Insert Random: Email"
+        "title": "%command.email.title%"
       },
       {
         "command": "insertRandomText.username",
-        "title": "Insert Random: Username"
+        "title": "%command.username.title%"
       },
       {
         "command": "insertRandomText.boolean",
-        "title": "Insert Random: Boolean"
+        "title": "%command.boolean.title%"
       },
       {
         "command": "insertRandomText.firstName",
-        "title": "Insert Random: First Name"
+        "title": "%command.firstName.title%"
       },
       {
         "command": "insertRandomText.lastName",
-        "title": "Insert Random: Last Name"
+        "title": "%command.lastName.title%"
       },
       {
         "command": "insertRandomText.phone",
-        "title": "Insert Random: Phone"
+        "title": "%command.phone.title%"
       },
       {
         "command": "insertRandomText.city",
-        "title": "Insert Random: City"
+        "title": "%command.city.title%"
       },
       {
         "command": "insertRandomText.address",
-        "title": "Insert Random: Street Address"
+        "title": "%command.address.title%"
       },
       {
         "command": "insertRandomText.ipv4",
-        "title": "Insert Random: IP Address"
+        "title": "%command.ipv4.title%"
       },
       {
         "command": "insertRandomText.mac",
-        "title": "Insert Random: MAC Address"
+        "title": "%command.mac.title%"
       },
       {
         "command": "insertRandomText.url",
-        "title": "Insert Random: URL"
+        "title": "%command.url.title%"
       },
       {
         "command": "insertRandomText.color",
-        "title": "Insert Random: Color (hex)"
+        "title": "%command.color.title%"
       },
       {
         "command": "insertRandomText.password",
-        "title": "Insert Random: Password"
+        "title": "%command.password.title%"
       },
       {
         "command": "insertRandomText.word",
-        "title": "Insert Random: Word"
+        "title": "%command.word.title%"
       },
       {
         "command": "insertRandomText.sentence",
-        "title": "Insert Random: Sentence"
+        "title": "%command.sentence.title%"
       },
       {
         "command": "insertRandomText.middleName",
-        "title": "Insert Random: Middle Name"
+        "title": "%command.middleName.title%"
       },
       {
         "command": "insertRandomText.prefix",
-        "title": "Insert Random: Name Prefix"
+        "title": "%command.prefix.title%"
       },
       {
         "command": "insertRandomText.suffix",
-        "title": "Insert Random: Name Suffix"
+        "title": "%command.suffix.title%"
       },
       {
         "command": "insertRandomText.sex",
-        "title": "Insert Random: Sex"
+        "title": "%command.sex.title%"
       },
       {
         "command": "insertRandomText.gender",
-        "title": "Insert Random: Gender"
+        "title": "%command.gender.title%"
       },
       {
         "command": "insertRandomText.jobTitle",
-        "title": "Insert Random: Job Title"
+        "title": "%command.jobTitle.title%"
       },
       {
         "command": "insertRandomText.jobType",
-        "title": "Insert Random: Job Type"
+        "title": "%command.jobType.title%"
       },
       {
         "command": "insertRandomText.jobArea",
-        "title": "Insert Random: Job Area"
+        "title": "%command.jobArea.title%"
       },
       {
         "command": "insertRandomText.bio",
-        "title": "Insert Random: Bio"
+        "title": "%command.bio.title%"
       },
       {
         "command": "insertRandomText.zodiac",
-        "title": "Insert Random: Zodiac Sign"
+        "title": "%command.zodiac.title%"
       },
       {
         "command": "insertRandomText.ipv6",
-        "title": "Insert Random: IPv6 Address"
+        "title": "%command.ipv6.title%"
       },
       {
         "command": "insertRandomText.port",
-        "title": "Insert Random: Port"
+        "title": "%command.port.title%"
       },
       {
         "command": "insertRandomText.httpMethod",
-        "title": "Insert Random: HTTP Method"
+        "title": "%command.httpMethod.title%"
       },
       {
         "command": "insertRandomText.httpStatus",
-        "title": "Insert Random: HTTP Status Code"
+        "title": "%command.httpStatus.title%"
       },
       {
         "command": "insertRandomText.userAgent",
-        "title": "Insert Random: User Agent"
+        "title": "%command.userAgent.title%"
       },
       {
         "command": "insertRandomText.domainName",
-        "title": "Insert Random: Domain Name"
+        "title": "%command.domainName.title%"
       },
       {
         "command": "insertRandomText.emoji",
-        "title": "Insert Random: Emoji"
+        "title": "%command.emoji.title%"
       },
       {
         "command": "insertRandomText.protocol",
-        "title": "Insert Random: Protocol"
+        "title": "%command.protocol.title%"
       },
       {
         "command": "insertRandomText.jwt",
-        "title": "Insert Random: JWT"
+        "title": "%command.jwt.title%"
       },
       {
         "command": "insertRandomText.displayName",
-        "title": "Insert Random: Display Name"
+        "title": "%command.displayName.title%"
       },
       {
         "command": "insertRandomText.company",
-        "title": "Insert Random: Company Name"
+        "title": "%command.company.title%"
       },
       {
         "command": "insertRandomText.catchPhrase",
-        "title": "Insert Random: Catch Phrase"
+        "title": "%command.catchPhrase.title%"
       },
       {
         "command": "insertRandomText.buzzPhrase",
-        "title": "Insert Random: Buzz Phrase"
+        "title": "%command.buzzPhrase.title%"
       },
       {
         "command": "insertRandomText.product",
-        "title": "Insert Random: Product"
+        "title": "%command.product.title%"
       },
       {
         "command": "insertRandomText.productName",
-        "title": "Insert Random: Product Name"
+        "title": "%command.productName.title%"
       },
       {
         "command": "insertRandomText.price",
-        "title": "Insert Random: Price"
+        "title": "%command.price.title%"
       },
       {
         "command": "insertRandomText.department",
-        "title": "Insert Random: Department"
+        "title": "%command.department.title%"
       },
       {
         "command": "insertRandomText.productMaterial",
-        "title": "Insert Random: Product Material"
+        "title": "%command.productMaterial.title%"
       },
       {
         "command": "insertRandomText.productDescription",
-        "title": "Insert Random: Product Description"
+        "title": "%command.productDescription.title%"
       },
       {
         "command": "insertRandomText.isbn",
-        "title": "Insert Random: ISBN"
+        "title": "%command.isbn.title%"
       },
       {
         "command": "insertRandomText.amount",
-        "title": "Insert Random: Amount"
+        "title": "%command.amount.title%"
       },
       {
         "command": "insertRandomText.currencyCode",
-        "title": "Insert Random: Currency Code"
+        "title": "%command.currencyCode.title%"
       },
       {
         "command": "insertRandomText.currencyName",
-        "title": "Insert Random: Currency Name"
+        "title": "%command.currencyName.title%"
       },
       {
         "command": "insertRandomText.currencySymbol",
-        "title": "Insert Random: Currency Symbol"
+        "title": "%command.currencySymbol.title%"
       },
       {
         "command": "insertRandomText.creditCard",
-        "title": "Insert Random: Credit Card Number"
+        "title": "%command.creditCard.title%"
       },
       {
         "command": "insertRandomText.creditCardCVV",
-        "title": "Insert Random: Credit Card CVV"
+        "title": "%command.creditCardCVV.title%"
       },
       {
         "command": "insertRandomText.iban",
-        "title": "Insert Random: IBAN"
+        "title": "%command.iban.title%"
       },
       {
         "command": "insertRandomText.bic",
-        "title": "Insert Random: BIC"
+        "title": "%command.bic.title%"
       },
       {
         "command": "insertRandomText.accountNumber",
-        "title": "Insert Random: Account Number"
+        "title": "%command.accountNumber.title%"
       },
       {
         "command": "insertRandomText.routingNumber",
-        "title": "Insert Random: Routing Number"
+        "title": "%command.routingNumber.title%"
       },
       {
         "command": "insertRandomText.bitcoin",
-        "title": "Insert Random: Bitcoin Address"
+        "title": "%command.bitcoin.title%"
       },
       {
         "command": "insertRandomText.ethereum",
-        "title": "Insert Random: Ethereum Address"
+        "title": "%command.ethereum.title%"
       },
       {
         "command": "insertRandomText.pin",
-        "title": "Insert Random: PIN"
+        "title": "%command.pin.title%"
       },
       {
         "command": "insertRandomText.zipCode",
-        "title": "Insert Random: Zip Code"
+        "title": "%command.zipCode.title%"
       },
       {
         "command": "insertRandomText.state",
-        "title": "Insert Random: State"
+        "title": "%command.state.title%"
       },
       {
         "command": "insertRandomText.stateAbbr",
-        "title": "Insert Random: State Abbreviation"
+        "title": "%command.stateAbbr.title%"
       },
       {
         "command": "insertRandomText.countryCode",
-        "title": "Insert Random: Country Code"
+        "title": "%command.countryCode.title%"
       },
       {
         "command": "insertRandomText.latitude",
-        "title": "Insert Random: Latitude"
+        "title": "%command.latitude.title%"
       },
       {
         "command": "insertRandomText.longitude",
-        "title": "Insert Random: Longitude"
+        "title": "%command.longitude.title%"
       },
       {
         "command": "insertRandomText.timeZone",
-        "title": "Insert Random: Time Zone"
+        "title": "%command.timeZone.title%"
       },
       {
         "command": "insertRandomText.county",
-        "title": "Insert Random: County"
+        "title": "%command.county.title%"
       },
       {
         "command": "insertRandomText.street",
-        "title": "Insert Random: Street Name"
+        "title": "%command.street.title%"
       },
       {
         "command": "insertRandomText.secondaryAddress",
-        "title": "Insert Random: Secondary Address"
+        "title": "%command.secondaryAddress.title%"
       },
       {
         "command": "insertRandomText.buildingNumber",
-        "title": "Insert Random: Building Number"
+        "title": "%command.buildingNumber.title%"
       },
       {
         "command": "insertRandomText.direction",
-        "title": "Insert Random: Direction"
+        "title": "%command.direction.title%"
       },
       {
         "command": "insertRandomText.pastDate",
-        "title": "Insert Random: Past Date"
+        "title": "%command.pastDate.title%"
       },
       {
         "command": "insertRandomText.futureDate",
-        "title": "Insert Random: Future Date"
+        "title": "%command.futureDate.title%"
       },
       {
         "command": "insertRandomText.recentDate",
-        "title": "Insert Random: Recent Date"
+        "title": "%command.recentDate.title%"
       },
       {
         "command": "insertRandomText.soonDate",
-        "title": "Insert Random: Soon Date"
+        "title": "%command.soonDate.title%"
       },
       {
         "command": "insertRandomText.birthdate",
-        "title": "Insert Random: Birthdate"
+        "title": "%command.birthdate.title%"
       },
       {
         "command": "insertRandomText.weekday",
-        "title": "Insert Random: Weekday"
+        "title": "%command.weekday.title%"
       },
       {
         "command": "insertRandomText.month",
-        "title": "Insert Random: Month"
+        "title": "%command.month.title%"
       },
       {
         "command": "insertRandomText.float",
-        "title": "Insert Random: Float"
+        "title": "%command.float.title%"
       },
       {
         "command": "insertRandomText.hexNumber",
-        "title": "Insert Random: Hex Number"
+        "title": "%command.hexNumber.title%"
       },
       {
         "command": "insertRandomText.binary",
-        "title": "Insert Random: Binary Number"
+        "title": "%command.binary.title%"
       },
       {
         "command": "insertRandomText.octal",
-        "title": "Insert Random: Octal Number"
+        "title": "%command.octal.title%"
       },
       {
         "command": "insertRandomText.nanoid",
-        "title": "Insert Random: Nano ID"
+        "title": "%command.nanoid.title%"
       },
       {
         "command": "insertRandomText.ulid",
-        "title": "Insert Random: ULID"
+        "title": "%command.ulid.title%"
       },
       {
         "command": "insertRandomText.alpha",
-        "title": "Insert Random: Alpha String"
+        "title": "%command.alpha.title%"
       },
       {
         "command": "insertRandomText.numeric",
-        "title": "Insert Random: Numeric String"
+        "title": "%command.numeric.title%"
       },
       {
         "command": "insertRandomText.hackerPhrase",
-        "title": "Insert Random: Hacker Phrase"
+        "title": "%command.hackerPhrase.title%"
       },
       {
         "command": "insertRandomText.slug",
-        "title": "Insert Random: Slug"
+        "title": "%command.slug.title%"
       },
       {
         "command": "insertRandomText.words",
-        "title": "Insert Random: Words"
+        "title": "%command.words.title%"
       },
       {
         "command": "insertRandomText.bookTitle",
-        "title": "Insert Random: Book Title"
+        "title": "%command.bookTitle.title%"
       },
       {
         "command": "insertRandomText.bookAuthor",
-        "title": "Insert Random: Book Author"
+        "title": "%command.bookAuthor.title%"
       },
       {
         "command": "insertRandomText.gitBranch",
-        "title": "Insert Random: Git Branch"
+        "title": "%command.gitBranch.title%"
       },
       {
         "command": "insertRandomText.gitCommitSha",
-        "title": "Insert Random: Git Commit SHA"
+        "title": "%command.gitCommitSha.title%"
       },
       {
         "command": "insertRandomText.gitCommitMessage",
-        "title": "Insert Random: Git Commit Message"
+        "title": "%command.gitCommitMessage.title%"
       },
       {
         "command": "insertRandomText.fileName",
-        "title": "Insert Random: File Name"
+        "title": "%command.fileName.title%"
       },
       {
         "command": "insertRandomText.filePath",
-        "title": "Insert Random: File Path"
+        "title": "%command.filePath.title%"
       },
       {
         "command": "insertRandomText.fileExt",
-        "title": "Insert Random: File Extension"
+        "title": "%command.fileExt.title%"
       },
       {
         "command": "insertRandomText.mimeType",
-        "title": "Insert Random: MIME Type"
+        "title": "%command.mimeType.title%"
       },
       {
         "command": "insertRandomText.semver",
-        "title": "Insert Random: Semver"
+        "title": "%command.semver.title%"
       },
       {
         "command": "insertRandomText.cron",
-        "title": "Insert Random: Cron Expression"
+        "title": "%command.cron.title%"
       },
       {
         "command": "insertRandomText.rgb",
-        "title": "Insert Random: Color (rgb)"
+        "title": "%command.rgb.title%"
       },
       {
         "command": "insertRandomText.hsl",
-        "title": "Insert Random: Color (hsl)"
+        "title": "%command.hsl.title%"
       },
       {
         "command": "insertRandomText.colorName",
-        "title": "Insert Random: Color Name"
+        "title": "%command.colorName.title%"
       },
       {
         "command": "insertRandomText.vehicle",
-        "title": "Insert Random: Vehicle"
+        "title": "%command.vehicle.title%"
       },
       {
         "command": "insertRandomText.vehicleManufacturer",
-        "title": "Insert Random: Vehicle Manufacturer"
+        "title": "%command.vehicleManufacturer.title%"
       },
       {
         "command": "insertRandomText.vehicleModel",
-        "title": "Insert Random: Vehicle Model"
+        "title": "%command.vehicleModel.title%"
       },
       {
         "command": "insertRandomText.vin",
-        "title": "Insert Random: VIN"
+        "title": "%command.vin.title%"
       },
       {
         "command": "insertRandomText.vrm",
-        "title": "Insert Random: License Plate (VRM)"
+        "title": "%command.vrm.title%"
       },
       {
         "command": "insertRandomText.dish",
-        "title": "Insert Random: Dish"
+        "title": "%command.dish.title%"
       },
       {
         "command": "insertRandomText.ingredient",
-        "title": "Insert Random: Ingredient"
+        "title": "%command.ingredient.title%"
       },
       {
         "command": "insertRandomText.fruit",
-        "title": "Insert Random: Fruit"
+        "title": "%command.fruit.title%"
       },
       {
         "command": "insertRandomText.vegetable",
-        "title": "Insert Random: Vegetable"
+        "title": "%command.vegetable.title%"
       },
       {
         "command": "insertRandomText.cuisine",
-        "title": "Insert Random: Cuisine"
+        "title": "%command.cuisine.title%"
       },
       {
         "command": "insertRandomText.songName",
-        "title": "Insert Random: Song Name"
+        "title": "%command.songName.title%"
       },
       {
         "command": "insertRandomText.musicGenre",
-        "title": "Insert Random: Music Genre"
+        "title": "%command.musicGenre.title%"
       },
       {
         "command": "insertRandomText.artist",
-        "title": "Insert Random: Artist"
+        "title": "%command.artist.title%"
       },
       {
         "command": "insertRandomText.album",
-        "title": "Insert Random: Album"
+        "title": "%command.album.title%"
       },
       {
         "command": "insertRandomText.dog",
-        "title": "Insert Random: Dog Breed"
+        "title": "%command.dog.title%"
       },
       {
         "command": "insertRandomText.cat",
-        "title": "Insert Random: Cat Breed"
+        "title": "%command.cat.title%"
       },
       {
         "command": "insertRandomText.bird",
-        "title": "Insert Random: Bird Species"
+        "title": "%command.bird.title%"
       },
       {
         "command": "insertRandomText.fish",
-        "title": "Insert Random: Fish Species"
+        "title": "%command.fish.title%"
       },
       {
         "command": "insertRandomText.horse",
-        "title": "Insert Random: Horse Breed"
+        "title": "%command.horse.title%"
       },
       {
         "command": "insertRandomText.airline",
-        "title": "Insert Random: Airline"
+        "title": "%command.airline.title%"
       },
       {
         "command": "insertRandomText.airport",
-        "title": "Insert Random: Airport"
+        "title": "%command.airport.title%"
       },
       {
         "command": "insertRandomText.flightNumber",
-        "title": "Insert Random: Flight Number"
+        "title": "%command.flightNumber.title%"
       },
       {
         "command": "insertRandomText.seat",
-        "title": "Insert Random: Seat"
+        "title": "%command.seat.title%"
       },
       {
         "command": "insertRandomText.imageUrl",
-        "title": "Insert Random: Image URL"
+        "title": "%command.imageUrl.title%"
       },
       {
         "command": "insertRandomText.avatarUrl",
-        "title": "Insert Random: Avatar URL"
+        "title": "%command.avatarUrl.title%"
       },
       {
         "command": "insertRandomText.mongodbObjectId",
-        "title": "Insert Random: MongoDB ObjectId"
+        "title": "%command.mongodbObjectId.title%"
       },
       {
         "command": "insertRandomText.setInsertType",
-        "title": "Insert Random: Set Insert Type"
+        "title": "%command.setInsertType.title%"
       },
       {
         "command": "insertRandomText.setOutputFormat",
-        "title": "Insert Random: Set Output Format"
+        "title": "%command.setOutputFormat.title%"
       },
       {
         "command": "insertRandomText.setDateFormat",
-        "title": "Insert Random: Set Date Format"
+        "title": "%command.setDateFormat.title%"
       },
       {
         "command": "insertRandomText.setRecordFormat",
-        "title": "Insert Random: Set Record Format"
+        "title": "%command.setRecordFormat.title%"
       },
       {
         "command": "insertRandomText.setRecordSqlTable",
-        "title": "Insert Random: Set Record SQL Table"
+        "title": "%command.setRecordSqlTable.title%"
       },
       {
         "command": "insertRandomText.setBulkCount",
-        "title": "Insert Random: Set Bulk Count"
+        "title": "%command.setBulkCount.title%"
       },
       {
         "command": "insertRandomText.setSeed",
-        "title": "Insert Random: Set Seed"
+        "title": "%command.setSeed.title%"
       },
       {
         "command": "insertRandomText.setLocale",
-        "title": "Insert Random: Set Locale"
+        "title": "%command.setLocale.title%"
       },
       {
         "command": "insertRandomText.toggleQuotes",
-        "title": "Insert Random: Toggle Wrap With Quotes"
+        "title": "%command.toggleQuotes.title%"
       },
       {
         "command": "insertRandomText.toggleNewLine",
-        "title": "Insert Random: Toggle Trailing New Line"
+        "title": "%command.toggleNewLine.title%"
       },
       {
         "command": "insertRandomText.toggleUniquePerCursor",
-        "title": "Insert Random: Toggle Unique Value Per Cursor"
+        "title": "%command.toggleUniquePerCursor.title%"
       },
       {
         "command": "insertRandomText.toggleStrictUnique",
-        "title": "Insert Random: Toggle Strict Unique"
+        "title": "%command.toggleStrictUnique.title%"
       },
       {
         "command": "insertRandomText.toggleContextMenu",
-        "title": "Insert Random: Toggle Editor Context Menu"
+        "title": "%command.toggleContextMenu.title%"
       },
       {
         "command": "insertRandomText.manageTemplates",
-        "title": "Insert Random: Manage Templates"
+        "title": "%command.manageTemplates.title%"
       },
       {
         "command": "insertRandomText.manageCustomLists",
-        "title": "Insert Random: Manage Custom Lists"
+        "title": "%command.manageCustomLists.title%"
       },
       {
         "command": "insertRandomText.resetSettings",
-        "title": "Insert Random: Reset Settings to Defaults"
+        "title": "%command.resetSettings.title%"
       }
     ],
     "submenus": [
       {
         "id": "insertRandomText.contextSubmenu",
-        "label": "Insert Random"
+        "label": "%submenu.contextSubmenu.label%"
       }
     ],
     "menus": {
@@ -973,11 +973,11 @@
     },
     "configuration": [
       {
-        "title": "Insert Random Text",
+        "title": "%config.title%",
         "properties": {
           "insertType": {
-            "title": "Insert type",
-            "description": "Where generated values go.",
+            "title": "%config.insertType.title%",
+            "description": "%config.insertType.description%",
             "type": "string",
             "default": "Cursor",
             "enum": [
@@ -986,44 +986,44 @@
               "Clipboard"
             ],
             "enumDescriptions": [
-              "Fill a fresh value at each cursor.",
-              "Insert one block at line 1.",
-              "Copy to the clipboard instead of inserting (no editor needed)."
+              "%config.insertType.enumDescriptions.0%",
+              "%config.insertType.enumDescriptions.1%",
+              "%config.insertType.enumDescriptions.2%"
             ]
           },
           "withQuote": {
-            "title": "Wrap with quotes",
-            "description": "Toggle to wrap random text with quotes.",
+            "title": "%config.withQuote.title%",
+            "description": "%config.withQuote.description%",
             "type": "boolean",
             "default": true
           },
           "withNewLine": {
-            "title": "Include newline",
-            "description": "Toggle to include a newline at the end of each insert.",
+            "title": "%config.withNewLine.title%",
+            "description": "%config.withNewLine.description%",
             "type": "boolean",
             "default": true
           },
           "insertRandomText.uniquePerCursor": {
-            "title": "Unique value per cursor",
-            "description": "Insert a different random value at each cursor (multi-cursor fill). When off, the same value is repeated at every cursor.",
+            "title": "%config.uniquePerCursor.title%",
+            "description": "%config.uniquePerCursor.description%",
             "type": "boolean",
             "default": true
           },
           "insertRandomText.strictUnique": {
-            "title": "Strict unique",
-            "description": "Re-draw duplicates so values meant to differ within one insert really do — the values of a bulk block, and values across cursors when unique value per cursor is on. Bounded at 25 re-draws per value, so a small pool (booleans, weekdays) that runs out keeps its duplicate instead of hanging. Applies to single-type inserts, not records.",
+            "title": "%config.strictUnique.title%",
+            "description": "%config.strictUnique.description%",
             "type": "boolean",
             "default": false
           },
           "insertRandomText.seed": {
-            "title": "Seed",
-            "description": "Set a number for reproducible output — the same seed produces the same values every run. Leave blank for random.",
+            "title": "%config.seed.title%",
+            "description": "%config.seed.description%",
             "type": "string",
             "default": ""
           },
           "insertRandomText.locale": {
-            "title": "Locale",
-            "description": "Language/region the generated data draws from — names, addresses, words and more come out localized. A type without localized data falls back to English.",
+            "title": "%config.locale.title%",
+            "description": "%config.locale.description%",
             "type": "string",
             "default": "en",
             "enum": [
@@ -1035,25 +1035,25 @@
               "ja"
             ],
             "enumDescriptions": [
-              "English (default).",
-              "German — Deutsch.",
-              "French — Français.",
-              "Spanish — Español.",
-              "Brazilian Portuguese — Português (Brasil).",
-              "Japanese — 日本語."
+              "%config.locale.enumDescriptions.0%",
+              "%config.locale.enumDescriptions.1%",
+              "%config.locale.enumDescriptions.2%",
+              "%config.locale.enumDescriptions.3%",
+              "%config.locale.enumDescriptions.4%",
+              "%config.locale.enumDescriptions.5%"
             ]
           },
           "insertRandomText.bulkCount": {
-            "title": "Bulk count",
-            "description": "How many values to insert at each cursor.",
+            "title": "%config.bulkCount.title%",
+            "description": "%config.bulkCount.description%",
             "type": "number",
             "default": 1,
             "minimum": 1,
             "maximum": 1000
           },
           "insertRandomText.outputFormat": {
-            "title": "Output format",
-            "description": "How multiple values (bulk count > 1) are formatted at each cursor.",
+            "title": "%config.outputFormat.title%",
+            "description": "%config.outputFormat.description%",
             "type": "string",
             "default": "plain",
             "enum": [
@@ -1062,14 +1062,14 @@
               "quotedList"
             ],
             "enumDescriptions": [
-              "One value per line.",
-              "A JSON array, e.g. [ \"a\", \"b\" ].",
-              "A quoted, comma-separated list, e.g. \"a\", \"b\"."
+              "%config.outputFormat.enumDescriptions.0%",
+              "%config.outputFormat.enumDescriptions.1%",
+              "%config.outputFormat.enumDescriptions.2%"
             ]
           },
           "insertRandomText.dateFormat": {
-            "title": "Date format",
-            "description": "How the timestamp Time generators (Date, Past/Future/Recent/Soon Date, Birthdate, Date (Between…)) render their value. Weekday and Month are unaffected.",
+            "title": "%config.dateFormat.title%",
+            "description": "%config.dateFormat.description%",
             "type": "string",
             "default": "iso",
             "enum": [
@@ -1080,16 +1080,16 @@
               "unixMillis"
             ],
             "enumDescriptions": [
-              "Full ISO 8601 timestamp, e.g. 2026-07-02T12:34:56.789Z.",
-              "Date only (YYYY-MM-DD), e.g. 2026-07-02.",
-              "Time only (HH:mm:ss), e.g. 12:34:56.",
-              "Unix time in seconds, e.g. 1783082096.",
-              "Unix time in milliseconds, e.g. 1783082096123."
+              "%config.dateFormat.enumDescriptions.0%",
+              "%config.dateFormat.enumDescriptions.1%",
+              "%config.dateFormat.enumDescriptions.2%",
+              "%config.dateFormat.enumDescriptions.3%",
+              "%config.dateFormat.enumDescriptions.4%"
             ]
           },
           "insertRandomText.recordFormat": {
-            "title": "Record format",
-            "description": "Shape for multi-field records (Insert Random: Record…): a JSON object, a SQL INSERT row, or a CSV line.",
+            "title": "%config.recordFormat.title%",
+            "description": "%config.recordFormat.description%",
             "type": "string",
             "default": "json",
             "enum": [
@@ -1098,20 +1098,20 @@
               "csv"
             ],
             "enumDescriptions": [
-              "A JSON object, e.g. { \"name\": \"…\", \"email\": \"…\" }.",
-              "A SQL INSERT row, e.g. INSERT INTO table (…) VALUES (…);",
-              "A CSV line, e.g. value,value,…"
+              "%config.recordFormat.enumDescriptions.0%",
+              "%config.recordFormat.enumDescriptions.1%",
+              "%config.recordFormat.enumDescriptions.2%"
             ]
           },
           "insertRandomText.recordSqlTable": {
-            "title": "Record SQL table",
-            "description": "Table name used by the SQL record shape.",
+            "title": "%config.recordSqlTable.title%",
+            "description": "%config.recordSqlTable.description%",
             "type": "string",
             "default": "table"
           },
           "insertRandomText.templates": {
-            "title": "Saved templates",
-            "description": "Named faker templates, shown in a Templates group at the top of Insert Random: Pick…. Each value is a template with {{module.method}} placeholders, e.g. { \"invoice\": \"INV-{{string.numeric(4)}}\", \"contact\": \"{{person.fullName}} <{{internet.email}}>\" }. Entries that are not non-empty strings are ignored (logged to the console).",
+            "title": "%config.templates.title%",
+            "description": "%config.templates.description%",
             "type": "object",
             "default": {},
             "additionalProperties": {
@@ -1119,8 +1119,8 @@
             }
           },
           "insertRandomText.customLists": {
-            "title": "Custom lists",
-            "description": "Named lists of your own values, shown in a Custom Lists group at the top of Insert Random: Pick… and offered as Record… fields (the name becomes the field key). Each insert draws one random item, e.g. { \"environment\": [ \"dev\", \"staging\", \"production\" ] }. Non-string values are ignored (logged to the console).",
+            "title": "%config.customLists.title%",
+            "description": "%config.customLists.description%",
             "type": "object",
             "default": {},
             "additionalProperties": {
@@ -1131,8 +1131,8 @@
             }
           },
           "insertRandomText.contextMenu.enabled": {
-            "title": "Show in editor context menu",
-            "description": "Add an \"Insert Random\" submenu to the editor right-click menu.",
+            "title": "%config.contextMenu.enabled.title%",
+            "description": "%config.contextMenu.enabled.description%",
             "type": "boolean",
             "default": false
           }
@@ -1162,8 +1162,9 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.18",
     "@types/vscode": "1.97.0",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.0",
     "eslint": "^9.39.3",
     "npm-run-all": "^4.1.5",

@@ -12,11 +12,18 @@ const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
 const commands: { command: string; title: string }[] = pkg.contributes.commands;
 const declared = new Set(commands.map((c) => c.command));
 
+// Display strings in package.json are %key% placeholders since manifest localization (package.nls) —
+// what VS Code renders is the looked-up value, so the invariants below hold on the resolved ENGLISH
+// base (package.nls.json), the per-key fallback every unlocalized install sees. An unresolvable
+// placeholder stays as-is and fails the assertions, which is exactly the broken state to catch.
+const nls: Record<string, string> = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.nls.json'), 'utf8'));
+const resolveNls = (value: string): string => value.replace(/^%(.+)%$/, (raw, key: string) => nls[key] ?? raw);
+
 const SUBMENU_ID = 'insertRandomText.contextSubmenu';
 
 describe('package.json contributions — palette & keybindings', () => {
   it("every command title carries the 'Insert Random: ' palette prefix", () => {
-    const bare = commands.filter((c) => !c.title.startsWith('Insert Random: '));
+    const bare = commands.filter((c) => !resolveNls(c.title).startsWith('Insert Random: '));
     assert.deepStrictEqual(bare.map((c) => c.command), [], 'commands missing the searchable prefix');
   });
 
@@ -38,7 +45,7 @@ describe('package.json contributions — editor context menu', () => {
     const submenus = pkg.contributes.submenus ?? [];
     const entry = submenus.find((s: { id: string }) => s.id === SUBMENU_ID);
     assert.ok(entry, `contributes.submenus is missing '${SUBMENU_ID}'`);
-    assert.strictEqual(entry.label, 'Insert Random');
+    assert.strictEqual(resolveNls(entry.label), 'Insert Random');
   });
 
   it('the when clause gates on editor focus AND the real contextMenu setting key', () => {
